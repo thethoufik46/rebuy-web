@@ -15,9 +15,9 @@ import {
 } from 'react-icons/fa';
 
 // Use the correct API imports
-import { getBrands } from "@/services/carBrandApi";
-import { getVariantsByBrand } from "@/services/carVariantApi";
-import { getFilteredCars } from "@/services/carFilterApi";
+import { getBrands } from "@/services/carBrandApi.js";
+import { getVariantsByBrand } from "@/services/carVariantApi.js";
+import { getFilteredCars } from "@/services/carFilterApi.js";
 
 const ALL_BRANDS = '__ALL__';
 
