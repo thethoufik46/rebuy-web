@@ -217,7 +217,7 @@ const styles = {
   root: {
     position: 'relative',
     width: '100vw',
-    height: '100vh',
+    height: '100dvh',
     backgroundColor: '#d6cef3', // fallback
     overflow: 'hidden',
   },
