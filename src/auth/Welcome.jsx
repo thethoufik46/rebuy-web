@@ -205,7 +205,7 @@ const Welcome = () => {
           </div>
 
           {/* Bottom spacing */}
-          <div style={{ height: '4vh' }} />
+      
         </div>
       </div>
     </div>
