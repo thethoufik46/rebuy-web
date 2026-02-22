@@ -155,7 +155,7 @@ const Welcome = () => {
         <div style={styles.container}>
           {/* Brand Section with Fade-in */}
           <div className="brand-animation" style={styles.brandWrapper}>
-            <h1 style={styles.brandTitle}>RE2BUY</h1>
+            <h1 style={styles.brandTitle}>RE22BUY</h1>
             <p style={styles.brandSubtitle}>USED CAR MARKETPLACE</p>
           </div>
 
