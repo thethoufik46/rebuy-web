@@ -4,7 +4,7 @@ import { Slider } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 
 import CarCard from "@/components/CarCard";
-import { getAllVariants } from "@/services/carVariantApi";
+import { getAllVariants } from "@/services/carVariantApi.js";
 
 /* ================= HELPERS (identical to Flutter) ================= */
 
