@@ -155,7 +155,7 @@ const Welcome = () => {
         <div style={styles.container}>
           {/* Brand Section with Fade-in */}
           <div className="brand-animation" style={styles.brandWrapper}>
-            <h1 style={styles.brandTitle}>RE22BUY</h1>
+            <h1 style={styles.brandTitle}>RE2BUY</h1>
             <p style={styles.brandSubtitle}>USED CAR MARKETPLACE</p>
           </div>
 
@@ -205,7 +205,7 @@ const Welcome = () => {
           </div>
 
           {/* Bottom spacing */}
-      
+   
         </div>
       </div>
     </div>
@@ -214,13 +214,14 @@ const Welcome = () => {
 
 // --- Styles (inline for clarity, can be moved to CSS module) ---
 const styles = {
-  root: {
-    position: 'relative',
-    width: '100vw',
-    height: '100dvh',
-    backgroundColor: '#d6cef3', // fallback
-    overflow: 'hidden',
-  },
+ root: {
+  position: 'fixed',
+  inset: 0,
+  width: '100%',
+  height: '100%',
+  backgroundColor: '#000',
+  overflow: 'hidden',
+},
   video: {
     position: 'absolute',
     top: 0,
