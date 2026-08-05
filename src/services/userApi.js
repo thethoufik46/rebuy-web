@@ -15,7 +15,7 @@ const getAuthHeaders = () => {
 };
 
 /**
- * Handle response and parse JSON
+ * Handle response and parse JSON safely
  * @param {Response} response - Fetch response
  * @returns {Promise<any>} Parsed JSON
  */
@@ -28,7 +28,29 @@ const handleResponse = async (response) => {
   }
 };
 
+/* ================= LOAD DISTRICTS FROM JSON ================= */
+/**
+ * Loads district list from a static JSON file.
+ * Place your JSON file in `public/data/tamilnadu_locations.json`
+ * @returns {Promise<string[]>} Array of district names
+ */
+export const loadDistricts = async () => {
+  try {
+    const res = await fetch('/data/tamilnadu_locations.json');
+    if (!res.ok) throw new Error('Failed to load districts');
+    const data = await res.json();
+    return Object.keys(data);
+  } catch (error) {
+    console.error('❌ loadDistricts error 👉', error);
+    return [];
+  }
+};
+
 /* ================= GET USER DETAILS ================= */
+/**
+ * Fetch current user details
+ * @returns {Promise<Object|null>} User object or null
+ */
 export const getUserDetails = async () => {
   try {
     const res = await fetch(`${BASE_URL}/auth/me`, {
@@ -50,13 +72,36 @@ export const getUserDetails = async () => {
   }
 };
 
+/**
+ * Get user verification status
+ * @returns {Promise<string|null>} Verification status or null
+ */
+export const getUserVerification = async () => {
+  const user = await getUserDetails();
+  return user?.verification || null;
+};
+
 /* ================= UPDATE PROFILE ================= */
-export const updateUserDetails = async ({ name, phone, email, location, address }) => {
+/**
+ * Update user profile details
+ * @param {Object} params
+ * @param {string} params.name
+ * @param {string} [params.phone] – optional
+ * @param {string} params.email
+ * @param {string} params.district
+ * @param {string} params.address
+ * @returns {Promise<boolean>} Success status
+ */
+export const updateUserDetails = async ({ name, phone, email, district, address }) => {
   try {
+    const payload = { name, email, district, address };
+    // phone is optional, only include if provided
+    if (phone) payload.phone = phone;
+
     const res = await fetch(`${BASE_URL}/auth/me`, {
       method: 'PUT',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ name, email, location, address }),
+      body: JSON.stringify(payload),
     });
 
     console.log('UPDATE STATUS 👉', res.status);
@@ -71,6 +116,13 @@ export const updateUserDetails = async ({ name, phone, email, location, address 
 };
 
 /* ================= UPLOAD PROFILE IMAGE ================= */
+/**
+ * Upload a profile image (File or bytes)
+ * @param {Object} params
+ * @param {File} [params.imageFile] – from file input
+ * @param {Uint8Array} [params.imageBytes] – raw image bytes
+ * @returns {Promise<boolean>} Success status
+ */
 export const uploadProfileImage = async ({ imageFile, imageBytes }) => {
   try {
     const token = localStorage.getItem('auth_token');
@@ -79,10 +131,8 @@ export const uploadProfileImage = async ({ imageFile, imageBytes }) => {
     const formData = new FormData();
 
     if (imageFile) {
-      // If it's a File object (from file input)
       formData.append('image', imageFile);
     } else if (imageBytes) {
-      // If we have raw bytes – create a Blob and append
       const blob = new Blob([imageBytes], { type: 'image/png' });
       formData.append('image', blob, 'profile.png');
     } else {
@@ -111,11 +161,21 @@ export const uploadProfileImage = async ({ imageFile, imageBytes }) => {
 };
 
 /* ================= IMAGE VIEW URL ================= */
+/**
+ * Get the full URL for a user's profile image
+ * @param {string} key – image key (filename)
+ * @returns {string} Full image URL
+ */
 export const profileImageUrl = (key) => {
   return `${BASE_URL}/users/image/${key}`;
 };
 
 /* ================= CHANGE PASSWORD ================= */
+/**
+ * Change user password
+ * @param {string} newPassword – new password (plain text)
+ * @returns {Promise<boolean>} Success status
+ */
 export const changePassword = async (newPassword) => {
   try {
     const res = await fetch(`${BASE_URL}/auth/change-password`, {
@@ -136,6 +196,12 @@ export const changePassword = async (newPassword) => {
 };
 
 /* ================= FORGOT PASSWORD REQUEST ================= */
+/**
+ * Request a password reset (forgot password)
+ * @param {string} phone – user's phone number
+ * @param {string} newPassword – new password
+ * @returns {Promise<boolean>} Success status
+ */
 export const forgotRequest = async (phone, newPassword) => {
   try {
     const res = await fetch(`${BASE_URL}/auth/forgot-request`, {
@@ -156,6 +222,10 @@ export const forgotRequest = async (phone, newPassword) => {
 };
 
 /* ================= DELETE ACCOUNT ================= */
+/**
+ * Delete the current user account
+ * @returns {Promise<boolean>} Success status
+ */
 export const deleteMyAccount = async () => {
   try {
     const res = await fetch(`${BASE_URL}/auth/me`, {
@@ -175,7 +245,10 @@ export const deleteMyAccount = async () => {
 };
 
 /* ================= LOGOUT ================= */
+/**
+ * Remove auth token from localStorage (logout)
+ */
 export const logout = () => {
   localStorage.removeItem('auth_token');
-  // Optionally remove other user-related data
+  // Optional: clear other user data if stored
 };

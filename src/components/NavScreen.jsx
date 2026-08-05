@@ -1,19 +1,25 @@
+// src/screens/NavScreen.jsx
+
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { logout } from "@/services/apiService"; // we'll use the logout from apiService
 
 export default function NavScreen() {
   const navigate = useNavigate();
 
   const go = (path) => navigate(path);
 
+  const handleLogout = () => {
+    logout();          // clears localStorage
+    go("/");           // redirect to login/welcome
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-gray-50 flex justify-center">
-      
       <div className="w-full max-w-sm min-h-screen relative">
 
-        {/* 🔹 TOP BAR */}
+        {/* TOP BAR */}
         <div className="flex items-center justify-between p-4">
-
           <GlassIcon onClick={() => navigate(-1)}>
             ←
           </GlassIcon>
@@ -32,7 +38,7 @@ export default function NavScreen() {
           </div>
         </div>
 
-        {/* 🔥 GLASS PANEL */}
+        {/* GLASS PANEL */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -42,6 +48,7 @@ export default function NavScreen() {
 
             <SectionTitle title="Account" />
 
+            {/* ✅ FIXED: "My Profile" navigates to /profile */}
             <NavItem label="My Profile" onClick={() => go("/profile")} />
             <NavItem label="My Orders (ஆர்டர்)" onClick={() => go("/orders")} />
             <NavItem label="Finance (பைனான்ஸ்)" onClick={() => go("/finance")} />
@@ -86,10 +93,7 @@ export default function NavScreen() {
             <NavItem
               label="Logout"
               danger
-              onClick={() => {
-                localStorage.clear();
-                go("/");
-              }}
+              onClick={handleLogout}
             />
           </div>
         </motion.div>
@@ -98,7 +102,7 @@ export default function NavScreen() {
   );
 }
 
-/* ================= UI ================= */
+/* ================= UI Components ================= */
 
 function GlassIcon({ children, onClick }) {
   return (

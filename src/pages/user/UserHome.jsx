@@ -2,14 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Navbar from "./home/Navbar";
-import SlideBanner from "@/pages/user/home/SlideBanner.jsx";
-import HomeBoardTwoButton from "@/pages/user/home/HomeBoardTwoButton.jsx";
-import HomeButtons from "@/pages/user/home/FourButton.jsx";
-import VideocardBuyandSell from "@/pages/user/home/VideocardBuyandSell.jsx";
-import HomeOwncardscroll from "@/pages/user/home/HomeOwncardscroll.jsx";
-import CarGridSection from "@/pages/user/home/CarGridSection.jsx";
-import BikeGridSection from "@/pages/user/home/BikeGridSection.jsx";
 
+import MainPage from "@/pages/user/home/Pages/MainPage";
 const BASE_URL = "https://rebuy-api.onrender.com/api";
 
 export default function UserHome() {
@@ -172,56 +166,12 @@ export default function UserHome() {
 
         {/* SLIDER */}
         <div className="mb-4">
-          <SlideBanner />
+          <MainPage />
         </div>
 
-        {/* BOARD CARDS */}
-        <div className="mb-4">
-          <HomeBoardTwoButton />
-        </div>
+       
 
-        {/* VIDEO */}
-        <div className="mb-4">
-          <VideocardBuyandSell />
-        </div>
-
-        {/* FOUR BUTTONS */}
-        <div className="mb-4">
-          <HomeButtons />
-        </div>
-
-        {/* ✅ VARIANT AUTO SCROLL */}
-      <div className="mb-4">
-  <SectionHeader
-    title="Car Sections"
-    onViewAll={() => navigate("/variants")}
-  />
-
-  <HomeOwncardscroll />
-</div>
-
-        {/* ✅ CAR GRID */}
-        <div className="mb-5">
-          <CarGridSection
-            cars={filteredCars}
-            showViewAllButton={true}
-            onViewAll={() =>
-              navigate("/filter-result", {
-                state: { filteredCars },
-              })
-            }
-          />
-        </div>
-
-        {/* ✅ BIKE GRID */}
-        <div className="mb-5">
-          <BikeGridSection
-            bikes={bikes}
-            onViewAll={() =>
-              navigate("/bike-list", { state: { bikes } })
-            }
-          />
-        </div>
+      
 
      
 

@@ -1,0 +1,297 @@
+{
+  "அரியலூர்": [
+    "Ariyalur", "Sendurai", "Udayarpalayam", "Andimadam", 
+    "Jayankondam", "T.Palur", "Keezhapalur", "Ezhumur", 
+    "Mullikarumbur", "Pakkampatti", "Varadarajanpettai"
+  ],
+  "செங்கல்பட்டு": [
+    "Chengalpattu", "Tambaram", "Pallavaram", "Guduvancheri", 
+    "Maraimalai Nagar", "Madurantakam", "Singaperumalkoil", 
+    "Kattankulathur", "Pammal", "Sembakkam", "Vandalur", 
+    "Vallam", "Padalam", "Thiruporur", "Kunnathur"
+  ],
+  "சென்னை": [
+    "Chennai", "Tondiarpet", "Mylapore", "Velachery", 
+    "Ambattur", "Anna Nagar", "Teynampet", "Adyar", 
+    "Perambur", "Saidapet", "Egmore", "Nungambakkam", 
+    "Kodambakkam", "Mogappair", "Thiruvanmiyur", 
+    "Royapuram", "Washermanpet", "Purasawalkam", 
+    "Kilpauk", "Ayanavaram", "Aminjikarai", "Virugambakkam"
+  ],
+  "கோயம்புத்தூர்": [
+    "Coimbatore", "Pollachi", "Mettupalayam", "Sulur", 
+    "Valparai", "Anaimalai", "Kinathukadavu", "Karumathampatti", 
+    "Periyanaickenpalayam", "Thondamuthur", "Madukkarai", 
+    "Kurichi", "Vedapatti", "Sarkarsamakulam", "Kurudampalayam", 
+    "Singanallur", "Gudalur", "Boluvampatti", "Alanthurai"
+  ],
+  "கடலூர்": [
+    "Cuddalore", "Chidambaram", "Panruti", "Virudhachalam", 
+    "Neyveli", "Bhuvanagiri", "Kattumannarkoil", "Kurinjipadi", 
+    "Vadalur", "Lalpettai", "Komaratchi", "Melbhuvanagiri", 
+    "Pennadam", "Mangalur", "Parangipettai", "Srimushnam"
+  ],
+  "தர்மபுரி": [
+    "Dharmapuri", "Palacode", "Pennagaram", "Harur", 
+    "Karimangalam", "Nallampalli", "Pappireddipatti", 
+    "Kambainallur", "Morangapalli", "Kadathur", "Kottapatti", 
+    "Thoppur", "Bommidi", "Denkanikottai", "Kelamangalam"
+  ],
+  "திண்டுக்கல்": [
+    "Dindigul", "Palani", "Oddanchatram", "Nilakottai", 
+    "Vedasandur", "Kodaikanal", "Vadamadurai", "Natham", 
+    "Batlagundu", "Reddiyarchatram", "Gujiliamparai", 
+    "Athoor", "Sevugampatti", "Kodaikanal Hills", "Palaiyur"
+  ],
+  "ஈரோடு": [
+    "Erode", "Bhavani", "Gobichettipalayam", "Perundurai", 
+    "Sathyamangalam", "Kangeyam", "Modakurichi", "Chennimalai", 
+    "Kodumudi", "Nambiyur", "Thalavadi", "Arachalur", 
+    "Punjai Puliampatti", "Vellakoil", "T.N.Palayam", "Bhavanisagar"
+  ],
+  "கள்ளக்குறிச்சி": [
+    "Kallakurichi", "Chinnasalem", "Sankarapuram", 
+    "Tirukovilur", "Ulundurpettai", "Rishivandiyam", 
+    "Kalakadu", "Gangavalli", "Thiruvakkarai", "Mailam", 
+    "Koliyanur", "Pethappampatti", "Thiyagadurgam"
+  ],
+  "காஞ்சிபுரம்": [
+    "Kanchipuram", "Sriperumbudur", "Uthiramerur", 
+    "Walajabad", "Madurantakam", "Padappai", "Poonamallee", 
+    "Thakkolam", "Perumalpattu", "Kattankulathur", 
+    "Thiruvalangadu", "Mamandur", "Perungalathur", "Vandavasi"
+  ],
+  "கன்னியாகுமரி": [
+    "Nagercoil", "Kanyakumari", "Colachel", "Marthandam", 
+    "Padmanabhapuram", "Thuckalay", "Kuzhithurai", 
+    "Suchindram", "Rajakkamangalam", "Mulagumoodu", 
+    "Killiyoor", "Boothapandi", "Kumarapuram", "Eraniel", 
+    "Palliyadi", "Kurunthencode", "Kulasekharam"
+  ],
+  "கரூர்": [
+    "Karur", "Kulithalai", "Krishnarayapuram", "Aravakurichi", 
+    "Pugalur", "Thanthoni", "Kadavur", "Mayanur", 
+    "Vangal", "Vedasandur", "Pallapatti", "Marudur", 
+    "Velayuthampalayam", "Kuppam", "Mulanur"
+  ],
+  "கிருஷ்ணகிரி": [
+    "Krishnagiri", "Hosur", "Denkanikottai", "Uthangarai", 
+    "Bargur", "Shoolagiri", "Kelamangalam", "Rayakottai", 
+    "Pochampalli", "Madhugiri", "Hogenakkal", "Anchetti", 
+    "Thally", "Soolagiri", "Kaveripattinam", "Mathigiri"
+  ],
+  "மதுரை": [
+    "Madurai", "Melur", "Thirumangalam", "Usilampatti", 
+    "Vadipatti", "T.Kallupatti", "Alanganallur", 
+    "Chellampatti", "Sedapatti", "T.Kallupatti", 
+    "Kallikudi", "Kottampatti", "Paravai", "Samayanallur", 
+    "Othakadai", "Anaiyur", "Thirupparankundram", "Idayapatti"
+  ],
+  "மயிலாடுதுறை": [
+    "Mayiladuthurai", "Sirkazhi", "Kuthalam", 
+    "Tharangambadi", "Kollumangudi", "Poompuhar", 
+    "Thalainayar", "Koradacheri", "Kuthanallur", 
+    "Thiruvengadu", "Thirukadaiyur", "Akkur", "Kodavasal"
+  ],
+  "நாகப்பட்டினம்": [
+    "Nagapattinam", "Velankanni", "Vedaranyam", "Karaikal", 
+    "Thalainayar", "Kilvelur", "Sirkazhi", "Tharangambadi", 
+    "Kollidam", "Keezhaiyur", "Kumaratchi", "Semmankuppam", 
+    "Manjakollai", "Vadakku Mayiladuthurai", "Akkaraipettai"
+  ],
+  "நாமக்கல்": [
+    "Namakkal", "Rasipuram", "Tiruchengode", "Paramathi Velur", 
+    "Kollimalai", "Sendamangalam", "Mohanur", "Puduchatram", 
+    "Kumarapalayam", "Komarapalayam", "Velur", "Erumapatty", 
+    "Pallipalayam", "Mallur", "Kabilarmalai"
+  ],
+  "நீலகிரி": [
+    "Ooty", "Coonoor", "Gudalur", "Kotagiri", 
+    "Kundah", "Pandalur", "Aravenu", "Burliyar", 
+    "Cherangode", "Devala", "Hulikal", "Jakkatala", 
+    "Kattabettu", "Love Dale", "Melinad", "Naduvattam", 
+    "Sholur", "Wellington"
+  ],
+  "பெரம்பலூர்": [
+    "Perambalur", "Kunnam", "Veppanthattai", "Alathur", 
+    "Elambalur", "Puduchatram", "Kurumbalur", "Aranthangi", 
+    "Andimadam", "Muthuveeranpatti", "Sengunam", 
+    "Thuraiyur", "Uppiliapuram", "Viralimalai"
+  ],
+  "புதுக்கோட்டை": [
+    "Pudukkottai", "Aranthangi", "Iluppur", "Thirumayam", 
+    "Ponnamaravathi", "Gandarvakottai", "Karambakudi", 
+    "Avudaiyarkoil", "Manamelkudi", "Thiruvonam", 
+    "Kunnandarkoil", "Keeramangalam", "Kottur", 
+    "Sembiyankottai", "Viralimalai"
+  ],
+  "இராமநாதபுரம்": [
+    "Ramanathapuram", "Paramakudi", "Rameswaram", 
+    "Mudukulathur", "Kadaladi", "Tiruvadanai", 
+    "Kamuthi", "Nainarkoil", "Thondi", "Pamban", 
+    "Mandapam", "Uchipuli", "Abiramam", "Sundarapandianpuram", 
+    "Keezhakarakudi", "Sayalkudi"
+  ],
+  "இராணிப்பேட்டை": [
+    "Ranipet", "Arcot", "Walajah", "Arakkonam", 
+    "Nemili", "Sholinghur", "Kaveripakkam", "Pernambet", 
+    "Thimiri", "Vellore", "Pudupattu", "Vadugapatti", 
+    "Melvisharam", "Kondappanayanapalli", "Naduvaneri"
+  ],
+  "சேலம்": [
+    "Salem", "Attur", "Mettur", "Omalur", "Edappadi", 
+    "Yercaud", "Sankagiri", "Vazhapadi", "Gangavalli", 
+    "Idappadi", "Kadayampatti", "Magudanchavadi", 
+    "Nangavalli", "Pethanaickenpalayam", "Thalaivasal", 
+    "Taramangalam", "Veerapandi"
+  ],
+  "சிவகங்கை": [
+    "Sivaganga", "Karaikudi", "Devakottai", "Manamadurai", 
+    "Ilayangudi", "Kalayarkoil", "Thiruppuvanam", 
+    "S.Pudur", "Kandanur", "Kannankudi", "Mohanur", 
+    "Pallathur", "Sikkal", "Singampunari", "Tirupachetti", 
+    "Vedarpatti"
+  ],
+  "தென்காசி": [
+    "Tenkasi", "Courtallam", "Sankarankovil", 
+    "Kadayanallur", "Shenkottai", "Veerakeralampudur", 
+    "Alangulam", "Puliyangudi", "Vasudevanallur", 
+    "Kadayanallur", "Sivagiri", "Rajapalayam", 
+    "Sankarankovil", "Sivakasi", "Srivilliputhur"
+  ],
+  "தஞ்சாவூர்": [
+    "Thanjavur", "Kumbakonam", "Pattukkottai", "Orathanadu", 
+    "Thiruvaiyaru", "Papanasam", "Ammapettai", "Budalur", 
+    "Madukkur", "Peravurani", "Thirukkuvalai", "Thiruppanandal", 
+    "Thiruvidaimarudur", "Thiruvonam", "Tiruchirappalli"
+  ],
+  "தேனி": [
+    "Theni", "Periyakulam", "Bodinayakanur", "Uthamapalayam", 
+    "Cumbum", "Andipatti", "Bodi", "Chinnamanur", 
+    "Gudalur", "Kamayagoundanpatti", "Kuchanur", 
+    "Megamalai", "Pannaipuram", "Thevaram", "Vadugapatti"
+  ],
+  "தூத்துக்குடி": [
+    "Thoothukudi", "Tiruchendur", "Kovilpatti", "Ettayapuram", 
+    "Kayalpattinam", "Vilathikulam", "Ottapidaram", 
+    "Alwarthirunagiri", "Arumuganeri", "Eral", "Kadambur", 
+    "Kadiapattinam", "Kalugumalai", "Pudur", "Sathankulam", 
+    "Srivaikuntam", "Thisayanvilai"
+  ],
+  "திருச்சிராப்பள்ளி": [
+    "Trichy", "Manapparai", "Musiri", "Lalgudi", 
+    "Srirangam", "Thuraiyur", "Thottiyam", "Pullambadi", 
+    "Uppiliapuram", "Vaiyampatti", "Mannachanallur", 
+    "Thathaiyangarpet", "Marungapuri", "Kattuputhur", 
+    "Thiruverumbur", "Thuvakudi"
+  ],
+  "திருநெல்வேலி": [
+    "Tirunelveli", "Palayamkottai", "Ambasamudram", 
+    "Nanguneri", "Radhapuram", "Sankarankoil", 
+    "Alangulam", "Kadayanallur", "Melaneelithanallur", 
+    "Sivagiri", "Tenkasi", "V.K.Pudur", "Vickramasingapuram", 
+    "Murappanadu", "Puliyankudi", "Sankarankovil"
+  ],
+  "திருப்பத்தூர்": [
+    "Tirupathur", "Vaniyambadi", "Ambur", "Natrampalli", 
+    "Kandili", "Allapuram", "Annavaram", "Gudiyatham", 
+    "K.V.Kuppam", "Madhanur", "Pallikonda", "Pernambut", 
+    "Thuthipattu", "Vadamadurai", "Vellore"
+  ],
+  "திருப்பூர்": [
+    "Tiruppur", "Avinashi", "Dharapuram", "Kangeyam", 
+    "Palladam", "Uthukuli", "Mulanur", "Vellakovil", 
+    "Kunnathur", "Madathukulam", "Moolanur", "Nallur", 
+    "Pongalur", "Sulur", "Thirumoorthy", "Udumalpet", 
+    "Vadugapatti"
+  ],
+  "திருவள்ளூர்": [
+    "Tiruvallur", "Avadi", "Ponneri", "Gummidipoondi", 
+    "Thiruthani", "Pallipattu", "Poonamallee", "Minjur", 
+    "R.K.Pet", "Tiruvottiyur", "Uthukottai", "Vellivoyal", 
+    "Kadambathur", "Periyapalayam", "Puzhal", "Red Hills", 
+    "Tiruninravur"
+  ],
+  "திருவண்ணாமலை": [
+    "Tiruvannamalai", "Arani", "Polur", "Chengam", 
+    "Cheyyar", "Vandavasi", "Thurinjapuram", "Kalasapakkam", 
+    "Keelpennathur", "Kilpennathur", "Melnariyappanur", 
+    "Peranamallur", "Pernametta", "Pudupalayam", 
+    "Thandrampet", "Thellar", "Vembakkam"
+  ],
+  "திருவாரூர்": [
+    "Tiruvarur", "Mannargudi", "Needamangalam", 
+    "Kodavasal", "Thiruthuraipoondi", "Nannilam", 
+    "Kottur", "Muthupet", "Pandavaiyaru", "Tiruvidaimarudur", 
+    "Valangaiman", "Vedaraniam", "Akkur", "Koradacheri", 
+    "Kuthanallur", "Malliyam", "Thiruvettakudi"
+  ],
+  "வேலூர்": [
+    "Vellore", "Katpadi", "Gudiyatham", "Pernambut", 
+    "Ambur", "Arakkonam", "Tirupattur", "Jolarpettai", 
+    "Kaniyambadi", "K.V.Kuppam", "Melmonavoor", 
+    "Nemili", "Pennathur", "Sholinghur", "Thakkolam", 
+    "Vadugapatti", "Walajah"
+  ],
+  "விழுப்புரம்": [
+    "Viluppuram", "Tindivanam", "Gingee", "Kandachipuram", 
+    "Vanur", "Mailam", "Marakkanam", "Melmalayanur", 
+    "Mugaiyur", "Olakkur", "Periyakulam", "Pondy", 
+    "Sankarapuram", "Thiagadurgam", "Thiruvennainallur", 
+    "Vadakkanandal", "Valavanur"
+  ],
+  "விருதுநகர்": [
+    "Virudhunagar", "Sivakasi", "Rajapalayam", "Aruppukkottai", 
+    "Sattur", "Tiruchuli", "Kariapatti", "Narikkudi", 
+    "Srivilliputhur", "Vembakottai", "Watrap", "Alangulam", 
+    "Chathirareddiyapatti", "Elayirampannai", "Kallupatti", 
+    "Koomapatti", "Mallankinaru", "Mamsapuram"
+  ],
+
+"புதுச்சேரி": [
+  "Puducherry",
+  "Oulgaret",
+  "Villianur",
+  "Bahour",
+  "Ariyankuppam",
+  "Mudaliarpet",
+  "Reddiarpalayam",
+  "Lawspet",
+  "Muthialpet",
+  "Kottakuppam",
+  "Kalapet",
+  "Thavalakuppam",
+  "Kirumampakkam",
+  "Nonankuppam",
+  "Abishegapakkam",
+  "Manavely",
+  "Auroville"
+],
+
+"காரைக்கால்": [
+  "Karaikal",
+  "Thirunallar",
+  "Nedungadu",
+  "Neravy",
+  "Tirumalairayanpattinam",
+  "Kottucherry"
+],
+
+"மாஹே": [
+  "Mahe",
+  "Chalakkara",
+  "Palloor",
+  "Pandakkal",
+  "Chembra"
+],
+
+"யானம்": [
+  "Yanam",
+  "Kanakalapeta",
+  "Adavipolam",
+  "Jambavanodai",
+  "Kurasampeta",
+  "Mettakur"
+]
+
+}

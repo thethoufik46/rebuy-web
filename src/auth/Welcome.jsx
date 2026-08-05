@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom'; // if using react-router v6
-import { ArrowRight3, TickCircle } from 'iconsax-react'; // make sure iconsax-react is installed
-
-// Replace with your actual asset path
-import carIcon from '../assets/icons/caricon.png'; 
+import { useNavigate } from 'react-router-dom';
+import { ArrowRight3, TickCircle, VolumeHigh, VolumeSlash } from 'iconsax-react';
+import carIcon from '../assets/icons/caricon.png';
 
 const Welcome = () => {
   const navigate = useNavigate();
@@ -13,6 +11,7 @@ const Welcome = () => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [containerWidth, setContainerWidth] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isMuted, setIsMuted] = useState(false); // ✅ starts with sound ON
 
   // Refs
   const containerRef = useRef(null);
@@ -20,24 +19,32 @@ const Welcome = () => {
   const videoRef = useRef(null);
 
   // Constants
-  const BUTTON_SIZE = 60; // width & height of the draggable button
+  const BUTTON_SIZE = 60;
   const maxDrag = Math.max(0, containerWidth - BUTTON_SIZE);
 
   // --- Video setup ---
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play().catch(err => console.log('Video autoplay failed:', err));
+    const video = videoRef.current;
+    if (video) {
+      video.play().catch(err => console.log('Autoplay blocked:', err));
     }
   }, []);
 
-  // --- Measure container width on mount and resize ---
+  // Toggle sound
+  const toggleSound = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    }
+  };
+
+  // --- Measure container width ---
   useEffect(() => {
     const measureWidth = () => {
       if (containerRef.current) {
         setContainerWidth(containerRef.current.offsetWidth);
       }
     };
-
     measureWidth();
     window.addEventListener('resize', measureWidth);
     return () => window.removeEventListener('resize', measureWidth);
@@ -45,7 +52,7 @@ const Welcome = () => {
 
   // --- Drag handlers ---
   const handleDragStart = useCallback((e) => {
-    e.preventDefault(); // prevent text selection
+    e.preventDefault();
     setIsDragging(true);
   }, []);
 
@@ -53,13 +60,12 @@ const Welcome = () => {
     (e) => {
       if (!isDragging || isCompleted || !containerRef.current) return;
 
-      // Get touch/mouse coordinates
       const clientX = e.type.startsWith('touch')
         ? e.touches[0].clientX
         : e.clientX;
 
       const containerRect = containerRef.current.getBoundingClientRect();
-      const newLeft = clientX - containerRect.left - BUTTON_SIZE / 2; // center button under cursor
+      const newLeft = clientX - containerRect.left - BUTTON_SIZE / 2;
       const clamped = Math.min(maxDrag, Math.max(0, newLeft));
 
       setDragPosition(clamped);
@@ -69,23 +75,17 @@ const Welcome = () => {
 
   const handleDragEnd = useCallback(() => {
     if (!isDragging || isCompleted) return;
-
     setIsDragging(false);
 
-    // Check if dragged far enough to complete
     if (dragPosition > maxDrag * 0.9) {
       setIsCompleted(true);
-      // Navigate after a short delay to show the tick animation
-      setTimeout(() => {
-        navigate('/register'); // adjust route as needed
-      }, 500);
+      setTimeout(() => navigate('/register'), 500);
     } else {
-      // Reset to start
       setDragPosition(0);
     }
   }, [isDragging, isCompleted, dragPosition, maxDrag, navigate]);
 
-  // Attach global move/up events when dragging
+  // Attach global events
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', handleDragMove);
@@ -98,7 +98,6 @@ const Welcome = () => {
       window.removeEventListener('mouseup', handleDragEnd);
       window.removeEventListener('touchend', handleDragEnd);
     }
-
     return () => {
       window.removeEventListener('mousemove', handleDragMove);
       window.removeEventListener('touchmove', handleDragMove);
@@ -107,7 +106,7 @@ const Welcome = () => {
     };
   }, [isDragging, handleDragMove, handleDragEnd]);
 
-  // --- Animation keyframes (injected as style tag) ---
+  // --- Inject keyframes ---
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
@@ -132,9 +131,7 @@ const Welcome = () => {
       }
     `;
     document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    };
+    return () => document.head.removeChild(style);
   }, []);
 
   return (
@@ -142,30 +139,33 @@ const Welcome = () => {
       {/* Video Background */}
       <video
         ref={videoRef}
-        src="https://res.cloudinary.com/dtqxc3rmt/video/upload/v1767108059/car_vid_kiee4t.mp4"
+        src="https://pub-73dec08cb6464c74a1b1bb96b4279b12.r2.dev/APP%20VIDEOS%20UPLOAD/intro.mp4"
         loop
-        muted
+        muted={isMuted}
         autoPlay
         playsInline
         style={styles.video}
       />
 
-      {/* Safe Area Content */}
+      {/* Sound Toggle Button */}
+      <button onClick={toggleSound} style={styles.soundButton}>
+        {isMuted ? <VolumeSlash size={24} color="white" /> : <VolumeHigh size={24} color="white" />}
+      </button>
+
+      {/* Main Content - Centered on desktop */}
       <div style={styles.safeArea}>
         <div style={styles.container}>
-          {/* Brand Section with Fade-in */}
+          {/* Brand Section */}
           <div className="brand-animation" style={styles.brandWrapper}>
             <h1 style={styles.brandTitle}>RE2BUY</h1>
             <p style={styles.brandSubtitle}>USED CAR MARKETPLACE</p>
           </div>
 
-          {/* Spacer to push swipe bar down */}
           <div style={{ flex: 1 }} />
 
-          {/* Glassmorphism Swipe Bar */}
+          {/* Swipe Bar */}
           <div style={styles.swipeBarWrapper} ref={containerRef}>
             <div style={styles.swipeBar}>
-              {/* Centered text + arrows (hidden when completed) */}
               {!isCompleted && (
                 <div style={styles.centerContent}>
                   <span style={styles.getStartedText}>Get Started</span>
@@ -177,7 +177,6 @@ const Welcome = () => {
                 </div>
               )}
 
-              {/* Completion tick */}
               {isCompleted && (
                 <div style={styles.centerContent}>
                   <TickCircle size={30} color="black" />
@@ -192,36 +191,36 @@ const Welcome = () => {
                 style={{
                   ...styles.dragButton,
                   left: dragPosition,
+                  transition: isDragging ? 'none' : 'left 0.12s ease',
                 }}
               >
                 <img src={carIcon} alt="car" style={styles.carIcon} />
               </div>
 
-              {/* Right side tick icon (always visible) */}
+              {/* Right tick */}
               <div style={styles.rightTick}>
                 <TickCircle size={22} color="black" />
               </div>
             </div>
           </div>
 
-          {/* Bottom spacing */}
-   
+          <div style={{ height: '4vh' }} />
         </div>
       </div>
     </div>
   );
 };
 
-// --- Styles (inline for clarity, can be moved to CSS module) ---
+// --- Styles ---
 const styles = {
- root: {
-  position: 'fixed',
-  inset: 0,
-  width: '100%',
-  height: '100%',
-  backgroundColor: '#000',
-  overflow: 'hidden',
-},
+  root: {
+    position: 'fixed',
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#000',
+    overflow: 'hidden',
+  },
   video: {
     position: 'absolute',
     top: 0,
@@ -230,6 +229,23 @@ const styles = {
     height: '100%',
     objectFit: 'cover',
     zIndex: 0,
+  },
+  soundButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    zIndex: 10,
+    background: 'rgba(0,0,0,0.5)',
+    border: 'none',
+    borderRadius: '50%',
+    width: 48,
+    height: 48,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    backdropFilter: 'blur(4px)',
+    border: '1px solid rgba(255,255,255,0.2)',
   },
   safeArea: {
     position: 'relative',
@@ -240,21 +256,28 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     boxSizing: 'border-box',
+    // Desktop centering
+    '@media (min-width: 768px)': {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
   },
   container: {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
+    maxWidth: 600,
+    margin: '0 auto',
+    width: '100%',
   },
   brandWrapper: {
     textAlign: 'center',
-    opacity: 0, // initial hidden, animation will set to 1
+    opacity: 0,
     transform: 'translateY(30px)',
-    animationFillMode: 'forwards', // handled by class but keep fallback
   },
   brandTitle: {
-    fontSize: '16vw', // responsive
+    fontSize: 'clamp(2.8rem, 16vw, 5rem)',
     fontWeight: 900,
     letterSpacing: 4,
     color: 'white',
@@ -263,7 +286,7 @@ const styles = {
     lineHeight: 1.2,
   },
   brandSubtitle: {
-    fontSize: '3.3vw',
+    fontSize: 'clamp(0.9rem, 3.3vw, 1.6rem)',
     letterSpacing: 4.5,
     fontWeight: 300,
     color: 'rgba(255,255,255,0.8)',
@@ -276,8 +299,7 @@ const styles = {
   },
   swipeBar: {
     position: 'relative',
-    height: '7.5vh',
-    minHeight: 50,
+    height: 'clamp(50px, 7.5vh, 80px)',
     backgroundColor: 'rgba(255,255,255,0.55)',
     backdropFilter: 'blur(6px)',
     WebkitBackdropFilter: 'blur(6px)',
@@ -286,8 +308,7 @@ const styles = {
     boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
     display: 'flex',
     alignItems: 'center',
-    // Overflow hidden to clip button shadow?
-    overflow: 'hidden', // needed so the button doesn't go outside border-radius
+    overflow: 'hidden',
   },
   centerContent: {
     position: 'absolute',
@@ -298,13 +319,13 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    pointerEvents: 'none', // allow clicks to pass through to draggable button
+    pointerEvents: 'none',
   },
   getStartedText: {
     fontWeight: 600,
     color: 'black',
     marginRight: 8,
-    fontSize: '1rem',
+    fontSize: 'clamp(0.9rem, 1.5vw, 1.2rem)',
   },
   arrowGroup: {
     display: 'flex',
@@ -325,11 +346,8 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'grab',
-    transition: isDragging => isDragging ? 'none' : 'left 0.1s ease', // smooth return when reset
-    // transition handled conditionally? We'll apply a class or inline style. For simplicity, we'll set transition in JS style with a state? Actually better to keep transition for left changes when not dragging.
-    // We'll set transition in the component dynamically via style, but we need to know if dragging. We'll add a style property inside component.
-    // For now, we'll set a default transition, and remove it during drag via a state class.
-    // We'll handle it with a separate CSS class.
+    top: '50%',
+    transform: 'translateY(-50%)',
   },
   carIcon: {
     width: 40,
@@ -346,16 +364,8 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    pointerEvents: 'none', // not interactive
+    pointerEvents: 'none',
   },
 };
-
-// To handle dynamic transition on drag button (remove transition while dragging for immediate movement)
-// We'll create a custom style that adds transition only when not dragging.
-// We'll add a state `isDragging` and pass it to style.
-// Update the dragButton style inside component to:
-// transition: isDragging ? 'none' : 'left 0.12s ease',
-// But since we need to access isDragging inside styles object, we'll move it inline.
-// So we'll modify the component to use inline style for the button.
 
 export default Welcome;
