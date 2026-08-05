@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 /* AUTH */
 import Welcome from "@/auth/Welcome";
@@ -24,26 +24,46 @@ import HomeOwnCardScrollFilter from "@/pages/user/home/HomeOwnCardScrollFilter";
 import NavScreen from "@/components/NavScreen";
 
 export default function App() {
+  const token = localStorage.getItem("auth_token");
+
   return (
     <BrowserRouter>
       <Routes>
 
-        <Route path="/" element={<Welcome />} />
-        <Route path="/login" element={<LoginLogic />} />
+        {/* Auto Login */}
+        <Route
+          path="/"
+          element={
+            token ? <Navigate to="/home" replace /> : <Welcome />
+          }
+        />
+
+        <Route
+          path="/login"
+          element={
+            token ? <Navigate to="/home" replace /> : <LoginLogic />
+          }
+        />
+
         <Route path="/register" element={<Register />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/disclaimer" element={<DisclaimerDialog />} />
 
-        <Route path="/home" element={<UserHome />} />
+        {/* Protected Pages */}
+        <Route
+          path="/home"
+          element={
+            token ? <UserHome /> : <Navigate to="/login" replace />
+          }
+        />
+
         <Route path="/menu" element={<NavScreen />} />
         <Route path="/notifications" element={<NotificationScreen />} />
         <Route path="/filter" element={<FilterScreen />} />
         <Route path="/filter-result" element={<FilterResultScreen />} />
         <Route path="/slide" element={<SlideBanner />} />
-
         <Route path="/car/:carId" element={<CarDetails />} />
 
-        {/* ✅ VARIANT FILTER PAGE */}
         <Route
           path="/variant/:variant"
           element={<HomeOwnCardScrollFilter />}

@@ -28,7 +28,7 @@ export default function LoginLogic() {
         passwordAudio.current.currentTime = 0;
         passwordAudio.current.play();
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const handleChange = (e) => {
@@ -66,10 +66,13 @@ export default function LoginLogic() {
         return;
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user");
+      navigate("/login");
 
       navigate("/home");
+
+
     } catch (err) {
       setLoading(false);
       alert("Server error");
