@@ -1,76 +1,16 @@
 // src/pages/user/home/property/PropertyGridSection.jsx
 import { useNavigate } from "react-router-dom";
+import PropertyCard from "@/components/PropertyCard"; // ✅ imported external component
 
 // ─── Skeleton Card (Shimmer) ──────────────────────────────
 const SkeletonCard = () => {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
-      <div className="h-32 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer" />
+    <div className="bg-white rounded-2xl overflow-hidden shadow-sm h-full flex flex-col">
+      <div className="flex-1 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer" />
       <div className="p-3 space-y-2">
         <div className="h-4 bg-gray-200 rounded w-3/4" />
         <div className="h-4 bg-gray-200 rounded w-1/2" />
         <div className="h-3 bg-gray-200 rounded w-2/3" />
-      </div>
-    </div>
-  );
-};
-
-// ─── Property Card ──────────────────────────────────────────
-const PropertyCard = ({ property, onClick }) => {
-  const {
-    _id,
-    bannerImage,
-    price,
-    mainType,
-    category,
-    district,
-    city,
-    bedrooms,
-    landArea,
-    direction,
-    status,
-  } = property;
-
-  const location = city ? `${city}, ${district}` : district || "Location";
-
-  return (
-    <div
-      onClick={onClick}
-      className="bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-    >
-      <div className="relative h-32 bg-slate-200">
-        {bannerImage ? (
-          <img
-            src={bannerImage}
-            alt={mainType || "Property"}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-400 text-sm">
-            No Image
-          </div>
-        )}
-        {status && status !== "available" && (
-          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-            {status}
-          </div>
-        )}
-      </div>
-      <div className="p-3 space-y-1">
-        <div className="flex justify-between items-start">
-          <p className="text-sm font-semibold truncate">
-            ₹{price?.toLocaleString() || "N/A"}
-          </p>
-          <span className="text-xs text-slate-500">{mainType || ""}</span>
-        </div>
-        <p className="text-xs text-slate-600 truncate">
-          {category || "Property"} • {location}
-        </p>
-        <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-          {bedrooms && <span>🛏 {bedrooms}</span>}
-          {landArea && <span>📐 {landArea}</span>}
-          {direction && <span>🧭 {direction}</span>}
-        </div>
       </div>
     </div>
   );
@@ -85,16 +25,17 @@ export default function PropertyGridSection({
 }) {
   const navigate = useNavigate();
 
-  // Show first 6 properties (matching Flutter's 2 columns × 3 rows)
   const visibleProperties = properties.slice(0, 6);
 
   // ─── Loading state ──────────────────────────────────────
   if (loading) {
     return (
       <div className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-3 gap-y-3.5">
           {Array.from({ length: 6 }).map((_, i) => (
-            <SkeletonCard key={i} />
+            <div key={i} className="aspect-[0.72] xl:aspect-[0.78]">
+              <SkeletonCard />
+            </div>
           ))}
         </div>
         {showViewAllButton && (
@@ -117,14 +58,33 @@ export default function PropertyGridSection({
   // ─── Render cards ──────────────────────────────────────
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
-        {visibleProperties.map((property) => (
-          <PropertyCard
-            key={property._id}
-            property={property}
-            onClick={() => navigate(`/property/${property._id}`)}
-          />
-        ))}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-3 gap-y-3.5">
+        {visibleProperties.map((property) => {
+          const id = property._id;
+          return (
+            <div
+              key={id}
+              className="cursor-pointer aspect-[0.72] xl:aspect-[0.78]"
+              onClick={() => navigate(`/property/${id}`)}
+            >
+              {/* ✅ Use external PropertyCard with exact props */}
+              <PropertyCard
+                propertyId={id}
+                mainType={property.mainType}
+                category={property.category}
+                price={property.price}
+                imageUrl={property.bannerImage}
+                status={property.status}
+                district={property.district}
+                city={property.city}
+                bedrooms={property.bedrooms}
+                landArea={property.landArea}
+                direction={property.direction}
+                onTap={() => navigate(`/property/${id}`)}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {showViewAllButton && (

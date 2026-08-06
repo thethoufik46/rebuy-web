@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import BikeGridSection from "../BikeGridSection";
+import BikeGridSection from "./bike/BikeGridSection";
 
 const BASE_URL = "https://rebuy-api.onrender.com/api";
 
@@ -74,45 +74,7 @@ export default function BikesPage() {
   // ─── Render ──────────────────────────────────────────────
   return (
     <div className="space-y-4">
-      {/* Search + Filter Button (optional, can keep gear for future filter page) */}
-      <div className="flex items-center gap-2 w-full">
-        <div className="relative flex-1">
-          <input
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Search bike brand..."
-            className="
-              w-full px-4 py-3
-              rounded-full
-              bg-white
-              shadow-sm
-              outline-none
-            "
-          />
-
-          {suggestions.length > 0 && (
-            <div className="absolute w-full bg-white rounded-xl mt-2 shadow-lg z-50">
-              {suggestions.map((s) => (
-                <div
-                  key={s}
-                  onClick={() => handleSuggestionClick(s)}
-                  className="px-4 py-2 hover:bg-slate-100 cursor-pointer text-sm"
-                >
-                  {s}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Optional filter button – you can link to a bike filter page if needed */}
-        <button
-          onClick={() => navigate("/bike-filter")}
-          className="w-12 h-12 rounded-xl bg-white shadow-sm"
-        >
-          ⚙
-        </button>
-      </div>
+    
 
       {/* Bike Grid */}
       <BikeGridSection

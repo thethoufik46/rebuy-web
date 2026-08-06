@@ -169,14 +169,6 @@ export default function UserHome() {
           <MainPage />
         </div>
 
-       
-
-      
-
-     
-
-    
-
      
       </div>
     </div>

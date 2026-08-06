@@ -94,7 +94,7 @@ export default function RealEstatePage() {
   // ─── Render ──────────────────────────────────────────────
   return (
     <div className="space-y-4">
-      <SlideBanner />
+   
 
       <SectionHeader
         title="Property Sections"

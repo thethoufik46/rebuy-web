@@ -6,14 +6,25 @@ import carIcon from '../assets/icons/caricon.png';
 const Welcome = () => {
   const navigate = useNavigate();
 
-  // State
+  // ============================================
+  // ✅ AUTO-LOGIN CHECK (SAFEST APPROACH)
+  // Runs before everything else – redirects if token exists
+  // ============================================
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+      navigate("/home", { replace: true });
+    }
+  }, [navigate]);
+
+  // ---------- State ----------
   const [dragPosition, setDragPosition] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [containerWidth, setContainerWidth] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isMuted, setIsMuted] = useState(false); // ✅ starts with sound ON
 
-  // Refs
+  // ---------- Refs ----------
   const containerRef = useRef(null);
   const buttonRef = useRef(null);
   const videoRef = useRef(null);

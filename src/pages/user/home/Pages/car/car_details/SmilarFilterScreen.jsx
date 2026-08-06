@@ -1,4 +1,4 @@
-// C:\flutter_projects\rebuy-web\src\pages\user\car_sections\car_details\SimilarFilterScreen.jsx
+// src/pages/user/home/Pages/car/car_details/SimilarFilterScreen.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -37,9 +37,7 @@ export default function SimilarFilterScreen() {
     loadSimilar();
   }, [car]);
 
-  if (!car) {
-    return <div>No car data</div>;
-  }
+  if (!car) return <div>No car data</div>;
 
   const brand = brandName(car);
 
@@ -60,14 +58,33 @@ export default function SimilarFilterScreen() {
       ) : (
         <div className="p-4">
           <div className="grid grid-cols-2 gap-3.5">
-            {cars.map(c => (
-              <div
-                key={c._id?.toString()}
-                onClick={() => navigate(`/car/${c._id}`, { state: { car: c } })}
-              >
-                <CarCard {...c} />
-              </div>
-            ))}
+            {cars.map(c => {
+              const id = c._id?.toString() || '';
+              return (
+                <div
+                  key={id}
+                  onClick={() => navigate(`/car/${id}`, { state: { car: c } })}
+                >
+                  <CarCard
+                    carId={id}
+                    brandName={c.brand?.name}
+                    brandLogoUrl={c.brand?.logo}
+                    variant={c.variantName}
+                    model={c.model}
+                    imageUrl={c.bannerImage}
+                    price={c.price}
+                    fuel={c.fuel}
+                    year={c.year}
+                    status={c.status}
+                    km={c.km}
+                    owner={c.owner}
+                    transmission={c.transmission}
+                    district={c.district}
+                    city={c.city}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

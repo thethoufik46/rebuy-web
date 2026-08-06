@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import SlideBanner from "../SlideBanner";
 import HomeBoardTwoButton from "../HomeBoardTwoButton";
 import HomeOwncardscroll from "../HomeOwncardscroll";
-import CarGridSection from "../CarGridSection";
+import CarGridSection from "./car/CarGridSection";
 
 const BASE_URL = "https://rebuy-api.onrender.com/api";
 
@@ -99,47 +99,7 @@ export default function CarsPage() {
   // ─── Render ──────────────────────────────────────────────
   return (
     <div className="space-y-4">
-      {/* Search + Filter Button */}
-      <div className="flex items-center gap-2 w-full">
-        <div className="relative flex-1">
-          <input
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Search brand..."
-            className="
-              w-full px-4 py-3
-              rounded-full
-              bg-white
-              shadow-sm
-              outline-none
-            "
-          />
-
-          {suggestions.length > 0 && (
-            <div className="absolute w-full bg-white rounded-xl mt-2 shadow-lg z-50">
-              {suggestions.map((s) => (
-                <div
-                  key={s}
-                  onClick={() => handleSuggestionClick(s)}
-                  className="px-4 py-2 hover:bg-slate-100 cursor-pointer text-sm"
-                >
-                  {s}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <button
-          onClick={() => navigate("/filter")}
-          className="w-12 h-12 rounded-xl bg-white shadow-sm"
-        >
-          ⚙
-        </button>
-      </div>
-
-      {/* Slider */}
-      <SlideBanner />
+    
 
       {/* Board Tabs */}
       <HomeBoardTwoButton

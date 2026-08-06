@@ -1,8 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import BikeCard from "@/components/BikeCard"; // ✅ adjust if needed
+import BikeCard from "@/components/BikeCard";
 
-/* ================= SAFE HELPERS (Flutter identical) ================= */
+/* ================= SAFE HELPERS ================= */
 
 const extractId = (value) => {
   if (!value) return "";
@@ -67,11 +67,9 @@ export default function BikeGridSection({
 
   return (
     <div className="flex flex-col">
-
-      {/* ✅ GRID – EXACT Flutter spacing */}
-      <div className="grid grid-cols-2 gap-x-3 gap-y-3.5">
-        {/* gap-x-3 = 12px
-            gap-y-3.5 ≈ 14px */}
+      {/* ✅ UPDATED GRID – responsive columns */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-3 gap-y-3.5">
+        {/* gap-x-3 = 12px, gap-y-3.5 ≈ 14px */}
         
         {bikesToShow.map((bike) => {
           const id = extractId(bike._id);
@@ -84,7 +82,8 @@ export default function BikeGridSection({
               onClick={() =>
                 navigate(`/bike/${id}`, { state: { bike } })
               }
-              className="cursor-pointer"
+              // ✅ responsive aspect ratio – same as car cards
+              className="cursor-pointer aspect-[0.72] xl:aspect-[0.78]"
             >
               <BikeCard
                 bikeId={id}
@@ -104,7 +103,7 @@ export default function BikeGridSection({
         })}
       </div>
 
-      {/* ✅ VIEW ALL BUTTON (Flutter identical) */}
+      {/* ✅ VIEW ALL BUTTON */}
       {bikes.length > 1 && (
         <div className="py-3.5">
           <button

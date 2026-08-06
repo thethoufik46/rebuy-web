@@ -89,8 +89,7 @@ export default function ElectronicsPage() {
 
   return (
     <div className="space-y-4">
-      <SlideBanner />
-
+  
       <SectionHeader
         title="Electronics"
         subtitle="மொபைல் / லேப்டாப் / PC"

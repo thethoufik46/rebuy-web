@@ -55,50 +55,54 @@ export default function Register() {
   };
 
   const handleRegister = async () => {
-    if (loading) return;
-    if (!agree) {
-      alert("Please accept Terms & Conditions");
-      return;
-    }
-    if (!form.name || !form.phone || !form.password || !form.district) {
-      alert("All fields required");
-      return;
-    }
+  if (loading) return;
 
-    // Phone validation
-    if (form.phone.length !== 10) {
-      alert("Phone number must be exactly 10 digits");
-      return;
-    }
+  if (!agree) {
+    alert("Please accept Terms & Conditions");
+    return;
+  }
 
-    // Password validation
-    if (form.password.length < 6) {
-      alert("Password must be at least 6 digits");
-      return;
-    }
+  if (!form.name || !form.phone || !form.password || !form.district) {
+    alert("All fields required");
+    return;
+  }
 
-    try {
-      setLoading(true);
-      const payload = {
-        name: form.name,
-        phone: form.phone,
-        password: form.password,
-        category: form.category,
-        district: form.district,
-        address: "NA",
-      };
-      const res = await registerUser(payload);
-      setLoading(false);
-      if (res.success) {
-        navigate("/disclaimer");
-      } else {
-        alert(res.message || "Registration failed");
-      }
-    } catch (err) {
-      setLoading(false);
-      alert("Network error");
+  if (form.phone.length !== 10) {
+    alert("Phone number must be exactly 10 digits");
+    return;
+  }
+
+  if (form.password.length < 6) {
+    alert("Password must be at least 6 digits");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const payload = {
+      name: form.name,
+      phone: form.phone,
+      password: form.password,
+      category: form.category,
+      district: form.district,
+      address: "NA",
+    };
+
+    const res = await registerUser(payload);
+
+    setLoading(false);
+
+    if (res.success) {
+      navigate("/disclaimer", { replace: true });
+    } else {
+      alert(res.message || "Registration failed");
     }
-  };
+  } catch (err) {
+    setLoading(false);
+    alert("Network error");
+  }
+};
 
   return (
     <div className="relative min-h-screen overflow-hidden">

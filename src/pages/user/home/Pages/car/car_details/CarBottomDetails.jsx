@@ -1,4 +1,4 @@
-// C:\flutter_projects\rebuy-web\src\pages\user\car_sections\car_details\CarBottomDetails.jsx
+// src/pages/user/home/Pages/car/car_details/CarBottomDetails.jsx
 import React from 'react';
 import { FaCalendarAlt, FaGasPump, FaTachometerAlt, FaUser } from 'react-icons/fa';
 
@@ -57,25 +57,18 @@ export default function CarBottomDetails({ car }) {
 
   return (
     <div className="px-0.5">
-      {/* TOP PRICE ROW */}
       <div className="flex justify-between">
         <PriceBlock label="Price" value={`₹${price}`} />
         <PriceBlock label="Down Payment" value="CIBIL Based" />
       </div>
-
       <div className="h-6" />
-
-      {/* SPECS CARD */}
       <div className="bg-white rounded-2xl shadow-md py-2.5 px-1.5 flex justify-between" style={{ boxShadow: '0 5px 12px rgba(0,0,0,0.08)' }}>
         <SpecItem icon={<FaCalendarAlt />} label="Year" value={year} />
         <SpecItem icon={<FaGasPump />} label="Fuel" value={fuel} />
         <SpecItem icon={<FaTachometerAlt />} label="KM" value={km} />
         <SpecItem icon={<FaUser />} label="Owner" value={value('owner')} />
       </div>
-
       <div className="h-4.5" />
-
-      {/* DETAILS LIST */}
       <div className="bg-[#FFF3CD] rounded-2xl p-1.5">
         <DetailRow label="Brand" value={brand} />
         <DetailRow label="Variant" value={variant} />
@@ -91,10 +84,7 @@ export default function CarBottomDetails({ car }) {
         <DetailRow label="Seller Info" value={sellerInfo} />
         <DetailRow label="Status" value={status} />
       </div>
-
       <div className="h-4" />
-
-      {/* DESCRIPTION + FINAL PRICE */}
       <div className="bg-white rounded-2xl border border-black/10 px-5 py-4">
         <p className="text-black/60 font-medium">Description</p>
         <p className="text-black font-bold leading-relaxed mt-1.5">{description}</p>

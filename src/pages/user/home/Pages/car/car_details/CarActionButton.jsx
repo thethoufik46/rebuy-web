@@ -1,4 +1,4 @@
-// C:\flutter_projects\rebuy-web\src\pages\user\car_sections\car_details\CarActionButton.jsx
+// src/pages/user/home/Pages/car/car_details/CarActionButton.jsx
 import React from 'react';
 
 export default function CarActionButton({ onBuy, onContact, onShare }) {

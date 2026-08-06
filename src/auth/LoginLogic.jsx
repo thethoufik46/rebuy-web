@@ -35,49 +35,51 @@ export default function LoginLogic() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleLogin = async () => {
-    if (loading) return;
+const handleLogin = async () => {
+  if (loading) return;
 
-    if (!form.identifier || !form.password) {
-      alert("Please enter phone/email & password");
+  if (!form.identifier || !form.password) {
+    alert("Please enter phone/email & password");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        identifier: form.identifier.trim(),
+        password: form.password.trim(),
+      }),
+    });
+
+    const data = await res.json();
+
+    setLoading(false);
+
+    if (!data.success || !data.token) {
+      alert(data.message || "Login failed");
       return;
     }
 
-    try {
-      setLoading(true);
+    // ✅ Save login data
+    localStorage.setItem("auth_token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
 
-      const res = await fetch(`${API_BASE}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          identifier: form.identifier.trim(),
-          password: form.password.trim(),
-        }),
-      });
+    // ✅ Go to Home
+    navigate("/home", { replace: true });
 
-      const data = await res.json();
-
-      setLoading(false);
-
-      if (!data.success || !data.token) {
-        alert(data.message || "Login failed");
-        return;
-      }
-
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("user");
-      navigate("/login");
-
-      navigate("/home");
+  } catch (err) {
+    setLoading(false);
+    alert("Server error");
+  }
+};
 
 
-    } catch (err) {
-      setLoading(false);
-      alert("Server error");
-    }
-  };
 
   return (
     <Login

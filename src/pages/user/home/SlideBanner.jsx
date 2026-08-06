@@ -45,34 +45,38 @@ export default function SlideBanner() {
   };
 
   return (
-    <div>
-      <div className="relative w-full overflow-hidden">
+    <div className="w-full max-w-md mx-auto">
+      <div className="relative overflow-hidden">
         <div
           className="flex transition-transform duration-500 ease-in-out"
-          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          style={{
+            transform: `translateX(-${currentIndex * 100}%)`,
+          }}
         >
           {banners.map((img, index) => (
-            <div key={index} className="min-w-full px-[14px] box-border">
+            <div key={index} className="min-w-full px-[14px]">
               <div
-                className="h-[170px] rounded-xl bg-cover bg-center"
-                style={{ backgroundImage: `url(${img})` }}
+                className="h-[170px] sm:h-[200px] rounded-2xl bg-cover bg-center shadow-lg"
+                style={{
+                  backgroundImage: `url(${img})`,
+                }}
               />
             </div>
           ))}
         </div>
       </div>
 
-      {/* DOTS */}
-      <div className="flex justify-center mt-2">
+      {/* Dots */}
+      <div className="flex justify-center mt-3 gap-2">
         {banners.map((_, i) => (
-          <div
+          <button
             key={i}
             onClick={() => goToSlide(i)}
-            className="h-[5px] mx-[4px] rounded-full cursor-pointer transition-all"
-            style={{
-              width: currentIndex === i ? 16 : 5,
-              backgroundColor: currentIndex === i ? "#1976d2" : "#b0b0b0",
-            }}
+            className={`rounded-full transition-all duration-300 ${
+              currentIndex === i
+                ? "w-5 h-2 bg-blue-600"
+                : "w-2 h-2 bg-gray-400"
+            }`}
           />
         ))}
       </div>

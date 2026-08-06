@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import CarCard from "@/components/CarCard";
 import { getAllVariants } from "@/services/carVariantApi";
 
-/* ================= HELPERS (Flutter identical) ================= */
+/* ================= HELPERS ================= */
 
 const extractId = (value) => {
   if (!value) return "";
@@ -58,7 +58,7 @@ export default function CarGridSection({ cars = [], onViewAll, showViewAllButton
   const navigate = useNavigate();
   const [variantMap, setVariantMap] = useState({});
 
-  /* ================= LOAD VARIANTS (Flutter cache logic) ================= */
+  /* ================= LOAD VARIANTS ================= */
 
   useEffect(() => {
     const loadVariants = async () => {
@@ -107,7 +107,7 @@ export default function CarGridSection({ cars = [], onViewAll, showViewAllButton
 
   if (!carsToShow.length) return null;
 
-  /* ================= ANIMATION (Flutter staggeredGrid feel) ================= */
+  /* ================= ANIMATION ================= */
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -124,15 +124,15 @@ export default function CarGridSection({ cars = [], onViewAll, showViewAllButton
 
   return (
     <div>
-      {/* ✅ GRID — EXACT Flutter spacing */}
+      {/* ✅ UPDATED GRID – mobile 2, tablet 4, desktop 6 */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-2"
+        className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6"
         style={{
-          columnGap: "12px",   // crossAxisSpacing
-          rowGap: "14px",      // mainAxisSpacing
+          columnGap: "12px",
+          rowGap: "14px",
         }}
       >
         {carsToShow.map((car) => {
@@ -145,10 +145,8 @@ export default function CarGridSection({ cars = [], onViewAll, showViewAllButton
               onClick={() =>
                 navigate(`/car/${carId}`, { state: { car } })
               }
-              style={{
-                aspectRatio: "0.72",  // childAspectRatio 🔥🔥🔥
-              }}
-              className="cursor-pointer"
+              // ✅ UPDATED – taller cards on XL screens
+              className="cursor-pointer aspect-[0.72] xl:aspect-[0.78]"
             >
               <CarCard
                 carId={carId}
@@ -172,7 +170,7 @@ export default function CarGridSection({ cars = [], onViewAll, showViewAllButton
         })}
       </motion.div>
 
-      {/* ✅ VIEW ALL BUTTON — EXACT Flutter */}
+      {/* ✅ VIEW ALL BUTTON */}
       {showViewAllButton && (
         <div style={{ padding: "14px 0" }}>
           <button
