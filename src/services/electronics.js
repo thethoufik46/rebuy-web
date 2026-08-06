@@ -1,5 +1,6 @@
+// src/services/electronics.js
+import API from "@/services/api"; // optional, but we use fetch
 
-import API from "@/services/api"; // ✅ your axios instance
 const BASE_URL = import.meta.env.VITE_API_URL || "https://rebuy-api.onrender.com/api";
 const ELECTRONICS_URL = `${BASE_URL}/electronics`;
 const LOCATIONS_URL = `${BASE_URL}/locations`;
@@ -7,7 +8,7 @@ const LOCATIONS_URL = `${BASE_URL}/locations`;
 // ─── Helpers ──────────────────────────────────────────────
 
 function getAuthHeaders() {
-  const token = getAuthToken(); // returns string or null
+  const token = localStorage.getItem("auth_token"); // ✅ fixed: no external helper
   if (!token) throw new Error("Login required");
   return {
     "Authorization": `Bearer ${token}`,
@@ -55,6 +56,33 @@ export async function getElectronics({
   }
 }
 
+// src/services/electronics.js
+
+/**
+ * Get single electronics item by ID (for details page)
+ */
+export async function getElectronicsById(id) {
+  try {
+    const url = `${ELECTRONICS_URL}/${id}`;
+    console.log("🔍 Fetching electronics:", url); // DEBUG
+
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.error(`❌ API error (${res.status}):`, await res.text());
+      return null;
+    }
+
+    const data = await res.json();
+    console.log("📦 Electronics response:", data); // DEBUG
+
+    // Try multiple response shapes
+    return data.electronics || data.item || data.data || data || null;
+  } catch (err) {
+    console.error("❌ getElectronicsById error:", err);
+    return null;
+  }
+}
+
 /**
  * Get locations (districts & cities) – public
  */
@@ -70,9 +98,6 @@ export async function getLocations() {
 
 // ─── Admin API (requires auth) ──────────────────────────
 
-/**
- * Admin: Get all electronics (including drafts & delete_requests)
- */
 export async function getAllElectronicsAdmin() {
   try {
     const headers = getAuthHeaders();
@@ -84,9 +109,6 @@ export async function getAllElectronicsAdmin() {
   }
 }
 
-/**
- * Admin: Add electronics with files
- */
 export async function addElectronics({
   data,
   banner,
@@ -97,28 +119,15 @@ export async function addElectronics({
 }) {
   try {
     const formData = new FormData();
-
-    // Append all data fields
     Object.entries(data).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
         formData.append(key, String(value));
       }
     });
-
-    if (videoLink && videoLink.trim()) {
-      formData.append("videoLink", videoLink.trim());
-    }
-
-    // Required banner
+    if (videoLink && videoLink.trim()) formData.append("videoLink", videoLink.trim());
     if (banner) formData.append("banner", banner);
-
-    // Optional gallery
     gallery.forEach((file) => formData.append("gallery", file));
-
-    // Optional audio
     if (audio) formData.append("audio", audio);
-
-    // Optional videos
     videos.forEach((file) => formData.append("video", file));
 
     const headers = getAuthHeaders();
@@ -127,7 +136,6 @@ export async function addElectronics({
       headers,
       body: formData,
     });
-
     if (res.ok) {
       const result = await res.json();
       return result.success === true;
@@ -139,9 +147,6 @@ export async function addElectronics({
   }
 }
 
-/**
- * Admin: Update electronics
- */
 export async function updateElectronics({
   id,
   data,
@@ -155,24 +160,18 @@ export async function updateElectronics({
 }) {
   try {
     const formData = new FormData();
-
     Object.entries(data).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
         formData.append(key, String(value));
       }
     });
-
-    if (videoLink && videoLink.trim()) {
-      formData.append("videoLink", videoLink.trim());
-    }
-
+    if (videoLink && videoLink.trim()) formData.append("videoLink", videoLink.trim());
     if (existingGallery.length) {
       formData.append("existingGallery", JSON.stringify(existingGallery));
     }
     if (existingVideos.length) {
       formData.append("existingVideos", JSON.stringify(existingVideos));
     }
-
     if (banner) formData.append("banner", banner);
     gallery.forEach((file) => formData.append("gallery", file));
     if (audio) formData.append("audio", audio);
@@ -184,7 +183,6 @@ export async function updateElectronics({
       headers,
       body: formData,
     });
-
     if (res.ok) {
       const result = await res.json();
       return result.success === true;
@@ -196,9 +194,6 @@ export async function updateElectronics({
   }
 }
 
-/**
- * Admin: Delete electronics
- */
 export async function deleteElectronics(id) {
   try {
     const headers = getAuthHeaders();
@@ -219,9 +214,6 @@ export async function deleteElectronics(id) {
 
 // ─── User API (requires auth) ───────────────────────────
 
-/**
- * User: Add electronics (draft)
- */
 export async function userAddElectronics({
   data,
   gallery = [],
@@ -231,17 +223,12 @@ export async function userAddElectronics({
 }) {
   try {
     const formData = new FormData();
-
     Object.entries(data).forEach(([key, value]) => {
       if (value !== null && value !== undefined && String(value).trim() !== "") {
         formData.append(key, String(value));
       }
     });
-
-    if (videoLink && videoLink.trim()) {
-      formData.append("videoLink", videoLink.trim());
-    }
-
+    if (videoLink && videoLink.trim()) formData.append("videoLink", videoLink.trim());
     gallery.forEach((file) => formData.append("gallery", file));
     if (audio) formData.append("audio", audio);
     videos.forEach((file) => formData.append("video", file));
@@ -252,7 +239,6 @@ export async function userAddElectronics({
       headers,
       body: formData,
     });
-
     if (res.ok) {
       const result = await res.json();
       return result.success === true;
@@ -264,15 +250,11 @@ export async function userAddElectronics({
   }
 }
 
-/**
- * User: Get my electronics grouped by draft/live
- */
 export async function getMyElectronicsGrouped() {
   try {
     const headers = getAuthHeaders();
     const data = await fetchJSON(`${ELECTRONICS_URL}/my`, { headers });
     const list = data.electronics || data.items || [];
-
     const draft = list.filter((item) => item.status === "draft");
     const live = list.filter((item) => item.status !== "draft");
     return { draft, live };
@@ -282,9 +264,6 @@ export async function getMyElectronicsGrouped() {
   }
 }
 
-/**
- * User: Request to delete an electronic item
- */
 export async function requestDeleteElectronics(id) {
   try {
     const headers = getAuthHeaders();

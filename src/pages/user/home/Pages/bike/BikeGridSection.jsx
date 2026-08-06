@@ -1,8 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import BikeCard from "@/components/BikeCard";
 
-/* ================= SAFE HELPERS ================= */
+/* ================= HELPERS ================= */
 
 const extractId = (value) => {
   if (!value) return "";
@@ -12,32 +13,14 @@ const extractId = (value) => {
     if (value._id) return value._id.toString();
   }
 
-  if (Array.isArray(value) && value.length) {
-    return extractId(value[0]);
-  }
-
   return value.toString();
-};
-
-const asString = (v) => {
-  if (!v) return "";
-
-  if (typeof v === "object") {
-    if (v.name) return v.name.toString();
-  }
-
-  return v.toString();
 };
 
 const brandName = (bike) => {
   const brand = bike?.brand;
 
-  if (brand && typeof brand === "object") {
-    return asString(brand.name);
-  }
-
-  if (Array.isArray(brand) && brand.length) {
-    return asString(brand[0]);
+  if (typeof brand === "object" && brand?.name) {
+    return brand.name.toString();
   }
 
   return "";
@@ -46,95 +29,136 @@ const brandName = (bike) => {
 const brandLogo = (bike) => {
   const brand = bike?.brand;
 
-  if (brand && typeof brand === "object" && brand.logo) {
+  if (typeof brand === "object" && brand?.logo) {
     return brand.logo.toString();
   }
 
   return "";
 };
 
+const isVisible = (bike) => {
+  const status = (bike?.status || "").toString().toLowerCase();
+
+  if (status === "draft") return false;
+  if (status === "drift") return false;
+
+  return true;
+};
+
+/* ─── Get model name directly from bike object ────────── */
+const getModelName = (bike) => {
+  const model = bike?.model;
+
+  if (!model) return "";
+
+  // If it's already a string, return it
+  if (typeof model === "string") return model;
+
+  // If it's an object, try common fields
+  if (typeof model === "object") {
+    if (model.modelName) return model.modelName.toString();
+    if (model.name) return model.name.toString();
+  }
+
+  // Fallback: try to extract ID (we don't want that, but better than empty)
+  return extractId(model);
+};
+
 /* ================= COMPONENT ================= */
 
-export default function BikeGridSection({
-  bikes = [],
-  onViewAll,
-}) {
+export default function BikeGridSection({ bikes = [], onViewAll, showViewAllButton }) {
   const navigate = useNavigate();
 
-  const bikesToShow = bikes.slice(0, 6);
+  const bikesToShow = bikes.filter(isVisible).slice(0, 6);
 
   if (!bikesToShow.length) return null;
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 40 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
+  };
+
   return (
-    <div className="flex flex-col">
-      {/* ✅ UPDATED GRID – responsive columns */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-3 gap-y-3.5">
-        {/* gap-x-3 = 12px, gap-y-3.5 ≈ 14px */}
-        
+    <div>
+      {/* ✅ UPDATED GRID – mobile 2, tablet 4, desktop 6 */}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6"
+        style={{
+          columnGap: "12px",
+          rowGap: "14px",
+        }}
+      >
         {bikesToShow.map((bike) => {
-          const id = extractId(bike._id);
-          const brand = brandName(bike);
-          const model = asString(bike.model);
+          const bikeId = extractId(bike._id);
 
           return (
-            <div
-              key={id}
+            <motion.div
+              key={bikeId}
+              variants={itemVariants}
               onClick={() =>
-                navigate(`/bike/${id}`, { state: { bike } })
+                navigate(`/bike/${bikeId}`, { state: { bike } })
               }
-              // ✅ responsive aspect ratio – same as car cards
               className="cursor-pointer aspect-[0.72] xl:aspect-[0.78]"
             >
               <BikeCard
-                bikeId={id}
-                name={`${brand} ${model}`}
-                brandName={brand}
+                bikeId={bikeId}
+                brandName={brandName(bike)}
                 brandLogoUrl={brandLogo(bike)}
-                imageUrl={asString(bike.bannerImage)}
-                location={asString(bike.location)}
-                price={`₹${asString(bike.price)}`}
-                year={asString(bike.year)}
-                km={asString(bike.km)}
-                owner={asString(bike.owner)}
-                status={asString(bike.status)}
+                model={getModelName(bike)}
+                variant={bike.variant || ""}
+                imageUrl={bike.bannerImage || ""}
+                price={bike.price?.toString() || "0"}
+                year={bike.year?.toString() || "-"}
+                status={bike.status || "available"}
+                km={bike.km?.toString() || "0"}
+                owner={bike.owner?.toString() || "1"}
+                district={bike.district || ""}
+                city={bike.city || ""}
               />
-            </div>
+            </motion.div>
           );
         })}
-      </div>
+      </motion.div>
 
       {/* ✅ VIEW ALL BUTTON */}
-      {bikes.length > 1 && (
-        <div className="py-3.5">
+      {showViewAllButton && (
+        <div style={{ padding: "14px 0" }}>
           <button
             onClick={onViewAll}
-            className="
-              w-full h-10.5
-              bg-white/45
-              rounded-2xl
-              px-6
-              flex items-center justify-between
-              transition hover:bg-white/60
-            "
+            style={{
+              height: "42px",
+              background: "rgba(255,255,255,0.45)",
+              borderRadius: "18px",
+              padding: "0 25px",
+              width: "100%",
+            }}
+            className="flex items-center justify-between"
           >
-            <span className="font-semibold text-xs text-black">
+            <span className="text-xs font-semibold text-black">
               View All Bikes
             </span>
 
-            <div className="w-7 h-7 bg-white/60 rounded-full flex items-center justify-center">
-              <svg
-                className="w-3.5 h-3.5 text-black"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                background: "rgba(255,255,255,0.6)",
+                borderRadius: "50%",
+              }}
+              className="flex items-center justify-center"
+            >
+              <span className="text-sm">→</span>
             </div>
           </button>
         </div>

@@ -1,8 +1,17 @@
 // src/pages/user/home/property/PropertyGridSection.jsx
 import { useNavigate } from "react-router-dom";
-import PropertyCard from "@/components/PropertyCard"; // ✅ imported external component
+import { motion } from "framer-motion";
+import PropertyCard from "@/components/PropertyCard";
 
-// ─── Skeleton Card (Shimmer) ──────────────────────────────
+// ─── Helper: filter out draft/drift ──────────────────────
+const isVisible = (property) => {
+  const status = (property?.status || "").toString().toLowerCase();
+  if (status === "draft") return false;
+  if (status === "drift") return false;
+  return true;
+};
+
+// ─── Skeleton Card ────────────────────────────────────────
 const SkeletonCard = () => {
   return (
     <div className="bg-white rounded-2xl overflow-hidden shadow-sm h-full flex flex-col">
@@ -16,7 +25,7 @@ const SkeletonCard = () => {
   );
 };
 
-// ─── Main Component ─────────────────────────────────────────
+// ─── Main Component ──────────────────────────────────────
 export default function PropertyGridSection({
   properties = [],
   showViewAllButton = false,
@@ -25,7 +34,21 @@ export default function PropertyGridSection({
 }) {
   const navigate = useNavigate();
 
-  const visibleProperties = properties.slice(0, 6);
+  const visibleProperties = properties.filter(isVisible).slice(0, 6);
+
+  // ─── Animation variants ────────────────────────────────
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 40 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
+  };
 
   // ─── Loading state ──────────────────────────────────────
   if (loading) {
@@ -58,16 +81,21 @@ export default function PropertyGridSection({
   // ─── Render cards ──────────────────────────────────────
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-3 gap-y-3.5">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-3 gap-y-3.5"
+      >
         {visibleProperties.map((property) => {
           const id = property._id;
           return (
-            <div
+            <motion.div
               key={id}
+              variants={itemVariants}
               className="cursor-pointer aspect-[0.72] xl:aspect-[0.78]"
-              onClick={() => navigate(`/property/${id}`)}
+              onClick={() => navigate(`/property/${id}`, { state: { property } })}
             >
-              {/* ✅ Use external PropertyCard with exact props */}
               <PropertyCard
                 propertyId={id}
                 mainType={property.mainType}
@@ -80,12 +108,12 @@ export default function PropertyGridSection({
                 bedrooms={property.bedrooms}
                 landArea={property.landArea}
                 direction={property.direction}
-                onTap={() => navigate(`/property/${id}`)}
+                onTap={() => navigate(`/property/${id}`, { state: { property } })}
               />
-            </div>
+            </motion.div>
           );
         })}
-      </div>
+      </motion.div>
 
       {showViewAllButton && (
         <button
