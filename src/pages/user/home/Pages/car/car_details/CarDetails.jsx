@@ -1,6 +1,6 @@
 // src/pages/user/home/Pages/car/car_details/CarDetails.jsx
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CarTopbar from "./CarTopbar";
 import CarGallery from "./CarGallery";
 import CarBottomDetails from "./CarBottomDetails";
@@ -39,6 +39,10 @@ export default function CarDetails() {
   const navigate = useNavigate();
   const location = useLocation();
   const { carId } = useParams();
+  const [searchParams] = useSearchParams();
+
+  // ✅ Read tab from URL (default to 0 for Cars)
+  const tab = searchParams.get("tab") || 0;
 
   const [car, setCar] = useState(location.state?.car || null);
   const [loading, setLoading] = useState(!location.state?.car);
@@ -111,6 +115,11 @@ export default function CarDetails() {
     loadSimilarCars();
   }, [loadSimilarCars]);
 
+  // ─── BACK HANDLER ──────────────────────────────────────
+  const handleBack = () => {
+    navigate(`/home?tab=${tab}`); // ✅ return to UserHome with correct tab
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading car...</div>;
   }
@@ -121,7 +130,25 @@ export default function CarDetails() {
   const brand = brandName(car);
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-screen relative">
+      {/* ✅ BACK BUTTON */}
+      <button
+        onClick={handleBack}
+        className="fixed top-4 left-4 z-50 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-colors"
+        aria-label="Go back"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 text-gray-800"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.5}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
       <CarTopbar car={car} />
       <div className="pb-10">
         <CarGallery
@@ -154,7 +181,7 @@ export default function CarDetails() {
                     <div
                       key={id}
                       className="w-44 cursor-pointer"
-                      onClick={() => navigate(`/car/${id}`, { state: { car: c } })}
+                      onClick={() => navigate(`/car/${id}?tab=${tab}`, { state: { car: c } })}
                     >
                       <CarCard
                         carId={id}

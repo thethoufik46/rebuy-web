@@ -1,6 +1,6 @@
 // src/pages/user/home/Pages/bike/bike_details/BikeDetails.jsx
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import BikeTopbar from "./BikeTopbar";
 import BikeGallery from "./BikeGallery";
 import BikeBottomDetails from "./BikeBottomDetails";
@@ -39,6 +39,10 @@ export default function BikeDetails() {
   const navigate = useNavigate();
   const location = useLocation();
   const { bikeId } = useParams();
+  const [searchParams] = useSearchParams();
+
+  // ✅ Read tab from URL (default to 1 for Bikes)
+  const tab = searchParams.get("tab") || 1;
 
   const [bike, setBike] = useState(location.state?.bike || null);
   const [loading, setLoading] = useState(!location.state?.bike);
@@ -111,6 +115,11 @@ export default function BikeDetails() {
     loadSimilarBikes();
   }, [loadSimilarBikes]);
 
+  // ─── BACK HANDLER ──────────────────────────────────────
+  const handleBack = () => {
+    navigate(`/home?tab=${tab}`); // ✅ return to UserHome with correct tab
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading bike...</div>;
   }
@@ -121,7 +130,25 @@ export default function BikeDetails() {
   const brand = brandName(bike);
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-screen relative">
+      {/* ✅ BACK BUTTON */}
+      <button
+        onClick={handleBack}
+        className="fixed top-4 left-4 z-50 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-colors"
+        aria-label="Go back"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 text-gray-800"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.5}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
       <BikeTopbar bike={bike} />
       <div className="pb-10">
         <BikeGallery
@@ -154,7 +181,7 @@ export default function BikeDetails() {
                     <div
                       key={id}
                       className="w-44 cursor-pointer"
-                      onClick={() => navigate(`/bike/${id}`, { state: { bike: b } })}
+                      onClick={() => navigate(`/bike/${id}?tab=${tab}`, { state: { bike: b } })}
                     >
                       <BikeCard
                         bikeId={id}

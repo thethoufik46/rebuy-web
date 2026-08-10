@@ -1,5 +1,6 @@
+// src/components/CarGridSection.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import CarCard from "@/components/CarCard";
 import { getAllVariants } from "@/services/carVariantApi";
@@ -8,41 +9,32 @@ import { getAllVariants } from "@/services/carVariantApi";
 
 const extractId = (value) => {
   if (!value) return "";
-
   if (typeof value === "object") {
     if (value.$oid) return value.$oid.toString();
     if (value._id) return value._id.toString();
   }
-
   return value.toString();
 };
 
 const brandName = (car) => {
   const brand = car?.brand;
-
   if (typeof brand === "object" && brand?.name) {
     return brand.name.toString();
   }
-
   return "";
 };
 
 const brandLogo = (car) => {
   const brand = car?.brand;
-
   if (typeof brand === "object" && brand?.logo) {
     return brand.logo.toString();
   }
-
   return "";
 };
 
 const isVisible = (car) => {
   const status = (car?.status || "").toString().toLowerCase();
-
-  if (status === "draft") return false;
-  if (status === "drift") return false;
-
+  if (status === "draft" || status === "drift") return false;
   return true;
 };
 
@@ -56,6 +48,9 @@ const CACHE_DURATION = 15 * 60 * 1000;
 
 export default function CarGridSection({ cars = [], onViewAll, showViewAllButton }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const currentTab = searchParams.get("tab") || 0; // Cars tab = 0
+
   const [variantMap, setVariantMap] = useState({});
 
   /* ================= LOAD VARIANTS ================= */
@@ -73,16 +68,13 @@ export default function CarGridSection({ cars = [], onViewAll, showViewAllButton
 
       try {
         const variants = await getAllVariants();
-
         const map = {};
         variants.forEach((v) => {
           const id = extractId(v._id);
           if (id) map[id] = v.variantName || "";
         });
-
         cachedVariantMap = map;
         cacheTime = Date.now();
-
         setVariantMap(map);
       } catch (e) {
         console.log("Variant load error 👉", e);
@@ -104,7 +96,6 @@ export default function CarGridSection({ cars = [], onViewAll, showViewAllButton
   /* ================= FILTER + TAKE(6) ================= */
 
   const carsToShow = cars.filter(isVisible).slice(0, 6);
-
   if (!carsToShow.length) return null;
 
   /* ================= ANIMATION ================= */
@@ -124,28 +115,22 @@ export default function CarGridSection({ cars = [], onViewAll, showViewAllButton
 
   return (
     <div>
-      {/* ✅ UPDATED GRID – mobile 2, tablet 4, desktop 6 */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="show"
         className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6"
-        style={{
-          columnGap: "12px",
-          rowGap: "14px",
-        }}
+        style={{ columnGap: "12px", rowGap: "14px" }}
       >
         {carsToShow.map((car) => {
           const carId = extractId(car._id);
-
           return (
             <motion.div
               key={carId}
               variants={itemVariants}
               onClick={() =>
-                navigate(`/car/${carId}`, { state: { car } })
+                navigate(`/car/${carId}?tab=${currentTab}`, { state: { car } }) // ✅ pass current tab
               }
-              // ✅ UPDATED – taller cards on XL screens
               className="cursor-pointer aspect-[0.72] xl:aspect-[0.78]"
             >
               <CarCard
@@ -170,7 +155,7 @@ export default function CarGridSection({ cars = [], onViewAll, showViewAllButton
         })}
       </motion.div>
 
-      {/* ✅ VIEW ALL BUTTON */}
+      {/* VIEW ALL BUTTON */}
       {showViewAllButton && (
         <div style={{ padding: "14px 0" }}>
           <button
@@ -184,10 +169,7 @@ export default function CarGridSection({ cars = [], onViewAll, showViewAllButton
             }}
             className="flex items-center justify-between"
           >
-            <span className="text-xs font-semibold text-black">
-              View All Cars
-            </span>
-
+            <span className="text-xs font-semibold text-black">View All Cars</span>
             <div
               style={{
                 width: 28,

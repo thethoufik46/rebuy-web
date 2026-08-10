@@ -1,3 +1,4 @@
+// src/components/HomeRoundButtons.jsx
 import React, { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +10,6 @@ let cachedVariants = [];
 let cacheTime = null;
 const CACHE_DURATION = 10 * 60 * 1000;
 
-const MAX_VARIANTS = 5;
 const SUBTITLE = "Filtered by";
 
 /* HELPERS */
@@ -19,11 +19,25 @@ export default function HomeRoundButtons() {
   const navigate = useNavigate();
 
   const [variants, setVariants] = useState([]);
+  const [maxVariants, setMaxVariants] = useState(17); // default desktop
 
   const scrollRef = useRef(null);
   const autoScrollRef = useRef(null);
   const userInteractingRef = useRef(false);
 
+  // ─── Responsive count ──────────────────────────────────
+  useEffect(() => {
+    const updateCount = () => {
+      const width = window.innerWidth;
+      setMaxVariants(width < 640 ? 6 : 17);
+    };
+
+    updateCount();
+    window.addEventListener("resize", updateCount);
+    return () => window.removeEventListener("resize", updateCount);
+  }, []);
+
+  // ─── Load variants ─────────────────────────────────────
   useEffect(() => {
     loadVariants();
   }, []);
@@ -41,7 +55,6 @@ export default function HomeRoundButtons() {
     try {
       const res = await fetch(`${BASE_URL}/variants/visible`);
       const data = await res.json();
-
       const fetched = data.variants || [];
 
       cachedVariants = fetched;
@@ -53,11 +66,11 @@ export default function HomeRoundButtons() {
     }
   };
 
-  /* AUTO SCROLL */
+  // ─── Auto‑scroll ──────────────────────────────────────
   useEffect(() => {
     startAutoScroll();
     return () => stopAutoScroll();
-  }, [variants]);
+  }, [variants, maxVariants]);
 
   const startAutoScroll = () => {
     stopAutoScroll();
@@ -66,19 +79,16 @@ export default function HomeRoundButtons() {
       if (!scrollRef.current || userInteractingRef.current) return;
 
       const el = scrollRef.current;
-
       const max = el.scrollWidth - el.clientWidth;
       const next = el.scrollLeft + 0.7;
 
       if (next >= max) {
         stopAutoScroll();
-
         setTimeout(() => {
           if (!scrollRef.current) return;
           scrollRef.current.scrollLeft = 0;
           startAutoScroll();
         }, 2000);
-
         return;
       }
 
@@ -95,7 +105,7 @@ export default function HomeRoundButtons() {
 
   if (!variants.length) return null;
 
-  const showVariants = variants.slice(0, MAX_VARIANTS);
+  const showVariants = variants.slice(0, maxVariants);
 
   return (
     <div style={{ height: 140 }}>
@@ -125,6 +135,7 @@ export default function HomeRoundButtons() {
           </motion.div>
         ))}
 
+        {/* ✅ VIEW ALL card */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
@@ -132,10 +143,14 @@ export default function HomeRoundButtons() {
         >
           <ViewAllCard onTap={() => navigate("/variants")} />
         </motion.div>
+
+        {/* ❌ Removed OWN BOARD card */}
       </div>
     </div>
   );
 }
+
+/* ─── Sub-components ────────────────────────────────────── */
 
 function TapScaleCard({ title, imageUrl, onTap }) {
   return (

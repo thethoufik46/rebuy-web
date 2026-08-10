@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
 import { getWishlist, toggleWishlist } from "@/services/wishlistApi";
+import AppBar from "@/components/AppBar"; // ✅ import
 
 import CarCard from "@/components/CarCard";
 import BikeCard from "@/components/BikeCard";
@@ -37,7 +38,6 @@ export default function WishlistPage() {
   const [loading, setLoading] = useState(false);
   const [wishlist, setWishlist] = useState([]);
 
-  // ─── Fetch wishlist ──────────────────────────────────────
   const fetchWishlist = useCallback(async () => {
     setLoading(true);
     try {
@@ -50,7 +50,6 @@ export default function WishlistPage() {
     }
   }, []);
 
-  // ─── Remove from wishlist ────────────────────────────────
   const removeFromWishlist = async (id, type) => {
     const action = await toggleWishlist({ itemId: id, itemType: type });
     if (action !== "removed") return;
@@ -61,7 +60,6 @@ export default function WishlistPage() {
     fetchWishlist();
   }, [fetchWishlist]);
 
-  // ─── Render card by type ──────────────────────────────────
   const renderCard = (item) => {
     const type = item._wishlistType || "Car";
     const id = extractId(item._id);
@@ -145,7 +143,7 @@ export default function WishlistPage() {
     }
   };
 
-  // ─── Loading state ──────────────────────────────────────────
+  // ─── Loading ──────────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#E9E9FF]">
@@ -157,11 +155,11 @@ export default function WishlistPage() {
     );
   }
 
-  // ─── Empty state ────────────────────────────────────────────
+  // ─── Empty ─────────────────────────────────────────────────
   if (wishlist.length === 0) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#D6CEF3] to-[#F3EFFF]">
-        <AppBar title="My Favorites ❤️" onBack={() => navigate(-1)} />
+        <AppBar title="My Favorites ❤️" />
         <div className="flex-1 flex flex-col items-center justify-center px-4">
           <FaHeart className="text-6xl text-gray-300 mb-6" />
           <p className="text-lg font-medium text-gray-600">Your favorites list is empty</p>
@@ -173,12 +171,12 @@ export default function WishlistPage() {
     );
   }
 
-  // ─── Grid with cards ────────────────────────────────────────
+  // ─── Grid ──────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#D6CEF3] to-[#F3EFFF]">
-      <AppBar title="My Favorites ❤️" onBack={() => navigate(-1)} />
+      <AppBar title="My Favorites ❤️" />
       <div className="flex-1 overflow-y-auto px-3 pt-2 pb-6">
-        <div className="grid grid-cols-2 gap-x-3 gap-y-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-3.5">
           {wishlist.map((item) => {
             const id = extractId(item._id);
             const type = item._wishlistType || "Car";
@@ -200,24 +198,6 @@ export default function WishlistPage() {
           })}
         </div>
       </div>
-    </div>
-  );
-}
-
-// ─── AppBar (reusable) ──────────────────────────────────────
-function AppBar({ title, onBack }) {
-  return (
-    <div className="sticky top-0 z-10 bg-[#E9E9FF] px-4 py-3 flex items-center justify-between">
-      <button
-        onClick={onBack}
-        className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-sm hover:bg-gray-50 transition"
-      >
-        <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <span className="text-base font-semibold text-black">{title}</span>
-      <div className="w-9" />
     </div>
   );
 }

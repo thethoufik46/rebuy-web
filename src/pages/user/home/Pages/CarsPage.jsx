@@ -1,10 +1,8 @@
 // src/pages/user/home/Pages/CarsPage.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import SlideBanner from "../SlideBanner";
-import HomeBoardTwoButton from "../HomeBoardTwoButton";
-import HomeOwncardscroll from "../HomeOwncardscroll";
+import HomeBoardTwoButton from "@/components/HomeBoardTwoButton";
+import HomeOwncardscroll from "./car/HomeOwncardscroll";
 import CarGridSection from "./car/CarGridSection";
 
 const BASE_URL = "https://rebuy-api.onrender.com/api";
@@ -16,15 +14,13 @@ export default function CarsPage() {
   const [cars, setCars] = useState([]);
   const [filteredCars, setFilteredCars] = useState([]);
 
-  const [selectedTab, setSelectedTab] = useState("own"); // "own" | "t board"
-
+  // Search state – kept for search functionality
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState([]);
 
-  // ─── Fetch Cars ──────────────────────────────────────────
+  // ─── Fetch all cars (no board filter) ────────────────────
   useEffect(() => {
     fetchCars();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function fetchCars() {
@@ -33,57 +29,29 @@ export default function CarsPage() {
       const data = await res.json();
       const allCars = data.cars || [];
       setCars(allCars);
-      applyBoardFilter(allCars, selectedTab);
+      setFilteredCars(allCars); // show all by default
     } catch (err) {
       console.error("Cars fetch error:", err);
     }
   }
 
-  // ─── Board Filter ────────────────────────────────────────
-  function applyBoardFilter(allCars, tab) {
-    const filtered = allCars.filter((c) => {
-      const board = c.board?.toLowerCase() || "";
-      if (tab === "own") return board === "own";
-      return board === "t board";
-    });
-    setFilteredCars(filtered);
-  }
-
-  // ─── Tab Change ──────────────────────────────────────────
-  function handleTabChange(tab) {
-    setSelectedTab(tab);
-    applyBoardFilter(cars, tab);
-  }
-
   // ─── Search ──────────────────────────────────────────────
   function handleSearchChange(value) {
     setSearch(value);
-
     if (!value) {
       setSuggestions([]);
-      applyBoardFilter(cars, selectedTab);
+      setFilteredCars(cars);
       return;
     }
-
-    const brands = cars
-      .map((c) => c.brand?.name || "")
-      .filter(Boolean);
-
+    const brands = cars.map((c) => c.brand?.name || "").filter(Boolean);
     const matches = brands.filter((b) =>
       b.toLowerCase().includes(value.toLowerCase())
     );
-
     setSuggestions([...new Set(matches)].slice(0, 8));
   }
 
   function handleSuggestionClick(brand) {
-    const brandCars = cars.filter((c) => {
-      const board = c.board?.toLowerCase() || "";
-      const matchesBoard =
-        selectedTab === "own" ? board === "own" : board === "t board";
-      return c.brand?.name === brand && matchesBoard;
-    });
-
+    const brandCars = cars.filter((c) => c.brand?.name === brand);
     setFilteredCars(brandCars);
     setSuggestions([]);
     setSearch(brand);
@@ -99,12 +67,10 @@ export default function CarsPage() {
   // ─── Render ──────────────────────────────────────────────
   return (
     <div className="space-y-4">
-    
-
-      {/* Board Tabs */}
+      {/* Board Buttons – both navigate to dedicated screens */}
       <HomeBoardTwoButton
-        selectedTab={selectedTab}
-        onTabChange={handleTabChange}
+        onOwnBoardTap={() => navigate("/own-cars")}
+        onTBoardTap={() => navigate("/t-board-cars")}
       />
 
       {/* Variant Auto Scroll */}
@@ -116,7 +82,7 @@ export default function CarsPage() {
         <HomeOwncardscroll />
       </div>
 
-      {/* Car Grid */}
+      {/* Car Grid – shows all cars (or filtered by search) */}
       <CarGridSection
         cars={filteredCars}
         showViewAllButton={true}
@@ -130,7 +96,7 @@ export default function CarsPage() {
 const SectionHeader = ({ title, onViewAll }) => (
   <div className="flex justify-between items-center mb-2">
     <h2 className="text-lg font-semibold">{title}</h2>
-    <button onClick={onViewAll} className="text-sm text-slate-500">
+    <button onClick={onViewAll} className="text-sm text-slate-500 hover:text-black transition">
       View All
     </button>
   </div>

@@ -48,7 +48,7 @@ export default function ElectronicsDetails() {
   const [similarLoading, setSimilarLoading] = useState(true);
   const autoTimerRef = useRef(null);
 
-  // ─── Fetch electronics (with fallback) ──────────────────
+  // ─── Fetch electronics (with robust fallback) ──────────
   useEffect(() => {
     if (electronics) return;
 
@@ -56,19 +56,25 @@ export default function ElectronicsDetails() {
       try {
         setLoading(true);
 
-        // Try direct fetch first
+        // 1) Try direct fetch
         let fetched = await getElectronicsById(electronicsId);
 
-        // If direct fails, fallback: fetch all and filter
+        // 2) If direct fails, fallback: fetch all and filter by _id OR electronicsId
         if (!fetched) {
           console.warn("⚠️ Direct fetch failed, falling back to full list filter...");
           const all = await getElectronics();
-          fetched = all.find((item) => extractId(item._id) === electronicsId) || null;
+
+          // Try to find by _id (string) or electronicsId (numeric/string)
+          fetched = all.find(
+            (item) =>
+              extractId(item._id) === electronicsId ||
+              item.electronicsId?.toString() === electronicsId
+          ) || null;
         }
 
         setElectronics(fetched || null);
       } catch (err) {
-        console.log("Fetch electronics error", err);
+        console.error("Fetch electronics error", err);
         setElectronics(null);
       } finally {
         setLoading(false);
@@ -124,8 +130,24 @@ export default function ElectronicsDetails() {
     loadSimilar();
   }, [loadSimilar]);
 
-  if (loading) return <div className="flex items-center justify-center h-screen">Loading electronics...</div>;
-  if (!electronics) return <div className="flex items-center justify-center h-screen">Item not found</div>;
+  // ─── Loading / Error states ─────────────────────────────
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading electronics...</div>;
+  }
+
+  if (!electronics) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <p className="text-gray-600">Item not found</p>
+        <button
+          onClick={() => navigate(-1)}
+          className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
 
   const brand = brandName(electronics);
 

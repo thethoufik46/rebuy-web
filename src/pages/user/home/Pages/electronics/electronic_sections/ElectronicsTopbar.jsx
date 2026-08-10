@@ -1,9 +1,11 @@
 // src/pages/user/home/Pages/electronics/electronics_details/ElectronicsTopbar.jsx
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import { toggleWishlist, isInWishlist } from '@/services/wishlistApi';
+import AppBar from '@/components/AppBar';
 
+/* ================= HELPERS ================= */
 const extractId = (value) => {
   if (!value) return '';
   if (typeof value === 'object') {
@@ -14,63 +16,177 @@ const extractId = (value) => {
   return value.toString();
 };
 
-const brandName = (electronics) => {
-  const brandData = electronics?.brand;
+const brandName = (item) => {
+  const brandData = item?.brand;
   if (brandData && typeof brandData === 'object' && brandData.name) return brandData.name.toString();
-  return 'Electronics';
+  return 'Brand';
 };
 
-const titleName = (electronics) => electronics?.title?.toString() || 'Item';
+const title = (item) => item?.title?.toString() || 'Electronics';
 
 export default function ElectronicsTopbar({ electronics, onWishlist }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  const [isToggling, setIsToggling] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [iconKey, setIconKey] = useState(0);
 
-  const electronicsId = extractId(electronics?._id);
+  const itemId = extractId(electronics?._id);
   const brand = brandName(electronics);
-  const title = titleName(electronics);
+  const itemTitle = title(electronics);
+  const toastTimerRef = useRef(null);
 
+  // ─── Check wishlist status on mount ──────────────────
   useEffect(() => {
-    if (!electronicsId) return;
-    const check = async () => {
-      try {
-        const result = await isInWishlist(electronicsId, 'Electronics');
-        setIsWishlisted(result);
-      } catch {}
-    };
-    check();
-  }, [electronicsId]);
+    if (!itemId) {
+      console.warn('⚠️ ElectronicsTopbar: No itemId found!');
+      setIsChecking(false);
+      return;
+    }
 
+    let isMounted = true;
+    const checkStatus = async () => {
+      try {
+        console.log(`🔍 Checking wishlist for electronicsId: ${itemId}`);
+        const response = await isInWishlist(itemId, 'Electronics');
+        console.log('📦 Raw API response (isInWishlist):', response);
+
+        // ─── ROBUST PARSING ──────────────────────────────
+        let exists = false;
+        if (typeof response === 'boolean') {
+          exists = response;
+        } else if (response && typeof response === 'object') {
+          exists = !!response.exists || !!response.data || !!response.success;
+          if (response._id || response.id) exists = true;
+        }
+
+        console.log(`✅ Parsed result (isWishlisted): ${exists}`);
+        if (isMounted) {
+          setIsWishlisted(exists);
+        }
+      } catch (err) {
+        console.error('❌ Wishlist check error:', err);
+        if (isMounted) setIsWishlisted(false);
+      } finally {
+        if (isMounted) setIsChecking(false);
+      }
+    };
+
+    checkStatus();
+    return () => { isMounted = false; };
+  }, [itemId]);
+
+  // ─── Auto-dismiss toast ──────────────────────────────
+  useEffect(() => {
+    if (!toast) return;
+    toastTimerRef.current = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(toastTimerRef.current);
+  }, [toast]);
+
+  // ─── Toggle wishlist ──────────────────────────────────
   const handleToggle = async (e) => {
     e.stopPropagation();
-    if (loading) return;
-    setLoading(true);
+    if (isToggling || isChecking) return;
+
+    setIsToggling(true);
     try {
-      const action = await toggleWishlist({ itemId: electronicsId, itemType: 'Electronics' });
-      const newState = action === 'added';
+      console.log(`🔄 Toggling wishlist for itemId: ${itemId}`);
+      const action = await toggleWishlist({ itemId, itemType: 'Electronics' });
+      console.log('📦 Raw API response (toggle):', action);
+
+      // ─── ROBUST PARSING for toggle response ──────────
+      let newState = false;
+      if (typeof action === 'string') {
+        newState = action === 'added';
+      } else if (action && typeof action === 'object') {
+        newState = action.action === 'added' || action.success === true;
+        if (action.exists !== undefined) newState = action.exists;
+      }
+
+      console.log(`✅ New wishlist state: ${newState}`);
       setIsWishlisted(newState);
-      onWishlist?.(action);
+      onWishlist?.(newState);
+
+      setToast({
+        message: newState ? 'Added to Wishlist ❤️' : 'Removed from Wishlist',
+        type: newState ? 'added' : 'removed',
+      });
+      setIconKey((prev) => prev + 1);
     } catch (err) {
-      console.error('Wishlist toggle error:', err);
+      console.error('❌ Wishlist toggle error:', err);
     } finally {
-      setLoading(false);
+      setIsToggling(false);
     }
   };
 
-  return (
-    <div className="bg-white flex items-center justify-between px-4 h-16">
-      <button onClick={() => window.history.back()} className="p-2">
-        <ArrowLeft className="w-5 h-5 text-black" />
-      </button>
-      <div className="flex-1 text-center">
-        <p className="text-sm text-black/60">{brand}</p>
-        <p className="text-base font-bold text-black uppercase">{title}</p>
-      </div>
-      {electronicsId && (
-        <button onClick={handleToggle} className="p-2" disabled={loading}>
-          {isWishlisted ? <FaHeart className="w-5 h-5 text-red-500" /> : <FaRegHeart className="w-5 h-5 text-black" />}
-        </button>
-      )}
+  // ─── Render heart ──────────────────────────────────────
+  const renderHeart = () => {
+    if (isChecking) {
+      return (
+        <div className="w-5 h-5 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
+      );
+    }
+    return (
+      <motion.div
+        key={iconKey}
+        whileTap={{ scale: 0.85 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+      >
+        {isWishlisted ? (
+          <FaHeart className="w-5 h-5 text-red-500" />
+        ) : (
+          <FaRegHeart className="w-5 h-5 text-black" />
+        )}
+      </motion.div>
+    );
+  };
+
+  // ─── Title: two‑line brand + title ────────────────────
+  const titleNode = (
+    <div className="flex flex-col items-center leading-tight">
+      <span className="text-sm text-black/60">{brand}</span>
+      <span className="text-base font-bold text-black uppercase">{itemTitle}</span>
     </div>
+  );
+
+  // ─── Right action: heart ──────────────────────────────
+  const actions = itemId ? (
+    <button
+      onClick={handleToggle}
+      className="p-2"
+      disabled={isChecking || isToggling}
+    >
+      {renderHeart()}
+    </button>
+  ) : null;
+
+  // ─── Toast ─────────────────────────────────────────────
+  const toastElement = (
+    <AnimatePresence>
+      {toast && (
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          transition={{ duration: 0.3 }}
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-lg text-sm font-medium ${
+            toast.type === 'added'
+              ? 'bg-red-500 text-white'
+              : 'bg-gray-800 text-white'
+          }`}
+        >
+          {toast.message}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  // ─── Return ────────────────────────────────────────────
+  return (
+    <>
+      <AppBar title={titleNode} actions={actions} />
+      {toastElement}
+    </>
   );
 }

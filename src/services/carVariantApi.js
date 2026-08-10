@@ -1,4 +1,4 @@
-// ================= carVariantApi.js =================
+// src/services/carVariantApi.js
 // ✅ FINAL CLEAN API (React / Axios / Production Safe)
 
 import axios from "axios";
@@ -28,12 +28,14 @@ const authHeaders = () => {
 
 /* =========================
    NORMALIZE VARIANT
+   - Ensures every variant has a consistent shape.
+   - Uses `variantName` primarily, with fallback to `title`.
 ========================= */
 const normalizeVariant = (v) => ({
   _id: v._id?.toString(),
   brandName: v.brandName || "",
   brandLogo: v.brandLogo || "",
-  variantName: v.variantName || v.title || "",
+  variantName: v.variantName || v.title || "",   // ✅ variant name is always present
   variantImage: v.variantImage || "",
   brandId: v.brandId || "",
 });

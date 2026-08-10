@@ -1,9 +1,11 @@
 // src/pages/user/home/Pages/bike/bike_details/BikeTopbar.jsx
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import { toggleWishlist, isInWishlist } from '@/services/wishlistApi';
+import AppBar from '@/components/AppBar';
 
+/* ================= HELPERS ================= */
 const extractId = (value) => {
   if (!value) return '';
   if (typeof value === 'object') {
@@ -22,63 +24,170 @@ const brandName = (bike) => {
 
 const model = (bike) => bike?.model?.toString() || 'Bike';
 
+/* ================= COMPONENT ================= */
 export default function BikeTopbar({ bike, onWishlist }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  const [isToggling, setIsToggling] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [iconKey, setIconKey] = useState(0);
 
   const bikeId = extractId(bike?._id);
   const brand = brandName(bike);
   const modelName = model(bike);
+  const toastTimerRef = useRef(null);
 
-  // Check initial wishlist status
+  // ─── Check wishlist status on mount ──────────────────
   useEffect(() => {
-    if (!bikeId) return;
-    const checkWishlist = async () => {
+    if (!bikeId) {
+      console.warn('⚠️ BikeTopbar: No bikeId found!');
+      setIsChecking(false);
+      return;
+    }
+
+    let isMounted = true;
+    const checkStatus = async () => {
       try {
-        const result = await isInWishlist(bikeId, 'Bike');
-        setIsWishlisted(result);
+        console.log(`🔍 Checking wishlist for bikeId: ${bikeId}`);
+        const response = await isInWishlist(bikeId, 'Bike');
+        console.log('📦 Raw API response (isInWishlist):', response);
+
+        // ─── ROBUST PARSING ──────────────────────────────
+        let exists = false;
+        if (typeof response === 'boolean') {
+          exists = response;
+        } else if (response && typeof response === 'object') {
+          exists = !!response.exists || !!response.data || !!response.success;
+          if (response._id || response.id) exists = true;
+        }
+
+        console.log(`✅ Parsed result (isWishlisted): ${exists}`);
+        if (isMounted) {
+          setIsWishlisted(exists);
+        }
       } catch (err) {
-        console.error('Wishlist check error:', err);
+        console.error('❌ Wishlist check error:', err);
+        if (isMounted) setIsWishlisted(false);
+      } finally {
+        if (isMounted) setIsChecking(false);
       }
     };
-    checkWishlist();
+
+    checkStatus();
+    return () => { isMounted = false; };
   }, [bikeId]);
 
-  // Toggle wishlist
+  // ─── Auto-dismiss toast ──────────────────────────────
+  useEffect(() => {
+    if (!toast) return;
+    toastTimerRef.current = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(toastTimerRef.current);
+  }, [toast]);
+
+  // ─── Toggle wishlist ──────────────────────────────────
   const handleToggle = async (e) => {
     e.stopPropagation();
-    if (loading) return;
-    setLoading(true);
+    if (isToggling || isChecking) return;
+
+    setIsToggling(true);
     try {
+      console.log(`🔄 Toggling wishlist for bikeId: ${bikeId}`);
       const action = await toggleWishlist({ itemId: bikeId, itemType: 'Bike' });
-      const newState = action === 'added';
+      console.log('📦 Raw API response (toggle):', action);
+
+      // ─── ROBUST PARSING for toggle response ──────────
+      let newState = false;
+      if (typeof action === 'string') {
+        newState = action === 'added';
+      } else if (action && typeof action === 'object') {
+        newState = action.action === 'added' || action.success === true;
+        if (action.exists !== undefined) newState = action.exists;
+      }
+
+      console.log(`✅ New wishlist state: ${newState}`);
       setIsWishlisted(newState);
-      onWishlist?.(action);
+      onWishlist?.(newState);
+
+      setToast({
+        message: newState ? 'Added to Wishlist ❤️' : 'Removed from Wishlist',
+        type: newState ? 'added' : 'removed',
+      });
+      setIconKey((prev) => prev + 1);
     } catch (err) {
-      console.error('Wishlist toggle error:', err);
+      console.error('❌ Wishlist toggle error:', err);
     } finally {
-      setLoading(false);
+      setIsToggling(false);
     }
   };
 
-  return (
-    <div className="bg-white flex items-center justify-between px-4 h-16">
-      <button onClick={() => window.history.back()} className="p-2">
-        <ArrowLeft className="w-5 h-5 text-black" />
-      </button>
-      <div className="flex-1 text-center">
-        <p className="text-sm text-black/60">{brand}</p>
-        <p className="text-base font-bold text-black uppercase">{modelName}</p>
-      </div>
-      {bikeId && (
-        <button onClick={handleToggle} className="p-2" disabled={loading}>
-          {isWishlisted ? (
-            <FaHeart className="w-5 h-5 text-red-500" />
-          ) : (
-            <FaRegHeart className="w-5 h-5 text-black" />
-          )}
-        </button>
-      )}
+  // ─── Render heart ──────────────────────────────────────
+  const renderHeart = () => {
+    if (isChecking) {
+      return (
+        <div className="w-5 h-5 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
+      );
+    }
+    return (
+      <motion.div
+        key={iconKey}
+        whileTap={{ scale: 0.85 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+      >
+        {isWishlisted ? (
+          <FaHeart className="w-5 h-5 text-red-500" />
+        ) : (
+          <FaRegHeart className="w-5 h-5 text-black" />
+        )}
+      </motion.div>
+    );
+  };
+
+  // ─── Title: two‑line brand + model ────────────────────
+  const title = (
+    <div className="flex flex-col items-center leading-tight">
+      <span className="text-sm text-black/60">{brand}</span>
+      <span className="text-base font-bold text-black uppercase">{modelName}</span>
     </div>
+  );
+
+  // ─── Right action: heart ──────────────────────────────
+  const actions = bikeId ? (
+    <button
+      onClick={handleToggle}
+      className="p-2"
+      disabled={isChecking || isToggling}
+    >
+      {renderHeart()}
+    </button>
+  ) : null;
+
+  // ─── Toast ─────────────────────────────────────────────
+  const toastElement = (
+    <AnimatePresence>
+      {toast && (
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          transition={{ duration: 0.3 }}
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-lg text-sm font-medium ${
+            toast.type === 'added'
+              ? 'bg-red-500 text-white'
+              : 'bg-gray-800 text-white'
+          }`}
+        >
+          {toast.message}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  // ─── Return ────────────────────────────────────────────
+  return (
+    <>
+      <AppBar title={title} actions={actions} />
+      {toastElement}
+    </>
   );
 }

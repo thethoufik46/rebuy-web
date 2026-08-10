@@ -93,13 +93,33 @@ export default function ElectronicsGridSection({
         })}
       </div>
 
-      {showViewAllButton && (
-        <button
-          onClick={onViewAll}
-          className="w-full py-2 text-sm text-purple-600 font-medium border border-purple-200 rounded-xl hover:bg-purple-50"
-        >
-          View All Electronics
-        </button>
+    {showViewAllButton && (
+        <div style={{ padding: "14px 0" }}>
+          <button
+            onClick={onViewAll}
+            style={{
+              height: "42px",
+              background: "rgba(255,255,255,0.45)",
+              borderRadius: "18px",
+              padding: "0 25px",
+              width: "100%",
+            }}
+            className="flex items-center justify-between"
+          >
+            <span className="text-xs font-semibold text-black">  View All Electronics</span>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                background: "rgba(255,255,255,0.6)",
+                borderRadius: "50%",
+              }}
+              className="flex items-center justify-center"
+            >
+              <span className="text-sm">→</span>
+            </div>
+          </button>
+        </div>
       )}
     </div>
   );

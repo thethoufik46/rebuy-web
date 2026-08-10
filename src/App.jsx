@@ -1,3 +1,4 @@
+// App.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 /* ─── AUTH ──────────────────────────────────────────────── */
@@ -17,8 +18,6 @@ import SlideBanner from "@/pages/user/home/SlideBanner";
 /* ─── DETAILS PAGES ─────────────────────────────────────── */
 import CarDetails from "@/pages/user/home/Pages/car/car_details/CarDetails";
 import BikeDetails from "@/pages/user/home/Pages/bike/bike_details/BikeDetails";
-
-// ✅ Use your actual folder names:
 import PropertyDetails from "@/pages/user/home/property/property_sections/PropertyDetails";
 import ElectronicsDetails from "@/pages/user/home/Pages/electronics/electronic_sections/ElectronicsDetails";
 
@@ -26,6 +25,11 @@ import ElectronicsDetails from "@/pages/user/home/Pages/electronics/electronic_s
 import HomeOwnCardScrollFilter from "@/pages/user/home/HomeOwnCardScrollFilter";
 import NavScreen from "@/components/NavScreen";
 import WishlistPage from "@/pages/Wishlist/WishlistPage";
+import VariantAll from "@/pages/user/home/Pages/car/VariantAll";
+
+// ─── BOARD SCREENS ──────────────────────────────────────
+import ViewAllOwnBoardScreen from "@/pages/user/home/Pages/car/ViewAllOwnBoardScreen";
+import ViewAllTBoardScreen from "@/pages/user/home/Pages/car/ViewAllTBoardScreen";
 
 export default function App() {
   return (
@@ -58,11 +62,18 @@ export default function App() {
         {/* ─── ELECTRONICS ────────────────────────── */}
         <Route path="/electronics/:electronicsId" element={<ElectronicsDetails />} />
 
-        {/* ─── VARIANT FILTER ────────────────────── */}
+        {/* ─── VARIANT FILTER (single variant) ────── */}
         <Route path="/variant/:variant" element={<HomeOwnCardScrollFilter />} />
+
+        {/* ─── VARIANT ALL PAGE ───────────────────── */}
+        <Route path="/variants" element={<VariantAll />} />
 
         {/* ─── WISHLIST ───────────────────────────── */}
         <Route path="/wishlist" element={<WishlistPage />} />
+
+        {/* ─── BOARD SCREENS ──────────────────────── */}
+        <Route path="/own-cars" element={<ViewAllOwnBoardScreen />} />
+        <Route path="/t-board-cars" element={<ViewAllTBoardScreen />} />
       </Routes>
     </BrowserRouter>
   );
