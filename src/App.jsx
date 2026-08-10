@@ -1,14 +1,26 @@
+
+// src/App.jsx
+
 import {
   BrowserRouter,
   Routes,
   Route,
 } from "react-router-dom";
 
+/* =========================================================
+   AUTH
+========================================================= */
+
 import Welcome from "@/auth/Welcome";
 import LoginLogic from "@/auth/LoginLogic";
 import Register from "@/auth/Register";
+import Forgot from "@/auth/Forgot";
 import Terms from "@/auth/Terms";
 import DisclaimerDialog from "@/auth/DisclaimerDialog";
+
+/* =========================================================
+   USER
+========================================================= */
 
 import UserHome from "@/pages/user/UserHome";
 
@@ -20,25 +32,53 @@ import FilterResultScreen from "@/pages/user/filter/FilterResultScreen";
 
 import SlideBanner from "@/pages/user/home/SlideBanner";
 
+/* =========================================================
+   PROFILE
+========================================================= */
+
+import UserProfile from "@/pages/user/Profile/UserProfile";
+import ChangePassword from "@/pages/user/Profile/ChangePassword";
+
+/* =========================================================
+   DETAILS
+========================================================= */
+
 import CarDetails from "@/pages/user/home/Pages/car/car_details/CarDetails";
 import BikeDetails from "@/pages/user/home/Pages/bike/bike_details/BikeDetails";
 import PropertyDetails from "@/pages/user/home/property/property_sections/PropertyDetails";
 import ElectronicsDetails from "@/pages/user/home/Pages/electronics/electronic_sections/ElectronicsDetails";
 
+/* =========================================================
+   CAR / VARIANT
+========================================================= */
+
 import HomeOwnCardScrollFilter from "@/pages/user/home/HomeOwnCardScrollFilter";
-import NavScreen from "@/components/NavScreen";
-import WishlistPage from "@/pages/Wishlist/WishlistPage";
 import VariantAll from "@/pages/user/home/Pages/car/VariantAll";
 
 import ViewAllOwnBoardScreen from "@/pages/user/home/Pages/car/ViewAllOwnBoardScreen";
 import ViewAllTBoardScreen from "@/pages/user/home/Pages/car/ViewAllTBoardScreen";
+
+/* =========================================================
+   COMPONENTS
+========================================================= */
+
+import NavScreen from "@/components/NavScreen";
+
+/* =========================================================
+   WISHLIST
+========================================================= */
+
+import WishlistPage from "@/pages/Wishlist/WishlistPage";
+
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* AUTH */}
+        {/* =====================================================
+            AUTH
+        ===================================================== */}
 
         <Route
           path="/"
@@ -48,6 +88,13 @@ export default function App() {
         <Route
           path="/login"
           element={<LoginLogic />}
+        />
+
+        {/* FORGOT PASSWORD */}
+
+        <Route
+          path="/forgot"
+          element={<Forgot />}
         />
 
         <Route
@@ -67,7 +114,10 @@ export default function App() {
           }
         />
 
-        {/* USER */}
+
+        {/* =====================================================
+            USER HOME
+        ===================================================== */}
 
         <Route
           path="/home"
@@ -110,7 +160,29 @@ export default function App() {
           element={<SlideBanner />}
         />
 
-        {/* CAR */}
+
+        {/* =====================================================
+            PROFILE
+        ===================================================== */}
+
+        <Route
+          path="/profile"
+          element={
+            <UserProfile />
+          }
+        />
+
+        <Route
+          path="/change-password"
+          element={
+            <ChangePassword />
+          }
+        />
+
+
+        {/* =====================================================
+            CAR
+        ===================================================== */}
 
         <Route
           path="/car/:carId"
@@ -119,7 +191,10 @@ export default function App() {
           }
         />
 
-        {/* BIKE */}
+
+        {/* =====================================================
+            BIKE
+        ===================================================== */}
 
         <Route
           path="/bike/:bikeId"
@@ -128,7 +203,10 @@ export default function App() {
           }
         />
 
-        {/* PROPERTY */}
+
+        {/* =====================================================
+            PROPERTY
+        ===================================================== */}
 
         <Route
           path="/property/:propertyId"
@@ -137,7 +215,10 @@ export default function App() {
           }
         />
 
-        {/* ELECTRONICS */}
+
+        {/* =====================================================
+            ELECTRONICS
+        ===================================================== */}
 
         <Route
           path="/electronics/:electronicsId"
@@ -146,7 +227,10 @@ export default function App() {
           }
         />
 
-        {/* VARIANT */}
+
+        {/* =====================================================
+            VARIANT
+        ===================================================== */}
 
         <Route
           path="/variant/:variant"
@@ -157,10 +241,15 @@ export default function App() {
 
         <Route
           path="/variants"
-          element={<VariantAll />}
+          element={
+            <VariantAll />
+          }
         />
 
-        {/* WISHLIST */}
+
+        {/* =====================================================
+            WISHLIST
+        ===================================================== */}
 
         <Route
           path="/wishlist"
@@ -169,7 +258,10 @@ export default function App() {
           }
         />
 
-        {/* BOARDS */}
+
+        {/* =====================================================
+            BOARDS
+        ===================================================== */}
 
         <Route
           path="/own-cars"
@@ -182,6 +274,18 @@ export default function App() {
           path="/t-board-cars"
           element={
             <ViewAllTBoardScreen />
+          }
+        />
+
+
+        {/* =====================================================
+            FALLBACK
+        ===================================================== */}
+
+        <Route
+          path="*"
+          element={
+            <Welcome />
           }
         />
 

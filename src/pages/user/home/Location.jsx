@@ -1,3 +1,4 @@
+
 // src/pages/user/Location.jsx
 
 import React from "react";
@@ -70,7 +71,9 @@ export default function Location() {
             title="Re2buy Location"
           />
 
-          {/* Open Google Maps */}
+          {/* =================================================
+              OPEN GOOGLE MAPS
+          ================================================= */}
 
           <a
             href="https://maps.app.goo.gl/kuCvcFBcWNHrYWvx5"
@@ -78,8 +81,13 @@ export default function Location() {
             rel="noopener noreferrer"
             className="open-map-button"
           >
-            <span>OPEN IN GOOGLE MAPS</span>
-            <span className="open-map-arrow">↗</span>
+            <span>
+              OPEN IN GOOGLE MAPS
+            </span>
+
+            <span className="open-map-arrow">
+              ↗
+            </span>
           </a>
 
         </div>
@@ -93,40 +101,100 @@ export default function Location() {
       <style>{`
 
         /* ===================================================
-           SECTION
+           LAVENDER COLOR SYSTEM
         =================================================== */
 
         .location-section {
+          --lavender-main: #9B7EDE;
+          --lavender-dark: #7256B8;
+          --lavender-light: #EDE6FF;
+          --lavender-soft: #F5F1FF;
+          --lavender-pale: #FAF8FF;
+          --lavender-border: #DDD2F7;
+          --lavender-hover: #DCCEFF;
+
           width: 100%;
+
           position: relative;
 
           background:
             linear-gradient(
               to bottom,
-              #FFE4A1 0%,
-              #FFE4A1 79%,
+              #EDE6FF 0%,
+              #EDE6FF 79%,
               #FFFFFF 79%,
               #FFFFFF 100%
             );
 
-          padding: 0 0 70px 0;
+          padding:
+            0 0 70px 0;
 
           overflow: hidden;
         }
 
+        /* ===================================================
+           SUBTLE LAVENDER GLOW
+        =================================================== */
+
+        .location-section::before {
+          content: "";
+
+          position: absolute;
+
+          width: 420px;
+          height: 420px;
+
+          top: -220px;
+          left: -180px;
+
+          border-radius: 50%;
+
+          background:
+            rgba(155, 126, 222, 0.12);
+
+          filter: blur(70px);
+
+          pointer-events: none;
+        }
+
+        .location-section::after {
+          content: "";
+
+          position: absolute;
+
+          width: 360px;
+          height: 360px;
+
+          right: -180px;
+          bottom: 80px;
+
+          border-radius: 50%;
+
+          background:
+            rgba(155, 126, 222, 0.10);
+
+          filter: blur(70px);
+
+          pointer-events: none;
+        }
 
         /* ===================================================
            WRAPPER
         =================================================== */
 
         .location-wrapper {
-          width: min(1415px, calc(100% - 40px));
+          width:
+            min(
+              1415px,
+              calc(100% - 40px)
+            );
 
           margin: 0 auto;
 
           position: relative;
-        }
 
+          z-index: 2;
+        }
 
         /* ===================================================
            HEADING
@@ -140,6 +208,9 @@ export default function Location() {
           margin-bottom: 38px;
         }
 
+        /* ===================================================
+           HEADING TITLE
+        =================================================== */
 
         .location-heading h2 {
           margin: 0;
@@ -149,7 +220,12 @@ export default function Location() {
             Helvetica,
             sans-serif;
 
-          font-size: clamp(42px, 5vw, 72px);
+          font-size:
+            clamp(
+              42px,
+              5vw,
+              72px
+            );
 
           line-height: 0.95;
 
@@ -157,19 +233,24 @@ export default function Location() {
 
           letter-spacing: -3px;
 
-          color: #EBA900;
+          color: #7256B8;
 
           text-transform: uppercase;
         }
 
+        /* Highlight */
 
         .location-heading h2 span {
-          color: #EBA900;
+          color: #9B7EDE;
         }
 
+        /* ===================================================
+           DESCRIPTION
+        =================================================== */
 
         .location-heading p {
-          margin: 18px auto 0;
+          margin:
+            18px auto 0;
 
           max-width: 620px;
 
@@ -182,9 +263,8 @@ export default function Location() {
 
           line-height: 1.6;
 
-          color: #171717;
+          color: #403B4C;
         }
-
 
         /* ===================================================
            LOCATION LIST
@@ -202,7 +282,6 @@ export default function Location() {
           margin-bottom: 48px;
         }
 
-
         /* ===================================================
            LOCATION CARD
         =================================================== */
@@ -214,15 +293,19 @@ export default function Location() {
 
           height: 80px;
 
-          border: none;
+          border:
+            1px solid
+            rgba(155, 126, 222, 0.18);
 
           outline: none;
 
           border-radius: 20px;
 
-          background: #FFFFFF;
+          background:
+            rgba(255, 255, 255, 0.92);
 
-          padding: 0 24px;
+          padding:
+            0 24px;
 
           display: flex;
 
@@ -240,27 +323,40 @@ export default function Location() {
             sans-serif;
 
           box-shadow:
-            0 1px 0 rgba(0, 0, 0, 0.01);
+            0 8px 28px
+            rgba(114, 86, 184, 0.08);
 
           transition:
             transform 0.25s ease,
             box-shadow 0.25s ease,
-            background 0.25s ease;
+            background 0.25s ease,
+            border-color 0.25s ease;
         }
 
+        /* ===================================================
+           CARD HOVER
+        =================================================== */
 
         .location-card:hover {
-          transform: translateY(-3px);
+          transform:
+            translateY(-3px);
+
+          background:
+            #FFFFFF;
+
+          border-color:
+            rgba(155, 126, 222, 0.38);
 
           box-shadow:
-            0 10px 25px rgba(0, 0, 0, 0.07);
+            0 16px 35px
+            rgba(114, 86, 184, 0.14);
         }
-
 
         .location-card:active {
-          transform: translateY(-1px) scale(0.99);
+          transform:
+            translateY(-1px)
+            scale(0.99);
         }
-
 
         /* ===================================================
            LOCATION ICON
@@ -268,13 +364,24 @@ export default function Location() {
 
         .location-icon {
           width: 32px;
+
           height: 32px;
 
-          flex: 0 0 32px;
+          flex:
+            0 0 32px;
 
           border-radius: 50%;
 
-          background: #FFE29A;
+          background:
+            linear-gradient(
+              135deg,
+              #EDE6FF,
+              #DCCEFF
+            );
+
+          border:
+            1px solid
+            rgba(155, 126, 222, 0.18);
 
           position: relative;
 
@@ -285,26 +392,36 @@ export default function Location() {
           justify-content: center;
         }
 
+        /* ===================================================
+           PIN DOT
+        =================================================== */
 
         .location-pin-dot {
           width: 6px;
+
           height: 6px;
 
           border-radius: 50%;
 
-          background: #171717;
+          background:
+            #7256B8;
 
           position: absolute;
 
           top: 7px;
         }
 
+        /* ===================================================
+           PIN LINE
+        =================================================== */
 
         .location-pin-line {
           width: 2px;
+
           height: 11px;
 
-          background: #171717;
+          background:
+            #7256B8;
 
           position: absolute;
 
@@ -312,7 +429,6 @@ export default function Location() {
 
           border-radius: 4px;
         }
-
 
         /* ===================================================
            LOCATION CONTENT
@@ -332,13 +448,16 @@ export default function Location() {
           min-width: 0;
         }
 
+        /* ===================================================
+           LOCATION NAME
+        =================================================== */
 
         .location-name {
           font-size: 15px;
 
           font-weight: 600;
 
-          color: #101010;
+          color: #16131D;
 
           white-space: nowrap;
 
@@ -347,17 +466,19 @@ export default function Location() {
           text-overflow: ellipsis;
         }
 
+        /* ===================================================
+           LOCATION SUBTITLE
+        =================================================== */
 
         .location-subtitle {
           margin-top: 4px;
 
           font-size: 12px;
 
-          color: #777777;
+          color: #777180;
 
           white-space: nowrap;
         }
-
 
         /* ===================================================
            CARD ARROW
@@ -365,13 +486,20 @@ export default function Location() {
 
         .location-arrow {
           width: 34px;
+
           height: 34px;
 
-          flex: 0 0 34px;
+          flex:
+            0 0 34px;
 
           border-radius: 50%;
 
-          background: #FFE4A1;
+          background:
+            #EDE6FF;
+
+          border:
+            1px solid
+            rgba(155, 126, 222, 0.14);
 
           display: flex;
 
@@ -379,22 +507,32 @@ export default function Location() {
 
           justify-content: center;
 
-          color: #151515;
+          color:
+            #7256B8;
 
           font-size: 17px;
 
           transition:
             transform 0.25s ease,
-            background 0.25s ease;
+            background 0.25s ease,
+            color 0.25s ease;
         }
 
+        /* ===================================================
+           ARROW HOVER
+        =================================================== */
 
-        .location-card:hover .location-arrow {
-          transform: translate(2px, -2px);
+        .location-card:hover
+        .location-arrow {
+          transform:
+            translate(2px, -2px);
 
-          background: #FFD875;
+          background:
+            #9B7EDE;
+
+          color:
+            #FFFFFF;
         }
-
 
         /* ===================================================
            MAP WRAPPER
@@ -411,15 +549,20 @@ export default function Location() {
 
           position: relative;
 
-          background: #D7DDE0;
+          background:
+            #E8E3F0;
+
+          border:
+            1px solid
+            rgba(155, 126, 222, 0.16);
 
           box-shadow:
-            0 20px 45px rgba(0, 0, 0, 0.04);
+            0 20px 45px
+            rgba(114, 86, 184, 0.10);
         }
 
-
         /* ===================================================
-           GOOGLE MAP IFRAME
+           MAP
         =================================================== */
 
         .location-map-wrapper iframe {
@@ -431,7 +574,6 @@ export default function Location() {
 
           border: 0;
         }
-
 
         /* ===================================================
            OPEN MAP BUTTON
@@ -446,13 +588,16 @@ export default function Location() {
 
           height: 48px;
 
-          padding: 0 18px;
+          padding:
+            0 18px;
 
           border-radius: 12px;
 
-          background: #FFFFFF;
+          background:
+            rgba(255, 255, 255, 0.96);
 
-          color: #151515;
+          color:
+            #3D334F;
 
           display: flex;
 
@@ -473,32 +618,49 @@ export default function Location() {
 
           letter-spacing: 0.8px;
 
+          border:
+            1px solid
+            rgba(155, 126, 222, 0.18);
+
           box-shadow:
-            0 8px 25px rgba(0, 0, 0, 0.14);
+            0 8px 25px
+            rgba(114, 86, 184, 0.16);
 
           transition:
             transform 0.25s ease,
             box-shadow 0.25s ease,
-            background 0.25s ease;
+            background 0.25s ease,
+            color 0.25s ease;
         }
 
+        /* ===================================================
+           OPEN MAP HOVER
+        =================================================== */
 
         .open-map-button:hover {
-          transform: translateY(-2px);
+          transform:
+            translateY(-2px);
 
-          background: #FFE4A1;
+          background:
+            #9B7EDE;
+
+          color:
+            #FFFFFF;
 
           box-shadow:
-            0 12px 30px rgba(0, 0, 0, 0.18);
+            0 12px 30px
+            rgba(114, 86, 184, 0.25);
         }
 
+        /* ===================================================
+           MAP ARROW
+        =================================================== */
 
         .open-map-arrow {
           font-size: 17px;
 
           line-height: 1;
         }
-
 
         /* ===================================================
            TABLET
@@ -507,24 +669,21 @@ export default function Location() {
         @media (max-width: 1100px) {
 
           .location-wrapper {
-            width: min(
-              calc(100% - 32px),
-              1000px
-            );
+            width:
+              min(
+                calc(100% - 32px),
+                1000px
+              );
           }
-
 
           .location-card {
             max-width: 380px;
           }
 
-
           .location-map-wrapper {
             height: 450px;
           }
-
         }
-
 
         /* ===================================================
            MOBILE
@@ -536,8 +695,8 @@ export default function Location() {
             background:
               linear-gradient(
                 to bottom,
-                #FFE4A1 0%,
-                #FFE4A1 68%,
+                #EDE6FF 0%,
+                #EDE6FF 68%,
                 #FFFFFF 68%,
                 #FFFFFF 100%
               );
@@ -545,16 +704,14 @@ export default function Location() {
             padding-bottom: 45px;
           }
 
-
           .location-wrapper {
-            width: calc(100% - 28px);
+            width:
+              calc(100% - 28px);
           }
-
 
           .location-heading {
             margin-bottom: 28px;
           }
-
 
           .location-heading h2 {
             font-size: 42px;
@@ -562,22 +719,24 @@ export default function Location() {
             letter-spacing: -2px;
           }
 
-
           .location-heading p {
             font-size: 14px;
 
-            padding: 0 10px;
-          }
+            padding:
+              0 10px;
 
+            color:
+              #514A5D;
+          }
 
           /* LOCATION CARD */
 
           .location-list {
-            justify-content: flex-start;
+            justify-content:
+              flex-start;
 
             margin-bottom: 30px;
           }
-
 
           .location-card {
             width: 100%;
@@ -588,27 +747,25 @@ export default function Location() {
 
             border-radius: 17px;
 
-            padding: 0 16px;
+            padding:
+              0 16px;
           }
-
 
           .location-icon {
             width: 30px;
+
             height: 30px;
 
             flex-basis: 30px;
           }
 
-
           .location-name {
             font-size: 14px;
           }
 
-
           .location-subtitle {
             font-size: 11px;
           }
-
 
           /* MAP */
 
@@ -618,7 +775,6 @@ export default function Location() {
             border-radius: 18px;
           }
 
-
           .open-map-button {
             left: 12px;
 
@@ -626,15 +782,14 @@ export default function Location() {
 
             height: 44px;
 
-            padding: 0 14px;
+            padding:
+              0 14px;
 
             border-radius: 10px;
 
             font-size: 10px;
           }
-
         }
-
 
         /* ===================================================
            SMALL MOBILE
@@ -646,20 +801,19 @@ export default function Location() {
             background:
               linear-gradient(
                 to bottom,
-                #FFE4A1 0%,
-                #FFE4A1 65%,
+                #EDE6FF 0%,
+                #EDE6FF 65%,
                 #FFFFFF 65%,
                 #FFFFFF 100%
               );
           }
 
-
           .location-heading h2 {
             font-size: 34px;
 
-            letter-spacing: -1.5px;
+            letter-spacing:
+              -1.5px;
           }
-
 
           .location-heading p {
             font-size: 13px;
@@ -669,20 +823,17 @@ export default function Location() {
             margin-top: 12px;
           }
 
-
           .location-card {
             height: 64px;
 
             border-radius: 16px;
           }
 
-
           .location-map-wrapper {
             height: 350px;
 
             border-radius: 16px;
           }
-
 
           .open-map-button {
             left: 10px;
@@ -691,11 +842,39 @@ export default function Location() {
 
             height: 42px;
 
-            padding: 0 12px;
+            padding:
+              0 12px;
 
             gap: 8px;
           }
+        }
 
+        /* ===================================================
+           EXTRA SMALL
+        =================================================== */
+
+        @media (max-width: 360px) {
+
+          .location-heading h2 {
+            font-size: 31px;
+          }
+
+          .location-heading p {
+            font-size: 12px;
+          }
+
+          .location-card {
+            padding:
+              0 13px;
+          }
+
+          .location-map-wrapper {
+            height: 320px;
+          }
+
+          .open-map-button {
+            font-size: 9px;
+          }
         }
 
       `}</style>

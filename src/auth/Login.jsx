@@ -1,4 +1,5 @@
-// src/pages/auth/Login.jsx
+
+// src/auth/Login.jsx
 
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +17,22 @@ export default function Login({
   playAudio,
 }) {
   const navigate = useNavigate();
+
+  /* =========================================================
+     FORGOT PASSWORD
+  ========================================================= */
+
+  const handleForgotPassword = () => {
+    navigate("/forgot");
+  };
+
+  /* =========================================================
+     REGISTER
+  ========================================================= */
+
+  const handleRegister = () => {
+    navigate("/register");
+  };
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
@@ -87,7 +104,7 @@ export default function Login({
       >
         <button
           type="button"
-          onClick={() => navigate("/register")}
+          onClick={handleRegister}
           className="
             rounded-full
 
@@ -298,7 +315,9 @@ export default function Login({
 
             <div className="space-y-4 sm:space-y-5">
 
-              {/* EMAIL / PHONE */}
+              {/* =================================================
+                  EMAIL / PHONE
+              ================================================= */}
 
               <motion.div
                 initial={{
@@ -317,7 +336,9 @@ export default function Login({
                 <InputBox
                   placeholder="Email / Phone"
                   name="identifier"
-                  value={form?.identifier || ""}
+                  value={
+                    form?.identifier || ""
+                  }
                   onChange={handleChange}
                   onFocus={() =>
                     playAudio("mobile")
@@ -326,7 +347,9 @@ export default function Login({
                 />
               </motion.div>
 
-              {/* PASSWORD */}
+              {/* =================================================
+                  PASSWORD
+              ================================================= */}
 
               <motion.div
                 initial={{
@@ -352,7 +375,9 @@ export default function Login({
                         ? "password"
                         : "text"
                     }
-                    value={form?.password || ""}
+                    value={
+                      form?.password || ""
+                    }
                     onChange={handleChange}
                     onFocus={() =>
                       playAudio("password")
@@ -360,7 +385,9 @@ export default function Login({
                     autoComplete="current-password"
                   />
 
-                  {/* PASSWORD TOGGLE */}
+                  {/* =========================================
+                      PASSWORD TOGGLE
+                  ========================================= */}
 
                   <button
                     type="button"
@@ -403,13 +430,17 @@ export default function Login({
                       active:scale-90
                     "
                   >
-                    {obscure ? "👁️" : "🙈"}
+                    {obscure
+                      ? "👁️"
+                      : "🙈"}
                   </button>
 
                 </div>
               </motion.div>
 
-              {/* LOGIN BUTTON */}
+              {/* =================================================
+                  LOGIN BUTTON
+              ================================================= */}
 
               <motion.div
                 initial={{
@@ -539,8 +570,15 @@ export default function Login({
               "
             >
 
+              {/* =================================================
+                  FORGOT PASSWORD
+              ================================================= */}
+
               <button
                 type="button"
+                onClick={
+                  handleForgotPassword
+                }
                 className="
                   text-[11px]
                   text-white/65
@@ -549,19 +587,21 @@ export default function Login({
 
                   hover:text-white
 
+                  active:scale-95
+
                   sm:text-xs
                 "
               >
                 Forgot password?
               </button>
 
-              {/* CREATE ACCOUNT */}
+              {/* =================================================
+                  CREATE ACCOUNT
+              ================================================= */}
 
               <button
                 type="button"
-                onClick={() =>
-                  navigate("/register")
-                }
+                onClick={handleRegister}
                 className="
                   text-[11px]
                   font-medium
@@ -572,6 +612,8 @@ export default function Login({
 
                   hover:text-white
 
+                  active:scale-95
+
                   sm:text-xs
                 "
               >
@@ -581,7 +623,9 @@ export default function Login({
             </motion.div>
 
           </div>
+
         </motion.div>
+
       </div>
 
       {/* =====================================================

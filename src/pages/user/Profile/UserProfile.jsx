@@ -1,462 +1,2900 @@
-// src/pages/user/Profile/UserProfile.jsx
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-import { motion } from "framer-motion";
-import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  ArrowLeft,
+  Camera,
+  Check,
+  ChevronDown,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Save,
+  ShieldCheck,
+  UserRound,
+  Home,
+  X,
+  Activity,
+  CircleUserRound,
+} from "lucide-react";
+
 import { useNavigate } from "react-router-dom";
+
 import {
   getUserDetails,
   updateUserDetails,
   uploadProfileImage,
   profileImageUrl,
-  logout,
-} from "@/services/apiService";
+} from "@/services/userApi";
+
 import districtsData from "@/assets/data/tamilnadu_locations.json";
-import BottomGlassNavBar from "@/components/BottomGlassNavBar";
-import AccountSettingsSection from "./AccountSettingsSection"; // local import
 
-// ─── Cache ─────────────────────────────────────────────────
-let cachedUser = null;
-let cacheTime = null;
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+import AccountSettingsSection from "./AccountSettingsSection";
 
-const UserProfile = () => {
+import desktopBg from "@/assets/images/desktop_bg.jpeg";
+
+
+/* =========================================================
+   CACHE
+========================================================= */
+
+const CACHE_KEY = "re2buy_user_profile";
+
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+const safeString = (value) => {
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return "";
+  }
+
+  return String(value);
+};
+
+
+/* =========================================================
+   DISTRICTS
+========================================================= */
+
+const getDistrictList = () => {
+  try {
+    if (
+      districtsData &&
+      typeof districtsData === "object" &&
+      !Array.isArray(districtsData)
+    ) {
+      return Object.keys(
+        districtsData
+      ).filter(Boolean);
+    }
+
+    return [];
+  } catch (error) {
+    console.error(
+      "District JSON error:",
+      error
+    );
+
+    return [];
+  }
+};
+
+
+/* =========================================================
+   USER PROFILE
+========================================================= */
+
+export default function UserProfile() {
   const navigate = useNavigate();
 
-  // ─── State ────────────────────────────────────────────────
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [districts, setDistricts] = useState([]);
-  const [selectedDistrict, setSelectedDistrict] = useState("");
-
-  // Edit modal state
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState("");
-  const [editPhone, setEditPhone] = useState("");
-  const [editEmail, setEditEmail] = useState("");
-  const [editAddress, setEditAddress] = useState("");
-  const [editDistrict, setEditDistrict] = useState("");
-
-  // Image
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
 
-  // ─── Load districts ──────────────────────────────────────
+
+  /* =======================================================
+     STATE
+  ======================================================= */
+
+  const [user, setUser] =
+    useState(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [editOpen, setEditOpen] =
+    useState(false);
+
+  const [imageFile, setImageFile] =
+    useState(null);
+
+  const [imagePreview, setImagePreview] =
+    useState("");
+
+  const [toast, setToast] =
+    useState(null);
+
+
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    district: "",
+    address: "",
+  });
+
+
+  /* =======================================================
+     DISTRICTS
+  ======================================================= */
+
+  const districts = useMemo(
+    () => getDistrictList(),
+    []
+  );
+
+
+  /* =======================================================
+     TOAST
+  ======================================================= */
+
+  const showToast = useCallback(
+    (
+      message,
+      type = "success"
+    ) => {
+      setToast({
+        message,
+        type,
+      });
+
+      window.setTimeout(() => {
+        setToast(null);
+      }, 3000);
+    },
+    []
+  );
+
+
+  /* =======================================================
+     IMAGE URL
+  ======================================================= */
+
+  const getImageUrl = useCallback(
+    (key) => {
+      if (!key) {
+        return "";
+      }
+
+      if (
+        typeof key === "string" &&
+        (
+          key.startsWith("http://") ||
+          key.startsWith("https://") ||
+          key.startsWith("data:")
+        )
+      ) {
+        return key;
+      }
+
+      try {
+        return profileImageUrl(key);
+      } catch {
+        return "";
+      }
+    },
+    []
+  );
+
+
+  /* =======================================================
+     APPLY USER
+  ======================================================= */
+
+  const applyUserToForm = useCallback(
+    (data) => {
+      if (!data) {
+        return;
+      }
+
+      setForm({
+        name: safeString(
+          data.name
+        ),
+
+        phone: safeString(
+          data.phone
+        ),
+
+        email: safeString(
+          data.email
+        ),
+
+        district: safeString(
+          data.district
+        ),
+
+        address: safeString(
+          data.address
+        ),
+      });
+    },
+    []
+  );
+
+
+  /* =======================================================
+     LOAD USER
+  ======================================================= */
+
+  const loadUser = useCallback(
+    async (useCache = true) => {
+      setLoading(true);
+
+      try {
+        /* CACHE */
+
+        if (useCache) {
+          const cached =
+            sessionStorage.getItem(
+              CACHE_KEY
+            );
+
+          if (cached) {
+            try {
+              const parsed =
+                JSON.parse(cached);
+
+              if (
+                parsed &&
+                typeof parsed ===
+                  "object"
+              ) {
+                setUser(parsed);
+
+                applyUserToForm(
+                  parsed
+                );
+
+                if (
+                  parsed.profileImage
+                ) {
+                  setImagePreview(
+                    getImageUrl(
+                      parsed.profileImage
+                    )
+                  );
+                }
+
+                setLoading(false);
+              }
+            } catch {
+              sessionStorage.removeItem(
+                CACHE_KEY
+              );
+            }
+          }
+        }
+
+
+        /* API */
+
+        const actualUser =
+          await getUserDetails();
+
+        if (!actualUser) {
+          throw new Error(
+            "Unable to load user"
+          );
+        }
+
+
+        setUser(
+          actualUser
+        );
+
+        applyUserToForm(
+          actualUser
+        );
+
+
+        if (
+          actualUser.profileImage
+        ) {
+          setImagePreview(
+            getImageUrl(
+              actualUser.profileImage
+            )
+          );
+        } else {
+          setImagePreview("");
+        }
+
+
+        sessionStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify(
+            actualUser
+          )
+        );
+      } catch (error) {
+        console.error(
+          "Profile load error:",
+          error
+        );
+
+        if (!user) {
+          showToast(
+            "Unable to load profile",
+            "error"
+          );
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      applyUserToForm,
+      getImageUrl,
+      showToast,
+      user,
+    ]
+  );
+
+
+  /* =======================================================
+     INITIAL LOAD
+  ======================================================= */
+
   useEffect(() => {
-    setDistricts(Object.keys(districtsData));
+    loadUser(true);
   }, []);
 
-  // ─── Load user (with caching) ────────────────────────────
-  const loadUser = useCallback(async () => {
-    // Check cache
-    if (cachedUser && cacheTime && Date.now() - cacheTime < CACHE_DURATION) {
-      setUser(cachedUser);
-      setSelectedDistrict(cachedUser.district || "");
-      setIsLoading(false);
+
+  /* =======================================================
+     IMAGE
+  ======================================================= */
+
+  const displayImage = useMemo(() => {
+    if (imagePreview) {
+      return imagePreview;
+    }
+
+    if (
+      user?.profileImage
+    ) {
+      return getImageUrl(
+        user.profileImage
+      );
+    }
+
+    return "";
+  }, [
+    imagePreview,
+    user,
+    getImageUrl,
+  ]);
+
+
+  /* =======================================================
+     OPEN EDIT
+  ======================================================= */
+
+  const openEdit = () => {
+    if (!user) {
       return;
     }
 
-    try {
-      const data = await getUserDetails();
-      if (data) {
-        cachedUser = data;
-        cacheTime = Date.now();
-        setUser(data);
-        setSelectedDistrict(data.district || "");
-      }
-    } catch (error) {
-      console.error("Failed to load user:", error);
-    } finally {
-      setIsLoading(false);
+    setForm({
+      name: safeString(
+        user.name
+      ),
+
+      phone: safeString(
+        user.phone
+      ),
+
+      email: safeString(
+        user.email
+      ),
+
+      district: safeString(
+        user.district
+      ),
+
+      address: safeString(
+        user.address
+      ),
+    });
+
+    setImageFile(null);
+
+    if (
+      user.profileImage
+    ) {
+      setImagePreview(
+        getImageUrl(
+          user.profileImage
+        )
+      );
+    } else {
+      setImagePreview("");
     }
-  }, []);
 
-  useEffect(() => {
-    loadUser();
-  }, [loadUser]);
-
-  // ─── Image helpers ────────────────────────────────────────
-  const getProfileImageUrl = () => {
-    if (imagePreview) return imagePreview;
-    if (user?.profileImage) return profileImageUrl(user.profileImage);
-    return "https://cdn-icons-png.flaticon.com/512/1144/1144709.png";
+    setEditOpen(true);
   };
 
-  const handleImagePick = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+
+  /* =======================================================
+     CLOSE EDIT
+  ======================================================= */
+
+  const closeEdit = () => {
+    if (saving) {
+      return;
+    }
+
+    setEditOpen(false);
+  };
+
+
+  /* =======================================================
+     INPUT
+  ======================================================= */
+
+  const handleChange = (
+    event
+  ) => {
+    const {
+      name,
+      value,
+    } = event.target;
+
+    setForm(
+      (previous) => ({
+        ...previous,
+        [name]: value,
+      })
+    );
+  };
+
+
+  /* =======================================================
+     IMAGE SELECT
+  ======================================================= */
+
+  const handleImageChange = (
+    event
+  ) => {
+    const file =
+      event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (
+      !file.type.startsWith(
+        "image/"
+      )
+    ) {
+      showToast(
+        "Please select an image",
+        "error"
+      );
+
+      event.target.value = "";
+
+      return;
+    }
+
+    if (
+      file.size >
+      8 * 1024 * 1024
+    ) {
+      showToast(
+        "Image must be below 8MB",
+        "error"
+      );
+
+      event.target.value = "";
+
+      return;
+    }
 
     setImageFile(file);
-    const reader = new FileReader();
-    reader.onload = (ev) => setImagePreview(ev.target.result);
-    reader.readAsDataURL(file);
+
+    const reader =
+      new FileReader();
+
+    reader.onload = () => {
+      setImagePreview(
+        String(
+          reader.result || ""
+        )
+      );
+    };
+
+    reader.readAsDataURL(
+      file
+    );
   };
 
-  const triggerFileInput = () => fileInputRef.current?.click();
 
-  // ─── Open edit modal ──────────────────────────────────────
-  const openEditModal = () => {
-    if (!user) return;
-    setEditName(user.name || "");
-    setEditPhone(user.phone || "");
-    setEditEmail(user.email || "");
-    setEditAddress(user.address || "");
-    setEditDistrict(user.district || "");
-    setIsEditing(true);
-  };
+  /* =======================================================
+     REMOVE SELECTED IMAGE
+  ======================================================= */
 
-  // ─── Save profile ─────────────────────────────────────────
-  const saveProfile = async () => {
-    try {
-      await updateUserDetails({
-        name: editName,
-        phone: editPhone,
-        email: editEmail,
-        district: editDistrict,
-        address: editAddress,
-      });
+  const removeSelectedImage = () => {
+    setImageFile(null);
 
-      if (imageFile) {
-        await uploadProfileImage({ imageFile });
-      }
+    if (
+      user?.profileImage
+    ) {
+      setImagePreview(
+        getImageUrl(
+          user.profileImage
+        )
+      );
+    } else {
+      setImagePreview("");
+    }
 
-      cachedUser = null;
-      cacheTime = null;
-      await loadUser();
-
-      setImageFile(null);
-      setImagePreview(null);
-      setIsEditing(false);
-
-      alert("✅ Profile updated successfully");
-    } catch (error) {
-      console.error("Save error:", error);
-      alert("Failed to update profile");
+    if (
+      fileInputRef.current
+    ) {
+      fileInputRef.current.value =
+        "";
     }
   };
 
-  // ─── Change password navigation ──────────────────────────
-  const goToChangePassword = () => {
-    navigate("/change-password");
+
+  /* =======================================================
+     SAVE
+  ======================================================= */
+
+  const saveProfile = async (
+    event
+  ) => {
+    event.preventDefault();
+
+    if (saving) {
+      return;
+    }
+
+    const name =
+      form.name.trim();
+
+    if (!name) {
+      showToast(
+        "Please enter your name",
+        "error"
+      );
+
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const updated =
+        await updateUserDetails({
+          name,
+
+          phone:
+            form.phone.trim(),
+
+          email:
+            form.email.trim(),
+
+          district:
+            form.district.trim(),
+
+          address:
+            form.address.trim(),
+        });
+
+
+      if (!updated) {
+        throw new Error(
+          "Profile update failed"
+        );
+      }
+
+
+      if (imageFile) {
+        const uploaded =
+          await uploadProfileImage({
+            imageFile,
+          });
+
+        if (!uploaded) {
+          showToast(
+            "Profile saved, image upload failed",
+            "error"
+          );
+        }
+      }
+
+
+      sessionStorage.removeItem(
+        CACHE_KEY
+      );
+
+      setImageFile(null);
+
+      setEditOpen(false);
+
+      await loadUser(false);
+
+      showToast(
+        "Profile updated successfully"
+      );
+    } catch (error) {
+      console.error(
+        "Save profile error:",
+        error
+      );
+
+      showToast(
+        error?.message ||
+          "Failed to update profile",
+        "error"
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // ─── Logout ──────────────────────────────────────────────
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
-  // ─── Render ──────────────────────────────────────────────
-  if (isLoading) {
+  /* =======================================================
+     LOADING
+  ======================================================= */
+
+  if (
+    loading &&
+    !user
+  ) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#EEF2FF]">
-        <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-      </div>
+      <LoadingScreen />
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#EEF2FF] relative overflow-hidden">
-      {/* Decorative circles */}
-      <div className="absolute -top-32 -left-24 w-64 h-64 rounded-full bg-blue-400/25 blur-2xl" />
-      <div className="absolute -top-16 -right-20 w-56 h-56 rounded-full bg-purple-400/30 blur-2xl" />
-      <div className="absolute bottom-40 right-0 w-44 h-44 rounded-full bg-purple-300/20 blur-2xl" />
 
-      {/* Main content */}
-      <div className="relative z-10">
-        {/* Gradient header */}
-        <div className="bg-gradient-to-br from-[#7C5CFC] via-[#9F7AEA] to-[#C4B5FD] rounded-b-[42px] px-6 pt-16 pb-12 shadow-lg">
-          <div className="flex flex-col items-center">
-            {/* Profile image */}
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="relative"
-            >
-              <div className="p-1 rounded-full border-2 border-white/60 shadow-xl">
-                <div className="w-28 h-28 rounded-full bg-white p-1">
+  /* =======================================================
+     VALUES
+  ======================================================= */
+
+  const name =
+    safeString(
+      user?.name
+    ) || "User";
+
+  const phone =
+    safeString(
+      user?.phone
+    );
+
+  const email =
+    safeString(
+      user?.email
+    );
+
+  const district =
+    safeString(
+      user?.district
+    );
+
+  const address =
+    safeString(
+      user?.address
+    );
+
+  const verification =
+    safeString(
+      user?.verification
+    );
+
+
+  /* =======================================================
+     PAGE
+  ======================================================= */
+
+  return (
+    <div className="profile-page">
+
+
+      {/* =================================================
+          BACKGROUND IMAGE
+      ================================================= */}
+
+      <img
+        src={desktopBg}
+        alt=""
+        className="profile-background"
+      />
+
+
+      {/* =================================================
+          ONLY ONE GLASS LAYER
+      ================================================= */}
+
+      <div className="profile-glass">
+
+
+        {/* =================================================
+            TOP BAR
+        ================================================= */}
+
+        <div className="profile-topbar">
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate(-1)
+            }
+            className="back-button"
+          >
+            <ArrowLeft
+              size={17}
+            />
+
+            <span>
+              Back
+            </span>
+          </button>
+
+
+          <div className="profile-heading">
+
+            <span>
+              RE2BUY
+            </span>
+
+            <strong>
+              Profile
+            </strong>
+
+          </div>
+
+
+          <div className="top-avatar">
+            <CircleUserRound
+              size={18}
+            />
+          </div>
+
+        </div>
+
+
+        {/* =================================================
+            MAIN CONTENT
+        ================================================= */}
+
+        <div className="profile-layout">
+
+
+          {/* =================================================
+              LEFT
+          ================================================= */}
+
+          <aside className="profile-left">
+
+            <div className="section-label">
+              ACCOUNT
+            </div>
+
+            <h2>
+              My Profile
+            </h2>
+
+
+            {/* PROFILE IMAGE */}
+
+            <div className="profile-image-wrap">
+
+              <div className="profile-image">
+
+                {displayImage ? (
                   <img
-                    src={getProfileImageUrl()}
-                    alt="Profile"
-                    className="w-full h-full rounded-full object-cover"
+                    src={displayImage}
+                    alt={name}
+                    onError={() =>
+                      setImagePreview("")
+                    }
                   />
-                </div>
+                ) : (
+                  <UserRound
+                    size={58}
+                    strokeWidth={1.4}
+                  />
+                )}
+
               </div>
-              <button
-                onClick={triggerFileInput}
-                className="absolute bottom-1 right-1 bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA] p-2 rounded-full shadow-md hover:scale-105 transition"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-4 h-4 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+
+              <span className="online-dot" />
+
+            </div>
+
+
+            <h1 className="profile-name">
+              {name}
+            </h1>
+
+
+            {verification && (
+              <div className="verification">
+                <ShieldCheck
+                  size={13}
+                />
+
+                {verification}
+              </div>
+            )}
+
+
+            <button
+              type="button"
+              onClick={openEdit}
+              className="edit-button"
+            >
+              <Pencil
+                size={14}
+              />
+
+              Edit Profile
+            </button>
+
+
+            {/* CONTACT */}
+
+            <div className="contact-list">
+
+              <FlatInfo
+                icon={Phone}
+                label="PHONE"
+                value={
+                  phone ||
+                  "Not added"
+                }
+              />
+
+              <FlatInfo
+                icon={Mail}
+                label="EMAIL"
+                value={
+                  email ||
+                  "Not added"
+                }
+              />
+
+              <FlatInfo
+                icon={MapPin}
+                label="DISTRICT"
+                value={
+                  district ||
+                  "Not added"
+                }
+              />
+
+            </div>
+
+          </aside>
+
+
+          {/* =================================================
+              RIGHT
+          ================================================= */}
+
+          <section className="profile-right">
+
+
+            {/* PERSONAL */}
+
+            <div className="personal-section">
+
+              <div className="section-header">
+
+                <div>
+                  <div className="section-label">
+                    PERSONAL
+                  </div>
+
+                  <h2>
+                    Profile Information
+                  </h2>
+                </div>
+
+                <div className="active-status">
+                  <span />
+                  ACTIVE
+                </div>
+
+              </div>
+
+
+              <div className="info-grid">
+
+                <InfoBox
+                  icon={UserRound}
+                  label="FULL NAME"
+                  value={name}
+                />
+
+                <InfoBox
+                  icon={Phone}
+                  label="PHONE NUMBER"
+                  value={
+                    phone ||
+                    "Not added"
+                  }
+                />
+
+                <InfoBox
+                  icon={Mail}
+                  label="EMAIL"
+                  value={
+                    email ||
+                    "Not added"
+                  }
+                />
+
+                <InfoBox
+                  icon={MapPin}
+                  label="DISTRICT"
+                  value={
+                    district ||
+                    "Not added"
+                  }
+                />
+
+                <InfoBox
+                  icon={Home}
+                  label="ADDRESS"
+                  value={
+                    address ||
+                    "Not added"
+                  }
+                  wide
+                />
+
+              </div>
+
+            </div>
+
+
+            {/* STATS */}
+
+            <div className="stats-grid">
+
+              <Stat
+                number={
+                  district
+                    ? "01"
+                    : "00"
+                }
+                label="LOCATION"
+              />
+
+              <Stat
+                number={
+                  email
+                    ? "01"
+                    : "00"
+                }
+                label="EMAIL"
+              />
+
+              <Stat
+                number={
+                  phone
+                    ? "01"
+                    : "00"
+                }
+                label="CONTACT"
+              />
+
+            </div>
+
+
+            {/* SETTINGS */}
+
+            <div className="settings-section">
+
+              <div className="section-label">
+                SETTINGS
+              </div>
+
+              <h2>
+                Account Settings
+              </h2>
+
+
+              {/* 
+                  IMPORTANT:
+                  AccountSettingsSection should be
+                  FLAT — no glass/background wrapper.
+              */}
+
+              <AccountSettingsSection
+                onEditProfile={
+                  openEdit
+                }
+                onChangePassword={() =>
+                  navigate(
+                    "/change-password"
+                  )
+                }
+              />
+
+            </div>
+
+          </section>
+
+        </div>
+
+      </div>
+
+
+      {/* =====================================================
+          EDIT MODAL
+      ===================================================== */}
+
+      {editOpen && (
+        <div className="edit-overlay">
+
+          <div className="edit-modal">
+
+            <button
+              type="button"
+              disabled={saving}
+              onClick={
+                closeEdit
+              }
+              className="modal-close"
+            >
+              <X
+                size={18}
+              />
+            </button>
+
+
+            <div className="section-label">
+              ACCOUNT
+            </div>
+
+            <h2>
+              Edit Profile
+            </h2>
+
+            <p>
+              Update your personal information
+            </p>
+
+
+            {/* IMAGE */}
+
+            <div className="edit-photo">
+
+              <div className="edit-photo-inner">
+
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    alt="Profile"
                   />
-                </svg>
+                ) : (
+                  <UserRound
+                    size={48}
+                  />
+                )}
+
+              </div>
+
+
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() =>
+                  fileInputRef.current?.click()
+                }
+                className="camera-button"
+              >
+                <Camera
+                  size={16}
+                />
               </button>
+
+
               <input
-                ref={fileInputRef}
+                ref={
+                  fileInputRef
+                }
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={handleImagePick}
+                onChange={
+                  handleImageChange
+                }
               />
-            </motion.div>
 
-            {/* Name */}
-            <motion.h2
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="text-2xl font-extrabold text-white mt-4 tracking-wide"
-            >
-              {user?.name || "User"}
-            </motion.h2>
+            </div>
 
-            {/* Phone & Email */}
-            <motion.div
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="mt-3 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full border border-white/30"
-            >
-              <span className="text-white font-semibold text-sm">
-                {user?.phone || "N/A"} • {user?.email || "N/A"}
-              </span>
-            </motion.div>
-          </div>
-        </div>
 
-        {/* Address Card */}
-        <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="mx-4 -mt-6"
-        >
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-5 border border-white/60 shadow-sm">
-            <div className="flex items-start gap-4">
-              <div className="bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA] p-3 rounded-2xl">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+            {imageFile && (
+              <div className="selected-image">
+
+                <span>
+                  {imageFile.name}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={
+                    removeSelectedImage
+                  }
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
+                  Remove
+                </button>
+
               </div>
-              <div className="flex-1">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Address
-                </p>
-                <p className="text-base font-bold text-gray-800 mt-1 leading-relaxed">
-                  {user?.address || "No address"}, {user?.district || ""}
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+            )}
 
-        {/* Account Settings */}
-        <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mx-4 mt-4"
-        >
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/60 shadow-sm overflow-hidden">
-            <AccountSettingsSection
-              onEditProfile={openEditModal}
-              onChangePassword={goToChangePassword}
-              onLogout={handleLogout}
-            />
-          </div>
-        </motion.div>
 
-        <div className="h-32" />
-      </div>
+            {/* FORM */}
 
-      {/* Bottom Navigation */}
-      <BottomGlassNavBar currentIndex={4} />
-
-      {/* ====================================================
-          EDIT MODAL (Bottom Sheet)
-          ==================================================== */}
-      {isEditing && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 backdrop-blur-sm"
-          onClick={() => setIsEditing(false)}
-        >
-          <div
-            className="w-full max-w-md bg-[#F8FAFC] rounded-t-3xl p-6 pb-8 animate-slide-up"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Handle */}
-            <div className="w-14 h-1.5 bg-gray-300 rounded-full mx-auto mb-6" />
-
-            {/* Profile image (click to change) */}
-            <div className="flex justify-center mb-6">
-              <button onClick={triggerFileInput} className="relative">
-                <div className="w-24 h-24 rounded-full bg-white shadow-md overflow-hidden">
-                  <img
-                    src={getProfileImageUrl()}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="absolute bottom-0 right-0 bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA] p-2 rounded-full shadow-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                    />
-                  </svg>
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImagePick}
-                />
-              </button>
-            </div>
-
-            {/* Form fields */}
-            <div className="space-y-4">
-              <TextField
-                label="Full Name"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                icon={
-                  <svg className="w-5 h-5 text-[#8B5CF6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                }
-              />
-              <TextField
-                label="Phone"
-                value={editPhone}
-                onChange={(e) => setEditPhone(e.target.value)}
-                icon={
-                  <svg className="w-5 h-5 text-[#8B5CF6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                }
-              />
-              <TextField
-                label="Email"
-                value={editEmail}
-                onChange={(e) => setEditEmail(e.target.value)}
-                type="email"
-                icon={
-                  <svg className="w-5 h-5 text-[#8B5CF6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                }
-              />
-              <DropdownField
-                label="District"
-                value={editDistrict}
-                options={districts}
-                onChange={(val) => setEditDistrict(val)}
-                icon={
-                  <svg className="w-5 h-5 text-[#8B5CF6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                }
-              />
-              <TextField
-                label="Address"
-                value={editAddress}
-                onChange={(e) => setEditAddress(e.target.value)}
-                icon={
-                  <svg className="w-5 h-5 text-[#8B5CF6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                }
-              />
-            </div>
-
-            <button
-              onClick={saveProfile}
-              className="w-full mt-8 py-4 bg-[#8B5CF6] hover:bg-[#7C5CFC] text-white font-bold rounded-2xl transition"
+            <form
+              onSubmit={
+                saveProfile
+              }
+              className="edit-form"
             >
-              SAVE CHANGES
-            </button>
+
+              <ProfileInput
+                label="Full Name"
+                name="name"
+                value={
+                  form.name
+                }
+                onChange={
+                  handleChange
+                }
+                icon={
+                  UserRound
+                }
+                disabled={
+                  saving
+                }
+                required
+              />
+
+
+              <ProfileInput
+                label="Phone"
+                name="phone"
+                type="tel"
+                value={
+                  form.phone
+                }
+                onChange={
+                  handleChange
+                }
+                icon={
+                  Phone
+                }
+                disabled={
+                  saving
+                }
+              />
+
+
+              <ProfileInput
+                label="Email"
+                name="email"
+                type="email"
+                value={
+                  form.email
+                }
+                onChange={
+                  handleChange
+                }
+                icon={
+                  Mail
+                }
+                disabled={
+                  saving
+                }
+              />
+
+
+              {/* DISTRICT */}
+
+              <div>
+
+                <label>
+                  District
+                </label>
+
+                <div className="select-wrap">
+
+                  <MapPin
+                    size={17}
+                  />
+
+                  <select
+                    name="district"
+                    value={
+                      form.district ||
+                      ""
+                    }
+                    onChange={
+                      handleChange
+                    }
+                    disabled={
+                      saving
+                    }
+                  >
+
+                    <option value="">
+                      Select District
+                    </option>
+
+                    {districts.map(
+                      (
+                        item
+                      ) => (
+                        <option
+                          key={
+                            item
+                          }
+                          value={
+                            item
+                          }
+                        >
+                          {item}
+                        </option>
+                      )
+                    )}
+
+                  </select>
+
+                  <ChevronDown
+                    size={17}
+                  />
+
+                </div>
+
+              </div>
+
+
+              <ProfileInput
+                label="Address"
+                name="address"
+                value={
+                  form.address
+                }
+                onChange={
+                  handleChange
+                }
+                icon={
+                  Home
+                }
+                disabled={
+                  saving
+                }
+              />
+
+
+              <button
+                type="submit"
+                disabled={
+                  saving
+                }
+                className="save-button"
+              >
+
+                {saving ? (
+                  <>
+                    <span className="spinner" />
+
+                    SAVING...
+                  </>
+                ) : (
+                  <>
+                    <Save
+                      size={17}
+                    />
+
+                    SAVE CHANGES
+                  </>
+                )}
+
+              </button>
+
+            </form>
+
           </div>
+
         </div>
       )}
+
+
+      {/* =====================================================
+          TOAST
+      ===================================================== */}
+
+      {toast && (
+        <div className="profile-toast">
+
+          {toast.type ===
+          "error" ? (
+            <X
+              size={15}
+              className="toast-error"
+            />
+          ) : (
+            <Check
+              size={15}
+              className="toast-success"
+            />
+          )}
+
+          {toast.message}
+
+        </div>
+      )}
+
+
+      {/* =====================================================
+          STYLES
+      ===================================================== */}
+
+      <style>{`
+
+        /* ===================================================
+           PAGE
+        =================================================== */
+
+        .profile-page {
+          position: relative;
+          min-height: 100vh;
+          width: 100%;
+          overflow-x: hidden;
+          color: #172033;
+          font-family: Inter, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+
+        /* ===================================================
+           BACKGROUND
+        =================================================== */
+
+        .profile-background {
+          position: fixed;
+          inset: 0;
+          z-index: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+
+        /* ===================================================
+           ONE AND ONLY GLASS LAYER
+        =================================================== */
+
+        .profile-glass {
+          position: relative;
+          z-index: 2;
+
+          width: min(
+            1180px,
+            calc(100% - 32px)
+          );
+
+          min-height: calc(100vh - 40px);
+
+          margin: 20px auto;
+
+          padding: 22px;
+
+          border-radius: 34px;
+
+          background: rgba(
+            255,
+            255,
+            255,
+            0.30
+          );
+
+          border: 1px solid rgba(
+            255,
+            255,
+            255,
+            0.68
+          );
+
+          box-shadow:
+            0 30px 100px
+            rgba(30, 40, 55, 0.18);
+
+          backdrop-filter: blur(22px);
+          -webkit-backdrop-filter: blur(22px);
+        }
+
+
+        /* ===================================================
+           TOP BAR
+           NO GLASS HERE
+        =================================================== */
+
+        .profile-topbar {
+          position: relative;
+
+          height: 58px;
+
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          padding: 0 2px;
+        }
+
+
+        .back-button {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          height: 40px;
+
+          padding: 0 15px;
+
+          border: 0;
+          border-radius: 999px;
+
+          background: rgba(
+            255,
+            255,
+            255,
+            0.45
+          );
+
+          color: #334155;
+
+          font-size: 12px;
+          font-weight: 700;
+
+          cursor: pointer;
+
+          transition: 0.2s ease;
+        }
+
+        .back-button:hover {
+          background: rgba(
+            255,
+            255,
+            255,
+            0.70
+          );
+
+          transform: translateX(-2px);
+        }
+
+
+        .profile-heading {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+
+          transform:
+            translate(-50%, -50%);
+
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .profile-heading span {
+          font-size: 8px;
+          font-weight: 800;
+          letter-spacing: 0.28em;
+          color: #94a3b8;
+        }
+
+        .profile-heading strong {
+          margin-top: 2px;
+
+          font-size: 15px;
+          font-weight: 900;
+
+          color: #172033;
+        }
+
+
+        .top-avatar {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          width: 40px;
+          height: 40px;
+
+          border-radius: 50%;
+
+          background: rgba(
+            255,
+            255,
+            255,
+            0.48
+          );
+
+          color: #64748b;
+        }
+
+
+        /* ===================================================
+           MAIN
+        =================================================== */
+
+        .profile-layout {
+          display: grid;
+
+          grid-template-columns:
+            330px minmax(0, 1fr);
+
+          gap: 30px;
+
+          padding-top: 18px;
+        }
+
+
+        /* ===================================================
+           LEFT
+           NO GLASS
+        =================================================== */
+
+        .profile-left {
+          padding: 20px 22px;
+        }
+
+
+        .section-label {
+          font-size: 9px;
+          font-weight: 800;
+
+          letter-spacing: 0.22em;
+
+          color: #91a0b5;
+        }
+
+
+        .profile-left h2,
+        .profile-right h2,
+        .settings-section h2 {
+          margin: 5px 0 0;
+
+          color: #182337;
+
+          font-size: 19px;
+          font-weight: 900;
+        }
+
+
+        .profile-image-wrap {
+          position: relative;
+
+          width: 145px;
+          height: 145px;
+
+          margin: 32px auto 0;
+        }
+
+
+        .profile-image {
+          width: 145px;
+          height: 145px;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          overflow: hidden;
+
+          border-radius: 38px;
+
+          background: rgba(
+            255,
+            255,
+            255,
+            0.58
+          );
+
+          color: #91a1b8;
+
+          box-shadow:
+            0 18px 40px
+            rgba(40, 50, 65, 0.14);
+        }
+
+
+        .profile-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+
+        .online-dot {
+          position: absolute;
+
+          right: 0;
+          bottom: 2px;
+
+          width: 22px;
+          height: 22px;
+
+          border-radius: 50%;
+
+          background: #35d49b;
+
+          border: 5px solid white;
+        }
+
+
+        .profile-name {
+          margin: 22px 0 0;
+
+          text-align: center;
+
+          font-size: 25px;
+          font-weight: 950;
+
+          color: #172033;
+        }
+
+
+        .verification {
+          width: fit-content;
+
+          display: flex;
+          align-items: center;
+          gap: 5px;
+
+          margin: 7px auto 0;
+
+          padding: 5px 11px;
+
+          border-radius: 999px;
+
+          color: #14966c;
+
+          background: rgba(
+            236,
+            253,
+            245,
+            0.70
+          );
+
+          font-size: 9px;
+          font-weight: 800;
+        }
+
+
+        .edit-button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+
+          height: 43px;
+
+          margin: 18px auto 0;
+
+          padding: 0 22px;
+
+          border: 0;
+          border-radius: 999px;
+
+          background: #172033;
+          color: white;
+
+          font-size: 11px;
+          font-weight: 800;
+
+          cursor: pointer;
+
+          box-shadow:
+            0 12px 25px
+            rgba(23, 32, 51, 0.20);
+
+          transition: 0.2s ease;
+        }
+
+        .edit-button:hover {
+          transform: translateY(-2px);
+        }
+
+
+        .contact-list {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+
+          margin-top: 28px;
+        }
+
+
+        .flat-info {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+
+          min-height: 54px;
+
+          padding: 8px 12px;
+
+          border-radius: 16px;
+
+          background: rgba(
+            255,
+            255,
+            255,
+            0.40
+          );
+        }
+
+
+        .flat-info-icon {
+          width: 30px;
+          height: 30px;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          flex-shrink: 0;
+
+          border-radius: 10px;
+
+          background: rgba(
+            255,
+            255,
+            255,
+            0.48
+          );
+
+          color: #607086;
+        }
+
+
+        .flat-info-content {
+          min-width: 0;
+        }
+
+        .flat-info-label {
+          font-size: 8px;
+          font-weight: 800;
+
+          letter-spacing: 0.12em;
+
+          color: #91a0b5;
+        }
+
+        .flat-info-value {
+          margin-top: 2px;
+
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+
+          font-size: 10px;
+          font-weight: 700;
+
+          color: #334155;
+        }
+
+
+        /* ===================================================
+           RIGHT
+        =================================================== */
+
+        .profile-right {
+          min-width: 0;
+        }
+
+
+        .personal-section {
+          padding: 20px 4px;
+        }
+
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          margin-bottom: 20px;
+        }
+
+
+        .active-status {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+
+          padding: 10px 15px;
+
+          border-radius: 999px;
+
+          background: rgba(
+            255,
+            255,
+            255,
+            0.42
+          );
+
+          color: #607086;
+
+          font-size: 9px;
+          font-weight: 800;
+        }
+
+        .active-status span {
+          width: 7px;
+          height: 7px;
+
+          border-radius: 50%;
+
+          background: #35d49b;
+        }
+
+
+        /* ===================================================
+           INFO GRID
+           NO BLUR
+        =================================================== */
+
+        .info-grid {
+          display: grid;
+
+          grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+          gap: 10px;
+        }
+
+
+        .info-box {
+          display: flex;
+          align-items: center;
+          gap: 13px;
+
+          min-width: 0;
+
+          min-height: 70px;
+
+          padding: 12px 15px;
+
+          border-radius: 20px;
+
+          background: rgba(
+            255,
+            255,
+            255,
+            0.48
+          );
+
+          box-shadow:
+            0 8px 25px
+            rgba(70, 80, 95, 0.05);
+        }
+
+
+        .info-box.wide {
+          grid-column: span 2;
+        }
+
+
+        .info-icon {
+          width: 40px;
+          height: 40px;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          flex-shrink: 0;
+
+          border-radius: 14px;
+
+          background: rgba(
+            255,
+            255,
+            255,
+            0.55
+          );
+
+          color: #64748b;
+        }
+
+
+        .info-content {
+          min-width: 0;
+        }
+
+
+        .info-label {
+          font-size: 8px;
+          font-weight: 800;
+
+          letter-spacing: 0.13em;
+
+          color: #91a0b5;
+        }
+
+
+        .info-value {
+          margin-top: 4px;
+
+          overflow: hidden;
+          text-overflow: ellipsis;
+
+          font-size: 12px;
+          font-weight: 800;
+
+          color: #334155;
+
+          word-break: break-word;
+        }
+
+
+        /* ===================================================
+           STATS
+        =================================================== */
+
+        .stats-grid {
+          display: grid;
+
+          grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+          gap: 10px;
+
+          margin-top: 2px;
+        }
+
+
+        .stat {
+          min-height: 76px;
+
+          padding: 14px;
+
+          border-radius: 20px;
+
+          background: rgba(
+            255,
+            255,
+            255,
+            0.38
+          );
+        }
+
+
+        .stat-number {
+          font-size: 22px;
+          font-weight: 950;
+
+          color: #172033;
+        }
+
+
+        .stat-label {
+          margin-top: 2px;
+
+          font-size: 8px;
+          font-weight: 800;
+
+          letter-spacing: 0.14em;
+
+          color: #91a0b5;
+        }
+
+
+        /* ===================================================
+           SETTINGS
+        =================================================== */
+
+        .settings-section {
+          margin-top: 12px;
+
+          padding: 20px 4px 0;
+
+          border-top:
+            1px solid
+            rgba(
+              255,
+              255,
+              255,
+              0.50
+            );
+        }
+
+
+        /* ===================================================
+           EDIT MODAL
+        =================================================== */
+
+        .edit-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 100;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          padding: 18px;
+
+          background:
+            rgba(
+              20,
+              28,
+              40,
+              0.28
+            );
+
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        }
+
+
+        .edit-modal {
+          position: relative;
+
+          width: min(
+            540px,
+            100%
+          );
+
+          max-height: 94vh;
+
+          overflow-y: auto;
+
+          padding: 28px;
+
+          border-radius: 30px;
+
+          background: rgba(
+            255,
+            255,
+            255,
+            0.92
+          );
+
+          box-shadow:
+            0 35px 100px
+            rgba(20, 30, 45, 0.30);
+        }
+
+
+        .edit-modal h2 {
+          margin: 5px 0 0;
+
+          font-size: 25px;
+          font-weight: 950;
+
+          color: #172033;
+        }
+
+
+        .edit-modal > p {
+          margin: 4px 0 0;
+
+          color: #8b98a9;
+
+          font-size: 12px;
+        }
+
+
+        .modal-close {
+          position: absolute;
+
+          right: 16px;
+          top: 16px;
+
+          width: 38px;
+          height: 38px;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          border: 0;
+          border-radius: 50%;
+
+          background: #f1f4f7;
+
+          color: #64748b;
+
+          cursor: pointer;
+        }
+
+
+        .edit-photo {
+          position: relative;
+
+          width: 110px;
+          height: 110px;
+
+          margin: 25px auto 0;
+        }
+
+
+        .edit-photo-inner {
+          width: 110px;
+          height: 110px;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          overflow: hidden;
+
+          border-radius: 30px;
+
+          background: #f1f4f7;
+
+          color: #94a3b8;
+        }
+
+
+        .edit-photo-inner img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+
+        .camera-button {
+          position: absolute;
+
+          right: -3px;
+          bottom: -3px;
+
+          width: 36px;
+          height: 36px;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          border: 3px solid white;
+          border-radius: 50%;
+
+          background: #172033;
+          color: white;
+
+          cursor: pointer;
+        }
+
+
+        .selected-image {
+          width: fit-content;
+          max-width: 100%;
+
+          display: flex;
+          align-items: center;
+          gap: 10px;
+
+          margin: 10px auto 0;
+
+          padding: 7px 11px;
+
+          border-radius: 999px;
+
+          background: #f4f6f8;
+
+          font-size: 10px;
+          color: #64748b;
+        }
+
+
+        .selected-image span {
+          max-width: 180px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+
+        .selected-image button {
+          border: 0;
+          background: transparent;
+
+          color: #ef4444;
+
+          font-size: 10px;
+          font-weight: 800;
+
+          cursor: pointer;
+        }
+
+
+        .edit-form {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+
+          margin-top: 24px;
+        }
+
+
+        .edit-form label {
+          display: block;
+
+          margin-bottom: 7px;
+
+          font-size: 10px;
+          font-weight: 800;
+
+          color: #64748b;
+        }
+
+
+        .input-wrap,
+        .select-wrap {
+          position: relative;
+        }
+
+
+        .input-wrap svg,
+        .select-wrap > svg:first-child {
+          position: absolute;
+
+          left: 15px;
+          top: 50%;
+
+          transform:
+            translateY(-50%);
+
+          color: #94a3b8;
+
+          pointer-events: none;
+        }
+
+
+        .input-wrap input,
+        .select-wrap select {
+          width: 100%;
+          height: 52px;
+
+          border: 1px solid #e7ebef;
+
+          border-radius: 16px;
+
+          background: #f8fafb;
+
+          padding: 0 15px 0 43px;
+
+          outline: none;
+
+          color: #334155;
+
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+
+        .select-wrap select {
+          appearance: none;
+
+          padding-right: 42px;
+
+          cursor: pointer;
+        }
+
+
+        .select-wrap > svg:last-child {
+          position: absolute;
+
+          right: 14px;
+          top: 50%;
+
+          transform:
+            translateY(-50%);
+
+          pointer-events: none;
+
+          color: #94a3b8;
+        }
+
+
+        .input-wrap input:focus,
+        .select-wrap select:focus {
+          border-color: #cbd5e1;
+
+          background: white;
+        }
+
+
+        .save-button {
+          height: 53px;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+
+          margin-top: 4px;
+
+          border: 0;
+          border-radius: 16px;
+
+          background: #172033;
+          color: white;
+
+          font-size: 12px;
+          font-weight: 800;
+
+          cursor: pointer;
+        }
+
+
+        .save-button:disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
+        }
+
+
+        .spinner {
+          width: 18px;
+          height: 18px;
+
+          border: 2px solid
+            rgba(255,255,255,0.25);
+
+          border-top-color: white;
+
+          border-radius: 50%;
+
+          animation:
+            profileSpin
+            0.7s
+            linear
+            infinite;
+        }
+
+
+        @keyframes profileSpin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+
+        /* ===================================================
+           TOAST
+        =================================================== */
+
+        .profile-toast {
+          position: fixed;
+
+          left: 50%;
+          bottom: 22px;
+
+          z-index: 200;
+
+          transform:
+            translateX(-50%);
+
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          max-width:
+            calc(100vw - 28px);
+
+          padding: 12px 18px;
+
+          border-radius: 999px;
+
+          background: #172033;
+          color: white;
+
+          font-size: 11px;
+          font-weight: 700;
+
+          box-shadow:
+            0 15px 40px
+            rgba(20, 30, 45, 0.25);
+        }
+
+
+        .toast-success {
+          color: #34d399;
+        }
+
+        .toast-error {
+          color: #fb7185;
+        }
+
+
+        /* ===================================================
+           MOBILE
+        =================================================== */
+
+        @media (max-width: 900px) {
+
+          .profile-glass {
+            width:
+              calc(100% - 18px);
+
+            min-height:
+              calc(100vh - 18px);
+
+            margin: 9px auto;
+
+            padding: 12px;
+
+            border-radius: 26px;
+
+            backdrop-filter:
+              blur(18px);
+
+            -webkit-backdrop-filter:
+              blur(18px);
+          }
+
+
+          .profile-layout {
+            grid-template-columns: 1fr;
+
+            gap: 4px;
+
+            padding-top: 5px;
+          }
+
+
+          .profile-left {
+            padding: 18px 10px 8px;
+
+            text-align: center;
+          }
+
+
+          .profile-left h2 {
+            font-size: 17px;
+          }
+
+
+          .profile-image-wrap {
+            margin-top: 20px;
+          }
+
+
+          .contact-list {
+            margin-top: 22px;
+
+            text-align: left;
+          }
+
+
+          .profile-right {
+            width: 100%;
+          }
+
+
+          .personal-section {
+            padding:
+              14px 4px 10px;
+          }
+
+
+          .section-header {
+            align-items: flex-start;
+          }
+
+
+          .section-header h2 {
+            font-size: 17px;
+          }
+
+
+          .active-status {
+            padding:
+              8px 11px;
+
+            font-size: 8px;
+          }
+
+
+          .info-grid {
+            grid-template-columns: 1fr;
+          }
+
+
+          .info-box.wide {
+            grid-column: span 1;
+          }
+
+
+          .stats-grid {
+            gap: 7px;
+          }
+
+
+          .stat {
+            min-height: 67px;
+
+            padding: 11px;
+          }
+
+
+          .stat-number {
+            font-size: 19px;
+          }
+
+
+          .stat-label {
+            font-size: 7px;
+          }
+
+
+          .settings-section {
+            padding:
+              17px 4px 0;
+          }
+
+
+          .settings-section h2 {
+            font-size: 17px;
+          }
+
+        }
+
+
+        /* ===================================================
+           SMALL MOBILE
+        =================================================== */
+
+        @media (max-width: 480px) {
+
+          .profile-background {
+            object-position:
+              center center;
+          }
+
+
+          .profile-glass {
+            width:
+              calc(100% - 10px);
+
+            margin: 5px auto;
+
+            padding: 9px;
+
+            border-radius: 23px;
+          }
+
+
+          .profile-topbar {
+            height: 52px;
+          }
+
+
+          .back-button {
+            width: 39px;
+            height: 39px;
+
+            justify-content: center;
+
+            padding: 0;
+          }
+
+
+          .back-button span {
+            display: none;
+          }
+
+
+          .top-avatar {
+            width: 39px;
+            height: 39px;
+          }
+
+
+          .profile-heading strong {
+            font-size: 14px;
+          }
+
+
+          .profile-image-wrap,
+          .profile-image {
+            width: 125px;
+            height: 125px;
+          }
+
+
+          .profile-name {
+            font-size: 22px;
+          }
+
+
+          .info-box {
+            min-height: 65px;
+
+            padding: 10px 12px;
+
+            border-radius: 17px;
+          }
+
+
+          .info-icon {
+            width: 36px;
+            height: 36px;
+          }
+
+
+          .info-value {
+            font-size: 11px;
+          }
+
+
+          .edit-modal {
+            padding: 22px 17px;
+
+            border-radius:
+              25px;
+          }
+
+        }
+
+
+        /* ===================================================
+           REDUCE MOTION
+        =================================================== */
+
+        @media (prefers-reduced-motion: reduce) {
+
+          *,
+          *::before,
+          *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+          }
+
+        }
+
+      `}</style>
+
     </div>
   );
-};
+}
 
-// ─── Reusable TextField ────────────────────────────────────
-const TextField = ({ label, value, onChange, type = "text", icon }) => (
-  <div className="relative">
-    <div className="absolute left-4 top-1/2 -translate-y-1/2">{icon}</div>
-    <input
-      type={type}
-      value={value}
-      onChange={onChange}
-      placeholder={label}
-      className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-[#8B5CF6] text-gray-800"
-    />
-  </div>
-);
 
-// ─── Reusable Dropdown ─────────────────────────────────────
-const DropdownField = ({ label, value, options, onChange, icon }) => (
-  <div className="relative">
-    <div className="absolute left-4 top-1/2 -translate-y-1/2">{icon}</div>
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-[#8B5CF6] text-gray-800 appearance-none"
-    >
-      <option value="">Select {label}</option>
-      {options.map((d) => (
-        <option key={d} value={d}>
-          {d}
-        </option>
-      ))}
-    </select>
-    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
+/* =========================================================
+   FLAT INFO
+========================================================= */
+
+function FlatInfo({
+  icon: Icon,
+  label,
+  value,
+}) {
+  return (
+    <div className="flat-info">
+
+      <div className="flat-info-icon">
+        <Icon
+          size={14}
+        />
+      </div>
+
+      <div className="flat-info-content">
+
+        <div className="flat-info-label">
+          {label}
+        </div>
+
+        <div className="flat-info-value">
+          {value}
+        </div>
+
+      </div>
+
     </div>
-  </div>
-);
+  );
+}
 
-export default UserProfile;
+
+/* =========================================================
+   INFO BOX
+========================================================= */
+
+function InfoBox({
+  icon: Icon,
+  label,
+  value,
+  wide = false,
+}) {
+  return (
+    <div
+      className={
+        wide
+          ? "info-box wide"
+          : "info-box"
+      }
+    >
+
+      <div className="info-icon">
+        <Icon
+          size={17}
+        />
+      </div>
+
+      <div className="info-content">
+
+        <div className="info-label">
+          {label}
+        </div>
+
+        <div className="info-value">
+          {value}
+        </div>
+
+      </div>
+
+    </div>
+  );
+}
+
+
+/* =========================================================
+   STAT
+========================================================= */
+
+function Stat({
+  number,
+  label,
+}) {
+  return (
+    <div className="stat">
+
+      <div className="stat-number">
+        {number}
+      </div>
+
+      <div className="stat-label">
+        {label}
+      </div>
+
+    </div>
+  );
+}
+
+
+/* =========================================================
+   PROFILE INPUT
+========================================================= */
+
+function ProfileInput({
+  label,
+  name,
+  value,
+  onChange,
+  icon: Icon,
+  type = "text",
+  disabled = false,
+  required = false,
+}) {
+  return (
+    <div>
+
+      <label>
+        {label}
+      </label>
+
+      <div className="input-wrap">
+
+        <Icon
+          size={17}
+        />
+
+        <input
+          type={type}
+          name={name}
+          value={
+            value || ""
+          }
+          onChange={
+            onChange
+          }
+          disabled={
+            disabled
+          }
+          required={
+            required
+          }
+        />
+
+      </div>
+
+    </div>
+  );
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+function LoadingScreen() {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+
+      <img
+        src={desktopBg}
+        alt=""
+        style={{
+          position: "fixed",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+        }}
+      />
+
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background:
+            "rgba(255,255,255,.30)",
+          backdropFilter:
+            "blur(18px)",
+        }}
+      >
+
+        <div
+          style={{
+            width: 35,
+            height: 35,
+            border:
+              "3px solid rgba(255,255,255,.45)",
+            borderTopColor:
+              "#172033",
+            borderRadius: "50%",
+            animation:
+              "profileSpin .7s linear infinite",
+          }}
+        />
+
+      </div>
+
+    </div>
+  );
+}

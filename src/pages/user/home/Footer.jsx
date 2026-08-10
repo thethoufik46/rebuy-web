@@ -1,13 +1,11 @@
+
 // src/pages/user/home/Footer.jsx
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
 /* =========================================================
-   LOGOS
-   ---------------------------------------------------------
-   Change these paths if your actual logo files are
-   located somewhere else.
+   LOGO
 ========================================================= */
 
 import re2buyLogo from "@/assets/logo/logo_1.webp";
@@ -20,11 +18,12 @@ export default function Footer() {
   const navigate = useNavigate();
 
   /* =======================================================
-     NAVIGATION HELPER
+     NAVIGATION
   ======================================================= */
 
   const go = (path) => {
     navigate(path);
+
     window.scrollTo({
       top: 0,
       behavior: "smooth",
@@ -32,7 +31,7 @@ export default function Footer() {
   };
 
   /* =======================================================
-     SOCIAL LINKS
+     EXTERNAL LINKS
   ======================================================= */
 
   const openExternal = (url) => {
@@ -43,81 +42,76 @@ export default function Footer() {
     );
   };
 
+  /* =======================================================
+     CALL
+  ======================================================= */
+
+  const callPhone = () => {
+    window.location.href =
+      "tel:+918270149856";
+  };
+
+  /* =======================================================
+     EMAIL
+  ======================================================= */
+
+  const sendMail = () => {
+    window.location.href =
+      "mailto:re2buyall@gmail.com?subject=Re2Buy Support";
+  };
+
+  /* =======================================================
+     CATCHTRA
+  ======================================================= */
+
+  const openCatchtra = () => {
+    navigate("/catchtra");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
   return (
-    <footer className="w-full bg-white text-black">
+    <>
+      <footer className="re2buy-footer">
 
-      {/* =====================================================
-          MAIN FOOTER
-      ===================================================== */}
+        {/* ===================================================
+            DESKTOP / MAIN FOOTER
+        =================================================== */}
 
-      <div className="w-full bg-[#FAFAFA]">
+        <div className="re2buy-footer-main">
 
-        <div
-          className="
-            max-w-[1420px]
-            mx-auto
-            px-6
-            md:px-10
-            lg:px-12
-            xl:px-0
-            py-16
-            lg:py-20
-          "
-        >
-
-          <div
-            className="
-              grid
-              grid-cols-1
-              sm:grid-cols-2
-              lg:grid-cols-[1.7fr_0.8fr_0.8fr_1fr]
-              gap-x-12
-              gap-y-12
-            "
-          >
+          <div className="re2buy-footer-container">
 
             {/* =================================================
                 BRAND / CONTACT
             ================================================= */}
 
-            <div>
+            <div className="re2buy-footer-brand">
 
               {/* LOGO */}
 
               <button
                 type="button"
                 onClick={() => go("/")}
-                className="
-                  block
-                  p-0
-                  border-0
-                  bg-transparent
-                  cursor-pointer
-                "
+                className="re2buy-footer-logo-button"
               >
                 <img
                   src={re2buyLogo}
                   alt="Re2Buy"
-                  className="
-                    h-[42px]
-                    md:h-[50px]
-                    w-auto
-                    object-contain
-                  "
+                  className="re2buy-footer-logo"
                 />
               </button>
 
               {/* DESCRIPTION */}
 
-              <p
-                className="
-                  mt-7
-                  max-w-[350px]
-                  text-[14px]
-                  leading-6
-                  text-black/65
-                "
-              >
+              <p className="re2buy-footer-description">
                 Trusted used cars, bikes, property
                 and electronics marketplace built
                 for modern buyers.
@@ -125,89 +119,77 @@ export default function Footer() {
 
               {/* PHONE */}
 
-              <div className="mt-7">
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    window.location.href =
-                      "tel:+918270149856";
-                  }}
-                  className="
-                    block
-                    text-left
-                    text-[14px]
-                    text-black
-                    hover:text-black/60
-                    transition
-                  "
-                >
-                  <span className="font-medium">
-                    Telefon:
-                  </span>{" "}
-                  +91 82701 49856
-                </button>
-
-                {/* EMAIL */}
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    window.location.href =
-                      "mailto:re2buyall@gmail.com?subject=Re2Buy Support";
-                  }}
-                  className="
-                    block
-                    mt-3
-                    text-left
-                    text-[14px]
-                    text-black
-                    hover:text-black/60
-                    transition
-                  "
-                >
-                  <span className="font-medium">
-                    Email:
-                  </span>{" "}
-                  re2buyall@gmail.com
-                </button>
-
-              </div>
-
-              {/* ADDRESS */}
-
-              <div className="mt-7">
-
-                <p
-                  className="
-                    text-[13px]
-                    leading-6
-                    text-black/65
-                  "
-                >
-                  5/77, Pallivasal Street,
-                  <br />
-                  Chockalingaburam,
-                  <br />
-                  Melur 625 103,
-                  <br />
-                  Madurai, Tamil Nadu
-                </p>
-
-              </div>
-
-              {/* SOCIAL ICONS */}
-
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-4
-                  mt-8
-                "
+              <button
+                type="button"
+                onClick={callPhone}
+                className="re2buy-footer-contact"
               >
+                <span className="re2buy-footer-contact-label">
+                  Telefon:
+                </span>{" "}
+                +91 82701 49856
+              </button>
 
-                {/* FACEBOOK */}
+              {/* EMAIL */}
+
+              <button
+                type="button"
+                onClick={sendMail}
+                className="re2buy-footer-contact re2buy-footer-email"
+              >
+                <span className="re2buy-footer-contact-label">
+                  Email:
+                </span>{" "}
+                re2buyall@gmail.com
+              </button>
+
+              {/* =================================================
+                  ADDRESS
+              ================================================= */}
+
+              <div className="re2buy-footer-address">
+
+                <div className="re2buy-address-column">
+                  <span className="re2buy-address-pin">
+                    📍
+                  </span>
+
+                  <p>
+                    5/77, Pallivasal Street,
+                    <br />
+                    Chockalingaburam,
+                    <br />
+                    Melur 625 103,
+                    <br />
+                    Madurai, Tamil Nadu
+                  </p>
+                </div>
+
+                <div className="re2buy-address-divider" />
+
+                <div className="re2buy-address-column">
+                  <span className="re2buy-address-pin">
+                    📍
+                  </span>
+
+                  <p>
+                    5/77, பள்ளிவாசல் தெரு,
+                    <br />
+                    சொக்கலிங்கபுரம்,
+                    <br />
+                    மதுரை - 625 103
+                    <br />
+                    தமிழ்நாடு
+                  </p>
+                </div>
+
+              </div>
+
+              {/* =================================================
+                  SOCIAL
+              ================================================= */}
+
+              <div className="re2buy-footer-social">
 
                 <button
                   type="button"
@@ -217,28 +199,10 @@ export default function Footer() {
                       "https://www.facebook.com/"
                     )
                   }
-                  className="
-                    w-12
-                    h-12
-                    rounded-full
-                    bg-white
-                    border
-                    border-black/5
-                    flex
-                    items-center
-                    justify-center
-                    text-[17px]
-                    font-bold
-                    shadow-sm
-                    hover:-translate-y-1
-                    hover:shadow-md
-                    transition-all
-                  "
+                  className="re2buy-social-button"
                 >
                   f
                 </button>
-
-                {/* INSTAGRAM */}
 
                 <button
                   type="button"
@@ -248,28 +212,10 @@ export default function Footer() {
                       "https://www.instagram.com/"
                     )
                   }
-                  className="
-                    w-12
-                    h-12
-                    rounded-full
-                    bg-white
-                    border
-                    border-black/5
-                    flex
-                    items-center
-                    justify-center
-                    text-[17px]
-                    font-bold
-                    shadow-sm
-                    hover:-translate-y-1
-                    hover:shadow-md
-                    transition-all
-                  "
+                  className="re2buy-social-button"
                 >
                   ◎
                 </button>
-
-                {/* YOUTUBE */}
 
                 <button
                   type="button"
@@ -279,28 +225,10 @@ export default function Footer() {
                       "https://www.youtube.com/"
                     )
                   }
-                  className="
-                    w-12
-                    h-12
-                    rounded-full
-                    bg-white
-                    border
-                    border-black/5
-                    flex
-                    items-center
-                    justify-center
-                    text-[15px]
-                    font-bold
-                    shadow-sm
-                    hover:-translate-y-1
-                    hover:shadow-md
-                    transition-all
-                  "
+                  className="re2buy-social-button"
                 >
                   ▶
                 </button>
-
-                {/* LINKEDIN */}
 
                 <button
                   type="button"
@@ -310,23 +238,7 @@ export default function Footer() {
                       "https://www.linkedin.com/"
                     )
                   }
-                  className="
-                    w-12
-                    h-12
-                    rounded-full
-                    bg-white
-                    border
-                    border-black/5
-                    flex
-                    items-center
-                    justify-center
-                    text-[15px]
-                    font-bold
-                    shadow-sm
-                    hover:-translate-y-1
-                    hover:shadow-md
-                    transition-all
-                  "
+                  className="re2buy-social-button"
                 >
                   in
                 </button>
@@ -336,7 +248,7 @@ export default function Footer() {
             </div>
 
             {/* =================================================
-                COMPANY
+                DESKTOP COMPANY
             ================================================= */}
 
             <FooterColumn
@@ -344,39 +256,33 @@ export default function Footer() {
               items={[
                 {
                   label: "About Us",
-                  onClick: () =>
-                    go("/about"),
+                  onClick: () => go("/about"),
                 },
                 {
                   label: "Contact",
-                  onClick: () =>
-                    go("/contact"),
+                  onClick: () => go("/contact"),
                 },
                 {
                   label: "Careers",
-                  onClick: () =>
-                    go("/careers"),
+                  onClick: () => go("/careers"),
                 },
                 {
                   label: "Partners",
-                  onClick: () =>
-                    go("/partners"),
+                  onClick: () => go("/partners"),
                 },
                 {
                   label: "News",
-                  onClick: () =>
-                    go("/news"),
+                  onClick: () => go("/news"),
                 },
                 {
                   label: "Events",
-                  onClick: () =>
-                    go("/events"),
+                  onClick: () => go("/events"),
                 },
               ]}
             />
 
             {/* =================================================
-                SERVICES
+                DESKTOP SERVICES
             ================================================= */}
 
             <FooterColumn
@@ -384,65 +290,55 @@ export default function Footer() {
               items={[
                 {
                   label: "Buy Car",
-                  onClick: () =>
-                    go("/?tab=0"),
+                  onClick: () => go("/?tab=0"),
                 },
                 {
                   label: "Sell Car",
-                  onClick: () =>
-                    go("/post/car"),
+                  onClick: () => go("/post/car"),
                 },
                 {
                   label: "Buy Bike",
-                  onClick: () =>
-                    go("/?tab=1"),
+                  onClick: () => go("/?tab=1"),
                 },
                 {
                   label: "Sell Bike",
-                  onClick: () =>
-                    go("/post/bike"),
+                  onClick: () => go("/post/bike"),
                 },
                 {
                   label: "Property",
-                  onClick: () =>
-                    go("/?tab=2"),
+                  onClick: () => go("/?tab=2"),
                 },
                 {
                   label: "Electronics",
-                  onClick: () =>
-                    go("/?tab=3"),
+                  onClick: () => go("/?tab=3"),
                 },
               ]}
             />
 
             {/* =================================================
-                SUPPORT / LEGAL
+                DESKTOP SUPPORT / LEGAL
             ================================================= */}
 
-            <div className="grid grid-cols-1 gap-10">
+            <div className="re2buy-footer-support">
 
               <FooterColumn
                 title="Support"
                 items={[
                   {
                     label: "Help",
-                    onClick: () =>
-                      go("/help"),
+                    onClick: () => go("/help"),
                   },
                   {
                     label: "Finance",
-                    onClick: () =>
-                      go("/finance"),
+                    onClick: () => go("/finance"),
                   },
                   {
                     label: "My Orders",
-                    onClick: () =>
-                      go("/orders"),
+                    onClick: () => go("/orders"),
                   },
                   {
                     label: "Cashback",
-                    onClick: () =>
-                      go("/cashback"),
+                    onClick: () => go("/cashback"),
                   },
                 ]}
               />
@@ -452,18 +348,15 @@ export default function Footer() {
                 items={[
                   {
                     label: "Privacy Policy",
-                    onClick: () =>
-                      go("/privacy"),
+                    onClick: () => go("/privacy"),
                   },
                   {
                     label: "Terms & Conditions",
-                    onClick: () =>
-                      go("/terms"),
+                    onClick: () => go("/terms"),
                   },
                   {
                     label: "Refund Policy",
-                    onClick: () =>
-                      go("/refund"),
+                    onClick: () => go("/refund"),
                   },
                 ]}
               />
@@ -472,96 +365,1259 @@ export default function Footer() {
 
           </div>
 
-        </div>
+          {/* =================================================
+              MOBILE FOOTER CONTENT
+              
+              This section follows the Flutter design.
+          ================================================= */}
 
-      </div>
+          <div className="re2buy-mobile-footer">
 
-      {/* =====================================================
-          GROUP / COMPANY LOGOS
-      ===================================================== */}
+            {/* =================================================
+                MOBILE BRAND
+            ================================================= */}
 
-      <GroupLogos />
+            <div className="re2buy-mobile-brand">
 
-      {/* =====================================================
-          COPYRIGHT
-      ===================================================== */}
+              <button
+                type="button"
+                onClick={() => go("/")}
+                className="re2buy-mobile-logo-button"
+              >
+                <img
+                  src={re2buyLogo}
+                  alt="Re2Buy"
+                  className="re2buy-mobile-logo"
+                />
+              </button>
 
-      <div
-        className="
-          border-t
-          border-black/5
-          bg-white
-        "
-      >
+              <p className="re2buy-mobile-description">
+                Trusted used cars & bikes marketplace
+                <br />
+                built for modern buyers.
+              </p>
 
-        <div
-          className="
-            max-w-[1420px]
-            mx-auto
-            px-6
-            md:px-10
-            lg:px-12
-            xl:px-0
-            py-5
-            flex
-            flex-col
-            md:flex-row
-            items-center
-            justify-between
-            gap-3
-          "
-        >
+              {/* =================================================
+                  ADDRESS CARD
+              ================================================= */}
 
-          <p
-            className="
-              text-[12px]
-              text-black/45
-              text-center
-              md:text-left
-            "
-          >
-            © {new Date().getFullYear()} Re2Buy.
-            All rights reserved.
-          </p>
+              <div className="re2buy-mobile-address-card">
 
-          <div
-            className="
-              flex
-              items-center
-              gap-2
-              text-[12px]
-              text-black/50
-            "
-          >
-            <span
-              className="
-                w-5
-                h-5
-                rounded-full
-                bg-[#E8F7E8]
-                text-[#258A35]
-                flex
-                items-center
-                justify-center
-                text-[10px]
-              "
-            >
-              ✓
-            </span>
+                <div className="re2buy-mobile-address-column">
+                  <p>
+                    📍 5/77, Pallivasal Street,
+                    <br />
+                    Chockalingaburam,
+                    <br />
+                    Melur 625 103,
+                    <br />
+                    Madurai Tamil Nadu
+                  </p>
+                </div>
 
-            India Verified Marketplace
+                <div className="re2buy-mobile-address-divider" />
+
+                <div className="re2buy-mobile-address-column">
+                  <p>
+                    📍 5/77, பள்ளிவாசல் தெரு,
+                    <br />
+                    சொக்கலிங்கபுரம்,
+                    <br />
+                    மதுரை - 625 103
+                    <br />
+                    தமிழ்நாடு
+                  </p>
+                </div>
+
+              </div>
+
+              {/* =================================================
+                  MOBILE CONTACT
+              ================================================= */}
+
+              <div className="re2buy-mobile-contact">
+
+                <button
+                  type="button"
+                  onClick={callPhone}
+                  className="re2buy-mobile-contact-item"
+                >
+                  <span className="re2buy-mobile-contact-icon">
+                    ☎
+                  </span>
+
+                  <span>
+                    +91 82701 49856
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={sendMail}
+                  className="re2buy-mobile-contact-item"
+                >
+                  <span className="re2buy-mobile-contact-icon">
+                    ✉
+                  </span>
+
+                  <span>
+                    re2buyall@gmail.com
+                  </span>
+                </button>
+
+              </div>
+
+            </div>
+
+            {/* =================================================
+                MOBILE CATEGORY CARDS
+            ================================================= */}
+
+            <div className="re2buy-mobile-category-grid">
+
+              <ModernCard
+                title="Account"
+                accent="#3B82F6"
+                items={[
+                  {
+                    label: "My Profile",
+                    onClick: () =>
+                      go("/profile"),
+                  },
+                  {
+                    label: "My Orders",
+                    onClick: () =>
+                      go("/orders"),
+                  },
+                  {
+                    label: "Finance",
+                    onClick: () =>
+                      go("/finance"),
+                  },
+                ]}
+              />
+
+              <ModernCard
+                title="Services"
+                accent="#EF4444"
+                items={[
+                  {
+                    label: "Buy Car",
+                    onClick: () =>
+                      go("/?tab=0"),
+                  },
+                  {
+                    label: "Sell Car",
+                    onClick: () =>
+                      go("/post/car"),
+                  },
+                  {
+                    label: "Filter Cars",
+                    onClick: () =>
+                      go("/filter"),
+                  },
+                ]}
+              />
+
+              <ModernCard
+                title="Support"
+                accent="#0EA5E9"
+                items={[
+                  {
+                    label: "Cashback",
+                    onClick: () =>
+                      go("/cashback"),
+                  },
+                  {
+                    label: "Partners",
+                    onClick: () =>
+                      go("/partners"),
+                  },
+                  {
+                    label: "Help",
+                    onClick: () =>
+                      go("/help"),
+                  },
+                ]}
+              />
+
+              <ModernCard
+                title="Legal"
+                accent="#FACC15"
+                items={[
+                  {
+                    label: "Privacy",
+                    onClick: () =>
+                      go("/privacy"),
+                  },
+                  {
+                    label: "Terms",
+                    onClick: () =>
+                      go("/terms"),
+                  },
+                  {
+                    label: "Refund",
+                    onClick: () =>
+                      go("/refund"),
+                  },
+                ]}
+              />
+
+            </div>
+
+            {/* =================================================
+                MOBILE COPYRIGHT
+            ================================================= */}
+
+            <div className="re2buy-mobile-copyright">
+
+              <div className="re2buy-mobile-divider" />
+
+              <p className="re2buy-copyright-text">
+                © 2026 Re2Buy. All rights reserved.
+              </p>
+
+              <div className="re2buy-verified-row">
+
+                <span className="re2buy-verified-icon">
+                  ✓
+                </span>
+
+                <span>
+                  India Verified Marketplace
+                </span>
+
+              </div>
+
+              {/* =================================================
+                  GROUP LOGOS
+              ================================================= */}
+
+              <div className="re2buy-group-section">
+
+                <p className="re2buy-group-title">
+                  End, all are
+                  <br />
+                  Group of Re2buy
+                </p>
+
+                <div className="re2buy-group-logo-grid">
+
+                  <GroupLogo
+                    name="Re2Buy Group"
+                    src="https://res.cloudinary.com/dtqxc3rmt/image/upload/v1767278603/logo1_jisgdr.jpg"
+                  />
+
+                  <GroupLogo
+                    name="Re2Buy Leasing"
+                    src="https://res.cloudinary.com/dtqxc3rmt/image/upload/v1767278603/logo2_cranby.jpg"
+                  />
+
+                  <GroupLogo
+                    name="Re2Buy Collection"
+                    src="https://res.cloudinary.com/dtqxc3rmt/image/upload/v1767278603/logo3_spwour.jpg"
+                  />
+
+                  <GroupLogo
+                    name="Re2Buy Investment"
+                    src="https://res.cloudinary.com/dtqxc3rmt/image/upload/v1767278603/logo4_vj6lzx.jpg"
+                  />
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* =================================================
+                CATCHTRA
+            ================================================= */}
+
+            <div className="re2buy-catchtra-wrapper">
+
+              <button
+                type="button"
+                onClick={openCatchtra}
+                className="re2buy-catchtra-button"
+              >
+                Developed by catchtra
+              </button>
+
+            </div>
+
           </div>
 
         </div>
 
-      </div>
+      </footer>
 
-    </footer>
+      {/* =====================================================
+          STYLES
+      ===================================================== */}
+
+      <style>{`
+
+        /* ===================================================
+           ROOT
+        =================================================== */
+
+        .re2buy-footer {
+          width: 100%;
+          background: #fff;
+          color: #111;
+        }
+
+        /* ===================================================
+           MAIN
+        =================================================== */
+
+        .re2buy-footer-main {
+          width: 100%;
+          background: #FAFAFA;
+        }
+
+        .re2buy-footer-container {
+          width: min(
+            1420px,
+            calc(100% - 40px)
+          );
+
+          margin: 0 auto;
+
+          padding:
+            64px 0 72px;
+
+          display: grid;
+
+          grid-template-columns:
+            1.7fr
+            0.8fr
+            0.8fr
+            1fr;
+
+          column-gap: 48px;
+
+          row-gap: 48px;
+        }
+
+        /* ===================================================
+           BRAND
+        =================================================== */
+
+        .re2buy-footer-brand {
+          min-width: 0;
+        }
+
+        .re2buy-footer-logo-button {
+          display: block;
+
+          padding: 0;
+
+          border: 0;
+
+          background: transparent;
+
+          cursor: pointer;
+        }
+
+        .re2buy-footer-logo {
+          height: 50px;
+
+          width: auto;
+
+          display: block;
+
+          object-fit: contain;
+        }
+
+        .re2buy-footer-description {
+          margin:
+            28px 0 0;
+
+          max-width: 350px;
+
+          font-size: 14px;
+
+          line-height: 1.7;
+
+          color:
+            rgba(0, 0, 0, 0.65);
+        }
+
+        /* ===================================================
+           CONTACT
+        =================================================== */
+
+        .re2buy-footer-contact {
+          display: block;
+
+          margin-top: 26px;
+
+          padding: 0;
+
+          border: 0;
+
+          background: transparent;
+
+          font-size: 14px;
+
+          line-height: 1.5;
+
+          color: #111;
+
+          cursor: pointer;
+
+          text-align: left;
+
+          transition:
+            opacity 0.2s ease;
+        }
+
+        .re2buy-footer-email {
+          margin-top: 10px;
+        }
+
+        .re2buy-footer-contact:hover {
+          opacity: 0.55;
+        }
+
+        .re2buy-footer-contact-label {
+          font-weight: 600;
+        }
+
+        /* ===================================================
+           ADDRESS
+        =================================================== */
+
+        .re2buy-footer-address {
+          display: flex;
+
+          align-items: stretch;
+
+          margin-top: 26px;
+
+          max-width: 540px;
+
+          padding: 16px;
+
+          background: #fff;
+
+          border-radius: 20px;
+
+          gap: 14px;
+        }
+
+        .re2buy-address-column {
+          flex: 1;
+
+          min-width: 0;
+        }
+
+        .re2buy-address-column p {
+          margin: 0;
+
+          font-size: 10px;
+
+          line-height: 1.5;
+
+          color: rgba(0, 0, 0, 0.68);
+        }
+
+        .re2buy-address-pin {
+          display: inline-block;
+
+          margin-bottom: 3px;
+
+          font-size: 11px;
+        }
+
+        .re2buy-address-divider {
+          width: 1px;
+
+          background:
+            rgba(0, 0, 0, 0.16);
+        }
+
+        /* ===================================================
+           SOCIAL
+        =================================================== */
+
+        .re2buy-footer-social {
+          display: flex;
+
+          align-items: center;
+
+          gap: 12px;
+
+          margin-top: 28px;
+        }
+
+        .re2buy-social-button {
+          width: 42px;
+
+          height: 42px;
+
+          border-radius: 50%;
+
+          border:
+            1px solid
+            rgba(0, 0, 0, 0.05);
+
+          background: #fff;
+
+          display: flex;
+
+          align-items: center;
+
+          justify-content: center;
+
+          font-size: 15px;
+
+          font-weight: 700;
+
+          cursor: pointer;
+
+          box-shadow:
+            0 3px 10px
+            rgba(0, 0, 0, 0.05);
+
+          transition:
+            transform 0.25s ease,
+            box-shadow 0.25s ease;
+        }
+
+        .re2buy-social-button:hover {
+          transform:
+            translateY(-3px);
+
+          box-shadow:
+            0 8px 18px
+            rgba(0, 0, 0, 0.10);
+        }
+
+        /* ===================================================
+           FOOTER COLUMNS
+        =================================================== */
+
+        .re2buy-footer-column-title {
+          margin: 0 0 22px;
+
+          font-size: 14px;
+
+          font-weight: 600;
+
+          color: #111;
+        }
+
+        .re2buy-footer-column-items {
+          display: flex;
+
+          flex-direction: column;
+
+          align-items: flex-start;
+
+          gap: 14px;
+        }
+
+        .re2buy-footer-column-item {
+          padding: 0;
+
+          border: 0;
+
+          background: transparent;
+
+          font-size: 14px;
+
+          line-height: 1.4;
+
+          color:
+            rgba(0, 0, 0, 0.68);
+
+          text-align: left;
+
+          cursor: pointer;
+
+          transition:
+            transform 0.2s ease,
+            color 0.2s ease;
+        }
+
+        .re2buy-footer-column-item:hover {
+          color: #111;
+
+          transform:
+            translateX(2px);
+        }
+
+        .re2buy-footer-support {
+          display: grid;
+
+          grid-template-columns: 1fr;
+
+          gap: 42px;
+        }
+
+        /* ===================================================
+           MOBILE FLUTTER STYLE
+           
+           Hidden on desktop.
+        =================================================== */
+
+        .re2buy-mobile-footer {
+          display: none;
+        }
+
+        /* ===================================================
+           MOBILE
+        =================================================== */
+
+        @media (max-width: 767px) {
+
+          /* -----------------------------------------------
+             Hide desktop footer
+          ----------------------------------------------- */
+
+          .re2buy-footer-container {
+            display: none;
+          }
+
+          /* -----------------------------------------------
+             Mobile wrapper
+          ----------------------------------------------- */
+
+          .re2buy-mobile-footer {
+            display: block;
+
+            width: 100%;
+
+            padding:
+              34px 22px 26px;
+
+            background:
+              linear-gradient(
+                to bottom,
+                #FFFDF5 0%,
+                #FFF6D9 100%
+              );
+
+            border-radius:
+              32px 32px 0 0;
+
+            overflow: hidden;
+          }
+
+          /* -----------------------------------------------
+             MOBILE LOGO
+          ----------------------------------------------- */
+
+          .re2buy-mobile-logo-button {
+            display: block;
+
+            padding: 0;
+
+            border: 0;
+
+            background: transparent;
+
+            cursor: pointer;
+          }
+
+          .re2buy-mobile-logo {
+            height: 30px;
+
+            width: auto;
+
+            display: block;
+
+            object-fit: contain;
+          }
+
+          /* -----------------------------------------------
+             DESCRIPTION
+          ----------------------------------------------- */
+
+          .re2buy-mobile-description {
+            margin:
+              12px 0 0;
+
+            font-size: 13px;
+
+            line-height: 1.5;
+
+            color:
+              rgba(0, 0, 0, 0.54);
+          }
+
+          /* -----------------------------------------------
+             ADDRESS CARD
+          ----------------------------------------------- */
+
+          .re2buy-mobile-address-card {
+            width: 100%;
+
+            margin-top: 18px;
+
+            padding: 16px;
+
+            display: flex;
+
+            align-items: stretch;
+
+            gap: 14px;
+
+            background: #fff;
+
+            border-radius: 20px;
+
+            box-shadow:
+              0 3px 15px
+              rgba(0, 0, 0, 0.035);
+          }
+
+          .re2buy-mobile-address-column {
+            flex: 1;
+
+            min-width: 0;
+          }
+
+          .re2buy-mobile-address-column p {
+            margin: 0;
+
+            font-size: 10px;
+
+            line-height: 1.4;
+
+            color: #222;
+          }
+
+          .re2buy-mobile-address-divider {
+            width: 1px;
+
+            flex: 0 0 1px;
+
+            background:
+              rgba(0, 0, 0, 0.18);
+          }
+
+          /* -----------------------------------------------
+             MOBILE CONTACT
+          ----------------------------------------------- */
+
+          .re2buy-mobile-contact {
+            width: 100%;
+
+            margin-top: 20px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-wrap: wrap;
+
+            column-gap: 26px;
+
+            row-gap: 12px;
+          }
+
+          .re2buy-mobile-contact-item {
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 6px;
+
+            padding: 0;
+
+            border: 0;
+
+            background: transparent;
+
+            color: #111;
+
+            font-size: 12px;
+
+            line-height: 1.4;
+
+            cursor: pointer;
+          }
+
+          .re2buy-mobile-contact-icon {
+            font-size: 15px;
+
+            line-height: 1;
+          }
+
+          /* -----------------------------------------------
+             CATEGORY GRID
+          ----------------------------------------------- */
+
+          .re2buy-mobile-category-grid {
+            width: 100%;
+
+            margin-top: 40px;
+
+            display: grid;
+
+            grid-template-columns:
+              repeat(2, minmax(0, 1fr));
+
+            gap: 18px;
+          }
+
+          /* -----------------------------------------------
+             MODERN CARD
+          ----------------------------------------------- */
+
+          .re2buy-modern-card {
+            width: 100%;
+
+            min-width: 0;
+
+            min-height: 188px;
+
+            padding: 16px;
+
+            border-radius: 22px;
+
+            background:
+              rgba(255, 255, 255, 0.85);
+
+            border:
+              1px solid
+              rgba(0, 0, 0, 0.025);
+
+            box-shadow:
+              0 10px 25px
+              rgba(0, 0, 0, 0.08);
+
+            backdrop-filter:
+              blur(12px);
+
+            -webkit-backdrop-filter:
+              blur(12px);
+          }
+
+          /* -----------------------------------------------
+             CARD TITLE
+          ----------------------------------------------- */
+
+          .re2buy-modern-card-title {
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            margin-bottom: 12px;
+          }
+
+          .re2buy-modern-card-accent {
+            width: 6px;
+
+            height: 22px;
+
+            flex: 0 0 6px;
+
+            border-radius: 4px;
+          }
+
+          .re2buy-modern-card-title-text {
+            font-size: 15px;
+
+            line-height: 1.3;
+
+            font-weight: 600;
+
+            color: #111;
+          }
+
+          /* -----------------------------------------------
+             CARD ITEMS
+          ----------------------------------------------- */
+
+          .re2buy-modern-card-items {
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: flex-start;
+
+            gap: 8px;
+          }
+
+          .re2buy-modern-card-item {
+            width: 100%;
+
+            min-height: 22px;
+
+            padding: 0;
+
+            border: 0;
+
+            background: transparent;
+
+            color:
+              rgba(0, 0, 0, 0.80);
+
+            font-size: 13px;
+
+            line-height: 1.4;
+
+            text-align: left;
+
+            cursor: pointer;
+
+            border-radius: 6px;
+
+            transition:
+              color 0.2s ease,
+              transform 0.2s ease;
+          }
+
+          .re2buy-modern-card-item:hover {
+            color: #111;
+
+            transform:
+              translateX(2px);
+          }
+
+          /* -----------------------------------------------
+             LAST ITEM EXTRA SPACE
+          ----------------------------------------------- */
+
+          .re2buy-modern-card-item:last-child {
+            margin-bottom: 16px;
+          }
+
+          /* -----------------------------------------------
+             COPYRIGHT
+          ----------------------------------------------- */
+
+          .re2buy-mobile-copyright {
+            width: 100%;
+
+            margin-top: 18px;
+
+            padding:
+              0 0 0;
+          }
+
+          .re2buy-mobile-divider {
+            width: 100%;
+
+            height: 1px;
+
+            margin-bottom: 6px;
+
+            background:
+              rgba(0, 0, 0, 0.12);
+          }
+
+          .re2buy-copyright-text {
+            margin: 0;
+
+            font-size: 13px;
+
+            line-height: 1.5;
+
+            color:
+              rgba(0, 0, 0, 0.54);
+          }
+
+          /* -----------------------------------------------
+             VERIFIED
+          ----------------------------------------------- */
+
+          .re2buy-verified-row {
+            display: flex;
+
+            align-items: center;
+
+            gap: 6px;
+
+            margin-top: 6px;
+
+            font-size: 12.5px;
+
+            line-height: 1.4;
+
+            font-weight: 500;
+
+            color: #111;
+          }
+
+          .re2buy-verified-icon {
+            width: 20px;
+
+            height: 20px;
+
+            flex: 0 0 20px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background:
+              #E8F7E8;
+
+            color:
+              #258A35;
+
+            font-size: 11px;
+
+            font-weight: 700;
+          }
+
+          /* -----------------------------------------------
+             GROUP SECTION
+          ----------------------------------------------- */
+
+          .re2buy-group-section {
+            width: 100%;
+
+            margin-top: 20px;
+          }
+
+          .re2buy-group-title {
+            margin: 0;
+
+            font-size: 14px;
+
+            line-height: 1.3;
+
+            color:
+              rgba(0, 0, 0, 0.54);
+
+            font-weight: 500;
+          }
+
+          /* -----------------------------------------------
+             GROUP LOGOS 2 x 2
+          ----------------------------------------------- */
+
+          .re2buy-group-logo-grid {
+            width: 100%;
+
+            margin-top: 10px;
+
+            display: grid;
+
+            grid-template-columns:
+              repeat(2, minmax(0, 1fr));
+
+            column-gap: 8px;
+
+            row-gap: 10px;
+          }
+
+          .re2buy-group-logo {
+            width: 100%;
+
+            height: 52px;
+
+            min-width: 0;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            overflow: hidden;
+
+            border-radius: 8px;
+
+            background:
+              rgba(255, 255, 255, 0.35);
+          }
+
+          .re2buy-group-logo img {
+            width: auto;
+
+            max-width: 100%;
+
+            height: auto;
+
+            max-height: 48px;
+
+            object-fit: contain;
+
+            display: block;
+          }
+
+          /* -----------------------------------------------
+             CATCHTRA
+          ----------------------------------------------- */
+
+          .re2buy-catchtra-wrapper {
+            width: 100%;
+
+            margin-top: 18px;
+
+            display: flex;
+
+            justify-content: center;
+          }
+
+          .re2buy-catchtra-button {
+            padding:
+              6px 12px;
+
+            border: 0;
+
+            border-radius: 20px;
+
+            background: #000;
+
+            color: #fff;
+
+            font-size: 10px;
+
+            line-height: 1.4;
+
+            font-weight: 500;
+
+            cursor: pointer;
+
+            transition:
+              transform 0.2s ease,
+              opacity 0.2s ease;
+          }
+
+          .re2buy-catchtra-button:hover {
+            transform:
+              translateY(-2px);
+
+            opacity: 0.82;
+          }
+        }
+
+        /* ===================================================
+           SMALL MOBILE
+        =================================================== */
+
+        @media (max-width: 480px) {
+
+          .re2buy-mobile-footer {
+            padding:
+              30px 16px 24px;
+
+            border-radius:
+              28px 28px 0 0;
+          }
+
+          .re2buy-mobile-category-grid {
+            gap: 14px;
+          }
+
+          .re2buy-modern-card {
+            min-height: 180px;
+
+            padding: 14px;
+
+            border-radius: 19px;
+          }
+
+          .re2buy-modern-card-title-text {
+            font-size: 14px;
+          }
+
+          .re2buy-modern-card-item {
+            font-size: 12px;
+          }
+
+          .re2buy-mobile-address-card {
+            padding: 13px;
+
+            gap: 10px;
+          }
+
+          .re2buy-mobile-address-column p {
+            font-size: 9px;
+
+            line-height: 1.4;
+          }
+
+          .re2buy-mobile-contact {
+            column-gap: 14px;
+          }
+
+          .re2buy-mobile-contact-item {
+            font-size: 11px;
+          }
+
+          .re2buy-group-logo {
+            height: 48px;
+          }
+        }
+
+        /* ===================================================
+           VERY SMALL MOBILE
+        =================================================== */
+
+        @media (max-width: 360px) {
+
+          .re2buy-mobile-footer {
+            padding:
+              28px 14px 22px;
+          }
+
+          .re2buy-mobile-category-grid {
+            gap: 11px;
+          }
+
+          .re2buy-modern-card {
+            min-height: 174px;
+
+            padding: 12px;
+
+            border-radius: 17px;
+          }
+
+          .re2buy-modern-card-title {
+            gap: 6px;
+          }
+
+          .re2buy-modern-card-accent {
+            width: 5px;
+
+            flex-basis: 5px;
+
+            height: 20px;
+          }
+
+          .re2buy-modern-card-title-text {
+            font-size: 13px;
+          }
+
+          .re2buy-modern-card-item {
+            font-size: 11px;
+          }
+
+          .re2buy-mobile-address-column p {
+            font-size: 8.5px;
+          }
+
+          .re2buy-mobile-contact-item {
+            font-size: 10px;
+          }
+        }
+
+      `}</style>
+    </>
   );
 }
 
 /* =========================================================
-   FOOTER COLUMN
+   DESKTOP FOOTER COLUMN
 ========================================================= */
 
 function FooterColumn({
@@ -569,27 +1625,13 @@ function FooterColumn({
   items = [],
 }) {
   return (
-    <div>
+    <div className="re2buy-footer-column">
 
-      <h3
-        className="
-          text-[14px]
-          font-semibold
-          text-black
-          mb-6
-        "
-      >
+      <h3 className="re2buy-footer-column-title">
         {title}
       </h3>
 
-      <div
-        className="
-          flex
-          flex-col
-          items-start
-          gap-4
-        "
-      >
+      <div className="re2buy-footer-column-items">
 
         {items.map(
           (item, index) => (
@@ -598,14 +1640,7 @@ function FooterColumn({
               type="button"
               onClick={item.onClick}
               className="
-                text-[14px]
-                leading-5
-                text-black/70
-                text-left
-                hover:text-black
-                hover:translate-x-0.5
-                transition-all
-                cursor-pointer
+                re2buy-footer-column-item
               "
             >
               {item.label}
@@ -620,138 +1655,75 @@ function FooterColumn({
 }
 
 /* =========================================================
-   GROUP LOGOS
+   MOBILE MODERN CARD
 ========================================================= */
 
-function GroupLogos() {
-  const logos = [
-    {
-      name: "Re2Buy Group",
-      src: "https://res.cloudinary.com/dtqxc3rmt/image/upload/v1767278603/logo1_jisgdr.jpg",
-    },
-    {
-      name: "Re2Buy Leasing",
-      src: "https://res.cloudinary.com/dtqxc3rmt/image/upload/v1767278603/logo2_cranby.jpg",
-    },
-    {
-      name: "Re2Buy Collection",
-      src: "https://res.cloudinary.com/dtqxc3rmt/image/upload/v1767278603/logo3_spwour.jpg",
-    },
-    {
-      name: "Re2Buy Investment",
-      src: "https://res.cloudinary.com/dtqxc3rmt/image/upload/v1767278603/logo4_vj6lzx.jpg",
-    },
-  ];
-
+function ModernCard({
+  title,
+  accent,
+  items = [],
+}) {
   return (
-    <div
-      className="
-        w-full
-        bg-white
-        border-t
-        border-black/5
-      "
-    >
+    <div className="re2buy-modern-card">
 
-      <div
-        className="
-          max-w-[1420px]
-          mx-auto
-          px-6
-          md:px-10
-          lg:px-12
-          xl:px-0
-          py-10
-        "
-      >
+      {/* TITLE */}
 
-        <div
-          className="
-            flex
-            flex-col
-            lg:flex-row
-            lg:items-center
-            gap-8
-          "
-        >
+      <div className="re2buy-modern-card-title">
 
-          {/* GROUP TEXT */}
+        <span
+          className="re2buy-modern-card-accent"
+          style={{
+            backgroundColor: accent,
+          }}
+        />
 
-          <div
-            className="
-              shrink-0
-              lg:w-[240px]
-            "
-          >
-
-            <p
-              className="
-                text-[14px]
-                leading-5
-                text-black/50
-                font-medium
-              "
-            >
-              A part of
-              <br />
-              <span className="font-bold text-black/60">
-                Re2Buy Group
-              </span>
-            </p>
-
-          </div>
-
-          {/* LOGOS */}
-
-          <div
-            className="
-              flex
-              flex-wrap
-              items-center
-              gap-x-8
-              gap-y-7
-              flex-1
-            "
-          >
-
-            {logos.map(
-              (logo) => (
-                <div
-                  key={logo.name}
-                  className="
-                    h-[48px]
-                    min-w-[125px]
-                    flex
-                    items-center
-                    justify-center
-                  "
-                >
-
-                  <img
-                    src={logo.src}
-                    alt={logo.name}
-                    loading="lazy"
-                    className="
-                      max-h-[48px]
-                      max-w-[145px]
-                      w-auto
-                      h-auto
-                      object-contain
-                      opacity-90
-                      hover:opacity-100
-                      transition
-                    "
-                  />
-
-                </div>
-              )
-            )}
-
-          </div>
-
-        </div>
+        <span className="re2buy-modern-card-title-text">
+          {title}
+        </span>
 
       </div>
+
+      {/* ITEMS */}
+
+      <div className="re2buy-modern-card-items">
+
+        {items.map(
+          (item, index) => (
+            <button
+              key={`${item.label}-${index}`}
+              type="button"
+              onClick={item.onClick}
+              className="
+                re2buy-modern-card-item
+              "
+            >
+              {item.label}
+            </button>
+          )
+        )}
+
+      </div>
+
+    </div>
+  );
+}
+
+/* =========================================================
+   GROUP LOGO
+========================================================= */
+
+function GroupLogo({
+  name,
+  src,
+}) {
+  return (
+    <div className="re2buy-group-logo">
+
+      <img
+        src={src}
+        alt={name}
+        loading="lazy"
+      />
 
     </div>
   );

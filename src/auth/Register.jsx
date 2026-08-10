@@ -1,5 +1,3 @@
-// src/auth/Register.jsx
-
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -25,19 +23,58 @@ export default function Register() {
      FORM
   ======================================================= */
 
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    password: "",
-    district: "",
-    category: "buyer",
-  });
+  /* =======================================================
+     FORM
+     -------------------------------------------------------
+     Keep register data in sessionStorage so when the user
+     opens Terms & Conditions and comes back, the form is
+     restored instead of becoming empty.
+  ======================================================= */
+
+  const REGISTER_DRAFT_KEY = "re2buy_register_draft";
+
+  const getSavedRegisterDraft = () => {
+    try {
+      const saved = sessionStorage.getItem(REGISTER_DRAFT_KEY);
+
+      if (!saved) return null;
+
+      const parsed = JSON.parse(saved);
+
+      if (!parsed || typeof parsed !== "object") {
+        return null;
+      }
+
+      return parsed;
+    } catch (error) {
+      console.error(
+        "❌ register draft restore error 👉",
+        error
+      );
+
+      return null;
+    }
+  };
+
+  const savedDraft = getSavedRegisterDraft();
+
+  const [form, setForm] = useState(
+    savedDraft?.form || {
+      name: "",
+      phone: "",
+      password: "",
+      district: "",
+      category: "buyer",
+    }
+  );
 
   const [districts, setDistricts] = useState([]);
 
   const [obscure, setObscure] = useState(true);
 
-  const [agree, setAgree] = useState(false);
+  const [agree, setAgree] = useState(
+    savedDraft?.agree === true
+  );
 
   const [loading, setLoading] = useState(false);
 
@@ -53,6 +90,30 @@ export default function Register() {
       console.error("❌ loadDistricts error 👉", error);
     }
   }, []);
+
+  /* =======================================================
+     SAVE REGISTER DRAFT
+     -------------------------------------------------------
+     This runs whenever the user changes the form or the
+     Terms checkbox. It survives route navigation to Terms.
+  ======================================================= */
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        REGISTER_DRAFT_KEY,
+        JSON.stringify({
+          form,
+          agree,
+        })
+      );
+    } catch (error) {
+      console.error(
+        "❌ register draft save error 👉",
+        error
+      );
+    }
+  }, [form, agree]);
 
   /* =======================================================
      CHANGE
@@ -144,6 +205,18 @@ export default function Register() {
       const res = await registerUser(payload);
 
       if (res?.success) {
+        /* Registration completed — remove saved draft */
+        try {
+          sessionStorage.removeItem(
+            REGISTER_DRAFT_KEY
+          );
+        } catch (error) {
+          console.error(
+            "❌ register draft clear error 👉",
+            error
+          );
+        }
+
         navigate("/disclaimer", {
           replace: true,
         });
