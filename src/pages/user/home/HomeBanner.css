@@ -1,37 +1,37 @@
+
 /* =========================================================
    RE2BUY HOME BANNER
-   Premium automotive fullscreen hero
+   FINAL VERSION
+   Desktop + Tablet + Mobile
 ========================================================= */
-
 
 /* =========================================================
    FONT
-   ---------------------------------------------------------
-   The screenshot has a clean modern Helvetica-style font.
 ========================================================= */
 
-.re2buy-home-banner,
-.re2buy-home-banner * {
+.re2buy-banner,
+.re2buy-banner * {
   font-family:
     "Helvetica Neue",
     Helvetica,
     Arial,
     sans-serif;
+
+  box-sizing: border-box;
 }
 
-
 /* =========================================================
-   MAIN
+   MAIN BANNER
 ========================================================= */
 
-.re2buy-home-banner {
+.re2buy-banner {
   position: relative;
 
   width: 100%;
 
   height: 100vh;
 
-  min-height: 680px;
+  min-height: 650px;
 
   overflow: hidden;
 
@@ -41,7 +41,6 @@
 
   isolation: isolate;
 }
-
 
 /* =========================================================
    VIDEO LAYER
@@ -58,9 +57,14 @@
 
   overflow: hidden;
 
+  display: block;
+
+  visibility: visible;
+
+  opacity: 1;
+
   z-index: 0;
 }
-
 
 /* =========================================================
    VIDEO
@@ -69,49 +73,76 @@
 .re2buy-banner-video {
   position: absolute;
 
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 
   width: 100%;
-
   height: 100%;
+
+  min-width: 100%;
+  min-height: 100%;
+
+  max-width: none;
+  max-height: none;
+
+  display: block !important;
+
+  visibility: visible !important;
+
+  /*
+    IMPORTANT:
+    Never start with opacity:0.
+    Mobile browsers may delay loadeddata.
+  */
+
+  opacity: 1 !important;
 
   object-fit: cover;
 
   object-position: center center;
 
-  display: block;
-
-  opacity: 0;
-
   transform: scale(1.025);
 
+  background: #111;
+
+  border: 0;
+
+  outline: none;
+
+  pointer-events: none;
+
   transition:
-    opacity 1s ease,
     transform 8s ease;
 }
-
 
 /* =========================================================
    VIDEO READY
 ========================================================= */
 
-.re2buy-video-ready {
-  opacity: 1;
+.re2buy-banner-video.re2buy-video-ready {
+  display: block !important;
+
+  visibility: visible !important;
+
+  opacity: 1 !important;
 
   transform: scale(1);
 }
 
-
 /* =========================================================
-   MAIN DARK OVERLAY
-   ---------------------------------------------------------
-   Screenshot has a subtle dark transparent layer.
+   DARK OVERLAY
 ========================================================= */
 
 .re2buy-banner-dark-overlay {
   position: absolute;
 
   inset: 0;
+
+  width: 100%;
+
+  height: 100%;
 
   z-index: 1;
 
@@ -127,7 +158,6 @@
     );
 }
 
-
 /* =========================================================
    TOP OVERLAY
 ========================================================= */
@@ -135,11 +165,13 @@
 .re2buy-banner-top-overlay {
   position: absolute;
 
+  top: 0;
+
   left: 0;
 
   right: 0;
 
-  top: 0;
+  width: 100%;
 
   height: 190px;
 
@@ -155,7 +187,6 @@
     );
 }
 
-
 /* =========================================================
    BOTTOM OVERLAY
 ========================================================= */
@@ -168,6 +199,8 @@
   right: 0;
 
   bottom: 0;
+
+  width: 100%;
 
   height: 260px;
 
@@ -182,7 +215,6 @@
       rgba(0, 0, 0, 0)
     );
 }
-
 
 /* =========================================================
    CONTENT
@@ -202,11 +234,8 @@
   align-items: center;
 }
 
-
 /* =========================================================
-   CONTENT WIDTH
-   ---------------------------------------------------------
-   Screenshot content starts around 15% from left.
+   CONTENT INNER
 ========================================================= */
 
 .re2buy-banner-content-inner {
@@ -222,7 +251,6 @@
 
   padding-top: 55px;
 }
-
 
 /* =========================================================
    SMALL TITLE
@@ -242,7 +270,6 @@
   color:
     rgba(255, 255, 255, 0.94);
 }
-
 
 /* =========================================================
    MAIN TITLE
@@ -270,15 +297,13 @@
   color: #fff;
 }
 
-
 /* =========================================================
-   TITLE SECOND LINE
+   TITLE SPAN
 ========================================================= */
 
 .re2buy-banner-title span {
   color: #fff;
 }
-
 
 /* =========================================================
    DESCRIPTION
@@ -299,7 +324,6 @@
     rgba(255, 255, 255, 0.82);
 }
 
-
 /* =========================================================
    BUTTON AREA
 ========================================================= */
@@ -314,9 +338,8 @@
   margin-top: 34px;
 }
 
-
 /* =========================================================
-   MAIN YELLOW BUTTON
+   MAIN BUTTON
 ========================================================= */
 
 .re2buy-banner-main-button {
@@ -355,7 +378,6 @@
     box-shadow 0.25s ease;
 }
 
-
 /* =========================================================
    ARROW
 ========================================================= */
@@ -369,7 +391,6 @@
     transform 0.25s ease;
 }
 
-
 /* =========================================================
    BUTTON HOVER
 ========================================================= */
@@ -377,13 +398,13 @@
 .re2buy-banner-main-button:hover {
   background: #ffe8ad;
 
-  transform: translateY(-2px);
+  transform:
+    translateY(-2px);
 
   box-shadow:
     0 15px 35px
     rgba(0, 0, 0, 0.18);
 }
-
 
 .re2buy-banner-main-button:hover
 .re2buy-button-arrow {
@@ -391,9 +412,8 @@
     translate(3px, -3px);
 }
 
-
 /* =========================================================
-   SECONDARY BUTTON
+   OUTLINE BUTTON
 ========================================================= */
 
 .re2buy-banner-outline-button {
@@ -431,7 +451,6 @@
     transform 0.25s ease;
 }
 
-
 .re2buy-banner-outline-button:hover {
   background:
     rgba(255, 255, 255, 0.17);
@@ -443,12 +462,8 @@
     translateY(-2px);
 }
 
-
 /* =========================================================
-   RIGHT SCROLL
-   ---------------------------------------------------------
-   Matches reference:
-   vertical text + thin line.
+   SCROLL INDICATOR
 ========================================================= */
 
 .re2buy-banner-scroll {
@@ -483,7 +498,6 @@
   cursor: pointer;
 }
 
-
 /* =========================================================
    SCROLL TEXT
 ========================================================= */
@@ -508,9 +522,8 @@
     rgba(255, 255, 255, 0.95);
 }
 
-
 /* =========================================================
-   SCROLL LINE
+   SCROLL TRACK
 ========================================================= */
 
 .re2buy-scroll-track {
@@ -525,7 +538,6 @@
 
   overflow: hidden;
 }
-
 
 /* =========================================================
    SCROLL DOT
@@ -547,7 +559,6 @@
   background: #fff;
 }
 
-
 /* =========================================================
    LARGE DESKTOP
 ========================================================= */
@@ -565,7 +576,6 @@
   }
 
 }
-
 
 /* =========================================================
    LAPTOP
@@ -590,17 +600,41 @@
 
 }
 
-
 /* =========================================================
    TABLET
 ========================================================= */
 
 @media (max-width: 900px) {
 
-  .re2buy-home-banner {
-    min-height: 650px;
-
+  .re2buy-banner {
     height: 90vh;
+
+    min-height: 650px;
+  }
+
+  .re2buy-banner-video-layer {
+    display: block !important;
+
+    visibility: visible !important;
+
+    opacity: 1 !important;
+  }
+
+  .re2buy-banner-video {
+    display: block !important;
+
+    visibility: visible !important;
+
+    opacity: 1 !important;
+
+    width: 100% !important;
+
+    height: 100% !important;
+
+    object-fit: cover !important;
+
+    object-position:
+      center center !important;
   }
 
   .re2buy-banner-content-inner {
@@ -626,137 +660,280 @@
 
 }
 
-
 /* =========================================================
    MOBILE
 ========================================================= */
 
 @media (max-width: 768px) {
 
-  .re2buy-home-banner {
-    height: 760px;
+  /* -----------------------------------------------
+     MAIN
+  ----------------------------------------------- */
 
-    min-height: 680px;
+  .re2buy-banner {
+    position: relative !important;
+
+    width: 100% !important;
+
+    height: 100svh !important;
+
+    min-height: 620px !important;
+
+    max-height: none !important;
+
+    overflow: hidden !important;
+
+    display: block !important;
   }
 
+  /* -----------------------------------------------
+     VIDEO LAYER
+  ----------------------------------------------- */
+
+  .re2buy-banner-video-layer {
+    position: absolute !important;
+
+    inset: 0 !important;
+
+    width: 100% !important;
+
+    height: 100% !important;
+
+    display: block !important;
+
+    visibility: visible !important;
+
+    opacity: 1 !important;
+
+    overflow: hidden !important;
+
+    z-index: 0 !important;
+  }
 
   /* -----------------------------------------------
-     VIDEO POSITION
+     MOBILE VIDEO
   ----------------------------------------------- */
 
   .re2buy-banner-video {
+    position: absolute !important;
+
+    top: 0 !important;
+
+    left: 0 !important;
+
+    right: 0 !important;
+
+    bottom: 0 !important;
+
+    width: 100% !important;
+
+    height: 100% !important;
+
+    min-width: 100% !important;
+
+    min-height: 100% !important;
+
+    max-width: none !important;
+
+    max-height: none !important;
+
+    display: block !important;
+
+    visibility: visible !important;
+
+    opacity: 1 !important;
+
+    object-fit: cover !important;
+
     object-position:
-      58% center;
+      58% center !important;
+
+    transform: scale(1.01) !important;
+
+    background: #111 !important;
+
+    pointer-events: none !important;
   }
 
-
   /* -----------------------------------------------
-     OVERLAY
+     DARK OVERLAY
   ----------------------------------------------- */
 
   .re2buy-banner-dark-overlay {
+    position: absolute !important;
+
+    inset: 0 !important;
+
+    display: block !important;
+
+    visibility: visible !important;
+
+    opacity: 1 !important;
+
+    z-index: 1 !important;
+
     background:
       linear-gradient(
         to bottom,
-        rgba(0, 0, 0, 0.32) 0%,
-        rgba(0, 0, 0, 0.3) 35%,
-        rgba(0, 0, 0, 0.72) 100%
-      );
+        rgba(0, 0, 0, 0.30) 0%,
+        rgba(0, 0, 0, 0.25) 35%,
+        rgba(0, 0, 0, 0.74) 100%
+      ) !important;
   }
 
+  /* -----------------------------------------------
+     TOP OVERLAY
+  ----------------------------------------------- */
+
+  .re2buy-banner-top-overlay {
+    top: 0 !important;
+
+    left: 0 !important;
+
+    right: 0 !important;
+
+    height: 150px !important;
+
+    display: block !important;
+
+    z-index: 2 !important;
+  }
+
+  /* -----------------------------------------------
+     BOTTOM OVERLAY
+  ----------------------------------------------- */
+
+  .re2buy-banner-bottom-overlay {
+    left: 0 !important;
+
+    right: 0 !important;
+
+    bottom: 0 !important;
+
+    height: 240px !important;
+
+    display: block !important;
+
+    z-index: 2 !important;
+  }
 
   /* -----------------------------------------------
      CONTENT
   ----------------------------------------------- */
 
   .re2buy-banner-content {
-    align-items: flex-end;
-  }
+    position: relative !important;
 
+    z-index: 5 !important;
+
+    width: 100% !important;
+
+    height: 100% !important;
+
+    display: flex !important;
+
+    align-items: flex-end !important;
+  }
 
   .re2buy-banner-content-inner {
-    width: 100%;
+    width: 100% !important;
 
-    padding-left: 22px;
+    max-width: none !important;
 
-    padding-right: 22px;
+    margin: 0 !important;
 
-    padding-bottom: 88px;
+    padding-left: 22px !important;
 
-    padding-top: 0;
+    padding-right: 22px !important;
+
+    padding-top: 0 !important;
+
+    padding-bottom: 88px !important;
   }
 
+  /* -----------------------------------------------
+     SMALL TEXT
+  ----------------------------------------------- */
 
   .re2buy-banner-small-text {
-    font-size: 13px;
+    font-size: 13px !important;
 
-    margin-bottom: 15px;
+    margin-bottom: 15px !important;
+
+    line-height: 1.4 !important;
   }
 
+  /* -----------------------------------------------
+     TITLE
+  ----------------------------------------------- */
 
   .re2buy-banner-title {
-    max-width: 100%;
+    max-width: 100% !important;
+
+    margin: 0 !important;
 
     font-size:
       clamp(
         43px,
         12vw,
         62px
-      );
+      ) !important;
 
-    line-height: 0.98;
+    line-height: 0.98 !important;
 
     letter-spacing:
-      -0.045em;
+      -0.045em !important;
   }
 
+  /* -----------------------------------------------
+     DESCRIPTION
+  ----------------------------------------------- */
 
   .re2buy-banner-description {
-    max-width: 390px;
+    max-width: 390px !important;
 
-    margin-top: 19px;
+    margin-top: 19px !important;
 
-    font-size: 13px;
+    font-size: 13px !important;
 
-    line-height: 1.55;
+    line-height: 1.55 !important;
   }
-
 
   /* -----------------------------------------------
      BUTTONS
   ----------------------------------------------- */
 
   .re2buy-banner-actions {
-    width: 100%;
+    width: 100% !important;
 
-    margin-top: 25px;
+    margin-top: 25px !important;
 
-    flex-direction: column;
+    display: flex !important;
 
-    align-items: stretch;
+    flex-direction: column !important;
 
-    gap: 9px;
+    align-items: stretch !important;
+
+    gap: 9px !important;
   }
-
 
   .re2buy-banner-main-button,
   .re2buy-banner-outline-button {
-    width: 100%;
+    width: 100% !important;
 
-    height: 56px;
+    height: 56px !important;
+
+    min-width: 0 !important;
   }
 
-
   /* -----------------------------------------------
-     SCROLL
+     HIDE SCROLL INDICATOR MOBILE
   ----------------------------------------------- */
 
   .re2buy-banner-scroll {
-    display: none;
+    display: none !important;
   }
-
 }
-
 
 /* =========================================================
    SMALL MOBILE
@@ -764,24 +941,70 @@
 
 @media (max-width: 420px) {
 
-  .re2buy-home-banner {
-    height: 720px;
+  .re2buy-banner {
+    height: 100svh !important;
+
+    min-height: 600px !important;
+  }
+
+  .re2buy-banner-video {
+    object-position:
+      58% center !important;
   }
 
   .re2buy-banner-content-inner {
-    padding-left: 18px;
+    padding-left: 18px !important;
 
-    padding-right: 18px;
+    padding-right: 18px !important;
 
-    padding-bottom: 70px;
+    padding-bottom: 70px !important;
   }
 
   .re2buy-banner-title {
-    font-size: 42px;
+    font-size: 42px !important;
   }
 
   .re2buy-banner-description {
-    font-size: 12.5px;
+    font-size: 12.5px !important;
+  }
+
+}
+
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 360px) {
+
+  .re2buy-banner {
+    height: 100svh !important;
+
+    min-height: 580px !important;
+  }
+
+  .re2buy-banner-content-inner {
+    padding-left: 16px !important;
+
+    padding-right: 16px !important;
+
+    padding-bottom: 58px !important;
+  }
+
+  .re2buy-banner-title {
+    font-size: 38px !important;
+  }
+
+  .re2buy-banner-description {
+    font-size: 12px !important;
+  }
+
+  .re2buy-banner-actions {
+    margin-top: 20px !important;
+  }
+
+  .re2buy-banner-main-button,
+  .re2buy-banner-outline-button {
+    height: 52px !important;
   }
 
 }

@@ -1,186 +1,537 @@
-// src/components/CarGridSection.jsx
-import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import CarCard from "@/components/CarCard";
-import { getAllVariants } from "@/services/carVariantApi";
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
-/* ================= HELPERS ================= */
+import {
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
+
+import {
+  motion,
+} from "framer-motion";
+
+import CarCard from "@/components/CarCard";
+
+import {
+  getAllVariants,
+} from "@/services/carVariantApi";
+
+/* =========================================================
+   ID
+========================================================= */
 
 const extractId = (value) => {
   if (!value) return "";
-  if (typeof value === "object") {
-    if (value.$oid) return value.$oid.toString();
-    if (value._id) return value._id.toString();
+
+  if (
+    typeof value === "object"
+  ) {
+    if (value.$oid) {
+      return String(
+        value.$oid
+      );
+    }
+
+    if (value._id) {
+      return String(
+        value._id
+      );
+    }
+
+    if (value.id) {
+      return String(
+        value.id
+      );
+    }
   }
-  return value.toString();
+
+  return String(value);
 };
 
-const brandName = (car) => {
-  const brand = car?.brand;
-  if (typeof brand === "object" && brand?.name) {
-    return brand.name.toString();
+/* =========================================================
+   IMAGE
+========================================================= */
+
+const getImage = (car) => {
+  const images = [
+    car?.bannerImage,
+    car?.imageUrl,
+    car?.image,
+    car?.thumbnail,
+    car?.photo,
+    car?.images?.[0],
+    car?.photos?.[0],
+    car?.gallery?.[0],
+    car?.media?.[0],
+  ];
+
+  for (
+    const item of images
+  ) {
+    if (!item) continue;
+
+    if (
+      typeof item === "string"
+    ) {
+      if (item.trim()) {
+        return item.trim();
+      }
+    }
+
+    if (
+      typeof item ===
+      "object"
+    ) {
+      const url =
+        item.url ||
+        item.secure_url ||
+        item.src ||
+        item.path ||
+        item.imageUrl;
+
+      if (url) {
+        return String(
+          url
+        );
+      }
+    }
   }
+
   return "";
 };
 
-const brandLogo = (car) => {
-  const brand = car?.brand;
-  if (typeof brand === "object" && brand?.logo) {
-    return brand.logo.toString();
+/* =========================================================
+   BRAND
+========================================================= */
+
+const getBrand = (car) => {
+  if (
+    typeof car?.brand ===
+    "object"
+  ) {
+    return (
+      car.brand.name ||
+      car.brand.brandName ||
+      ""
+    );
   }
-  return "";
+
+  return car?.brand || "";
 };
 
-const isVisible = (car) => {
-  const status = (car?.status || "").toString().toLowerCase();
-  if (status === "draft" || status === "drift") return false;
-  return true;
-};
+/* =========================================================
+   VARIANT CACHE
+========================================================= */
 
-/* ================= CACHE ================= */
+let variantCache = {};
+let variantCacheTime = 0;
 
-let cachedVariantMap = {};
-let cacheTime = null;
-const CACHE_DURATION = 15 * 60 * 1000;
+const CACHE_TIME =
+  15 * 60 * 1000;
 
-/* ================= COMPONENT ================= */
+/* =========================================================
+   COMPONENT
+========================================================= */
 
-export default function CarGridSection({ cars = [], onViewAll, showViewAllButton }) {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const currentTab = searchParams.get("tab") || 0; // Cars tab = 0
+export default function CarGridSection({
+  cars = [],
+  onViewAll,
+  showViewAllButton = false,
 
-  const [variantMap, setVariantMap] = useState({});
+  // Search Result context
+  fromSearch = false,
+  searchQuery = "",
+  searchCars = [],
+}) {
+  const navigate =
+    useNavigate();
 
-  /* ================= LOAD VARIANTS ================= */
+  const [
+    searchParams,
+  ] = useSearchParams();
+
+  const currentTab =
+    searchParams.get(
+      "tab"
+    ) || "0";
+
+  const [
+    variantMap,
+    setVariantMap,
+  ] = useState({});
+
+  /* =======================================================
+     LOAD VARIANTS
+  ======================================================= */
 
   useEffect(() => {
-    const loadVariants = async () => {
+    let active = true;
+
+    const load = async () => {
       if (
-        cacheTime &&
-        Date.now() - cacheTime < CACHE_DURATION &&
-        Object.keys(cachedVariantMap).length
+        Date.now() -
+          variantCacheTime <
+          CACHE_TIME &&
+        Object.keys(
+          variantCache
+        ).length
       ) {
-        setVariantMap(cachedVariantMap);
+        setVariantMap(
+          variantCache
+        );
+
         return;
       }
 
       try {
-        const variants = await getAllVariants();
+        const variants =
+          await getAllVariants();
+
+        if (
+          !Array.isArray(
+            variants
+          )
+        ) {
+          return;
+        }
+
         const map = {};
-        variants.forEach((v) => {
-          const id = extractId(v._id);
-          if (id) map[id] = v.variantName || "";
-        });
-        cachedVariantMap = map;
-        cacheTime = Date.now();
-        setVariantMap(map);
-      } catch (e) {
-        console.log("Variant load error 👉", e);
+
+        variants.forEach(
+          (item) => {
+            const id =
+              extractId(
+                item?._id
+              );
+
+            if (id) {
+              map[id] =
+                item?.variantName ||
+                item?.name ||
+                "";
+            }
+          }
+        );
+
+        variantCache =
+          map;
+
+        variantCacheTime =
+          Date.now();
+
+        if (active) {
+          setVariantMap(
+            map
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Variant error:",
+          error
+        );
       }
     };
 
-    loadVariants();
+    load();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const variantName = useCallback(
-    (variantValue) => {
-      const id = extractId(variantValue);
-      if (!id) return "";
-      return variantMap[id] || "";
+  /* =======================================================
+     VARIANT
+  ======================================================= */
+
+  const getVariantName =
+    useCallback(
+      (value) => {
+        if (!value) {
+          return "";
+        }
+
+        if (
+          typeof value ===
+          "object"
+        ) {
+          return (
+            value.variantName ||
+            value.name ||
+            value.title ||
+            ""
+          );
+        }
+
+        const id =
+          extractId(value);
+
+        return (
+          variantMap[id] ||
+          ""
+        );
+      },
+      [variantMap]
+    );
+
+  /* =======================================================
+     VISIBLE
+  ======================================================= */
+
+  const visibleCars =
+    Array.isArray(cars)
+      ? cars
+          .filter((car) => {
+            const status =
+              String(
+                car?.status ||
+                  ""
+              ).toLowerCase();
+
+            return (
+              status !==
+                "draft" &&
+              status !==
+                "deleted" &&
+              status !==
+                "drift"
+            );
+          })
+          .slice(0, 6)
+      : [];
+
+  if (!visibleCars.length) {
+    return null;
+  }
+
+  /* =======================================================
+     OPEN DETAILS
+  ======================================================= */
+
+  const openDetails =
+    (car) => {
+      const id =
+        extractId(
+          car?._id ||
+            car?.id ||
+            car?.carId
+        );
+
+      if (!id) {
+        console.error(
+          "Car ID missing",
+          car
+        );
+
+        return;
+      }
+
+      navigate(
+        `/car/${encodeURIComponent(
+          id
+        )}?tab=${currentTab}`,
+        {
+          state: {
+            car,
+          },
+        }
+      );
+    };
+
+  /* =======================================================
+     ANIMATION
+  ======================================================= */
+
+  const container = {
+    hidden: {
+      opacity: 0,
     },
-    [variantMap]
-  );
 
-  /* ================= FILTER + TAKE(6) ================= */
-
-  const carsToShow = cars.filter(isVisible).slice(0, 6);
-  if (!carsToShow.length) return null;
-
-  /* ================= ANIMATION ================= */
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.08 },
+      transition: {
+        staggerChildren:
+          0.06,
+      },
     },
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 40 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
+  const item = {
+    hidden: {
+      opacity: 0,
+      y: 15,
+    },
+
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.35,
+      },
+    },
   };
 
+  /* =======================================================
+     UI
+  ======================================================= */
+
   return (
-    <div>
+    <div className="w-full">
+
       <motion.div
-        variants={containerVariants}
+        variants={container}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6"
-        style={{ columnGap: "12px", rowGap: "14px" }}
+        className="
+          grid
+          grid-cols-2
+          gap-x-3
+          gap-y-3.5
+          md:grid-cols-4
+          lg:grid-cols-6
+        "
       >
-        {carsToShow.map((car) => {
-          const carId = extractId(car._id);
-          return (
-            <motion.div
-              key={carId}
-              variants={itemVariants}
-              onClick={() =>
-                navigate(`/car/${carId}?tab=${currentTab}`, { state: { car } }) // ✅ pass current tab
-              }
-              className="cursor-pointer aspect-[0.72] xl:aspect-[0.78]"
-            >
-              <CarCard
-                carId={carId}
-                brandName={brandName(car)}
-                brandLogoUrl={brandLogo(car)}
-                variant={variantName(car.variant)}
-                model={car.model || ""}
-                imageUrl={car.bannerImage || ""}
-                price={car.price?.toString() || "0"}
-                fuel={car.fuel || ""}
-                year={car.year?.toString() || "-"}
-                status={car.status || "available"}
-                km={car.km?.toString() || "0"}
-                owner={car.owner?.toString() || "1"}
-                transmission={car.transmission || "Manual"}
-                district={car.district || ""}
-                city={car.city || ""}
-              />
-            </motion.div>
-          );
-        })}
+        {visibleCars.map(
+          (car, index) => {
+            const carId =
+              extractId(
+                car?._id ||
+                  car?.id ||
+                  car?.carId
+              );
+
+            return (
+              <motion.div
+                key={
+                  carId ||
+                  `car-${index}`
+                }
+                variants={item}
+                className="min-w-0 w-full"
+              >
+                <CarCard
+                  carId={carId}
+
+                  brandName={
+                    getBrand(car)
+                  }
+
+                  variant={
+                    getVariantName(
+                      car?.variant
+                    )
+                  }
+
+                  model={
+                    car?.model
+                      ?.name ||
+                    car?.model
+                      ?.modelName ||
+                    car?.model ||
+                    ""
+                  }
+
+                  imageUrl={
+                    getImage(car)
+                  }
+
+                  price={
+                    car?.price ??
+                    "0"
+                  }
+
+                  fuel={
+                    car?.fuel ||
+                    car?.fuelType ||
+                    ""
+                  }
+
+                  year={
+                    car?.year ||
+                    "-"
+                  }
+
+                  status={
+                    car?.status ||
+                    "available"
+                  }
+
+                  km={
+                    car?.km ??
+                    car?.kilometers ??
+                    "0"
+                  }
+
+                  owner={
+                    car?.owner ||
+                    "1"
+                  }
+
+                  transmission={
+                    car?.transmission ||
+                    "Manual"
+                  }
+
+                  district={
+                    car?.district ||
+                    ""
+                  }
+
+                  city={
+                    car?.city ||
+                    ""
+                  }
+
+                  onTap={() =>
+                    openDetails(
+                      car
+                    )
+                  }
+                />
+              </motion.div>
+            );
+          }
+        )}
       </motion.div>
 
-      {/* VIEW ALL BUTTON */}
       {showViewAllButton && (
-        <div style={{ padding: "14px 0" }}>
+        <div className="py-3.5">
           <button
-            onClick={onViewAll}
-            style={{
-              height: "42px",
-              background: "rgba(255,255,255,0.45)",
-              borderRadius: "18px",
-              padding: "0 25px",
-              width: "100%",
-            }}
-            className="flex items-center justify-between"
+            type="button"
+            onClick={
+              onViewAll
+            }
+            className="
+              flex
+              h-[42px]
+              w-full
+              items-center
+              justify-between
+              rounded-[18px]
+              bg-white/45
+              px-5
+              hover:bg-white/65
+            "
           >
-            <span className="text-xs font-semibold text-black">View All Cars</span>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                background: "rgba(255,255,255,0.6)",
-                borderRadius: "50%",
-              }}
-              className="flex items-center justify-center"
+            <span className="text-xs font-semibold">
+              View All Cars
+            </span>
+
+            <span
+              className="
+                flex
+                h-7
+                w-7
+                items-center
+                justify-center
+                rounded-full
+                bg-white/60
+              "
             >
-              <span className="text-sm">→</span>
-            </div>
+              →
+            </span>
           </button>
         </div>
       )}

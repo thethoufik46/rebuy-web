@@ -1,10 +1,24 @@
 // src/pages/user/UserHome.jsx
 
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+
+import {
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
+
+import {
+  motion,
+  AnimatePresence,
+} from "framer-motion";
+
+/* =========================================================
+   HOME COMPONENTS
+========================================================= */
 
 import Navbar from "./home/Navbar";
+
+import SearchBar from "./Search/SearchBar";
 
 /* =========================================================
    HOME SECTIONS
@@ -41,9 +55,6 @@ const BASE_URL =
 
 /* =========================================================
    CATEGORY PAGES
-   ---------------------------------------------------------
-   Location is NOT a tab.
-   Footer is NOT a tab.
 ========================================================= */
 
 const pages = [
@@ -53,18 +64,21 @@ const pages = [
     icon: carIcon,
     component: CarsPage,
   },
+
   {
     id: 1,
     label: "Bikes",
     icon: bikeIcon,
     component: BikesPage,
   },
+
   {
     id: 2,
     label: "Property",
     icon: propertyIcon,
     component: RealEstatePage,
   },
+
   {
     id: 3,
     label: "Electronics",
@@ -78,18 +92,16 @@ const pages = [
 ========================================================= */
 
 export default function UserHome() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const [searchParams, setSearchParams] =
-    useSearchParams();
+  const [
+    searchParams,
+    setSearchParams,
+  ] = useSearchParams();
 
   /* =======================================================
-     READ TAB FROM URL
-     -------------------------------------------------------
-     ?tab=0 → Cars
-     ?tab=1 → Bikes
-     ?tab=2 → Property
-     ?tab=3 → Electronics
+     URL TAB
   ======================================================= */
 
   const rawTab = Number(
@@ -107,12 +119,11 @@ export default function UserHome() {
      STATES
   ======================================================= */
 
-  const [cars, setCars] = useState([]);
-
-  const [search, setSearch] = useState("");
-
-  const [suggestions, setSuggestions] =
+  const [cars, setCars] =
     useState([]);
+
+  const [search, setSearch] =
+    useState("");
 
   /* =======================================================
      FETCH CARS
@@ -124,23 +135,31 @@ export default function UserHome() {
 
   async function fetchCars() {
     try {
-      const res = await fetch(
-        `${BASE_URL}/cars`
-      );
+      const response =
+        await fetch(
+          `${BASE_URL}/cars`
+        );
 
-      if (!res.ok) {
+      if (!response.ok) {
         throw new Error(
-          `Failed to fetch cars: ${res.status}`
+          `Failed to fetch cars: ${response.status}`
         );
       }
 
-      const data = await res.json();
+      const data =
+        await response.json();
 
-      setCars(data.cars || []);
-    } catch (err) {
-      console.log(
+      setCars(
+        Array.isArray(
+          data?.cars
+        )
+          ? data.cars
+          : []
+      );
+    } catch (error) {
+      console.error(
         "Fetch cars error:",
-        err
+        error
       );
 
       setCars([]);
@@ -151,53 +170,45 @@ export default function UserHome() {
      SEARCH CHANGE
   ======================================================= */
 
-  function handleSearchChange(value) {
+  function handleSearchChange(
+    value
+  ) {
     setSearch(value);
-
-    if (!value.trim()) {
-      setSuggestions([]);
-      return;
-    }
-
-    const brands = cars
-      .map(
-        (car) =>
-          car?.brand?.name || ""
-      )
-      .filter(Boolean);
-
-    const unique = [
-      ...new Set(brands),
-    ];
-
-    const result = unique.filter(
-      (brand) =>
-        brand
-          .toLowerCase()
-          .includes(
-            value.toLowerCase()
-          )
-    );
-
-    setSuggestions(
-      result.slice(0, 8)
-    );
   }
 
   /* =======================================================
-     SEARCH SUGGESTION CLICK
+     SEARCH RESULT
   ======================================================= */
 
-  function handleSuggestionClick(brand) {
-    setSearch(brand);
-    setSuggestions([]);
+  function handleSearchSubmit(
+    query,
+    matchedCars
+  ) {
+    setSearch(query);
+
+    navigate(
+      "/search-results",
+      {
+        state: {
+          query,
+          filteredCars:
+            Array.isArray(
+              matchedCars
+            )
+              ? matchedCars
+              : [],
+        },
+      }
+    );
   }
 
   /* =======================================================
      TAB CHANGE
   ======================================================= */
 
-  function handleTabChange(index) {
+  function handleTabChange(
+    index
+  ) {
     setSearchParams({
       tab: index,
     });
@@ -207,12 +218,15 @@ export default function UserHome() {
      ACTIVE PAGE
   ======================================================= */
 
-  const ActivePage = useMemo(
-    () =>
-      pages[selectedIndex]?.component ||
-      CarsPage,
-    [selectedIndex]
-  );
+  const ActivePage =
+    useMemo(
+      () =>
+        pages[
+          selectedIndex
+        ]?.component ||
+        CarsPage,
+      [selectedIndex]
+    );
 
   /* =======================================================
      RENDER
@@ -222,8 +236,8 @@ export default function UserHome() {
     <div
       className="
         min-h-screen
-        text-black
         overflow-x-hidden
+        text-black
       "
       style={{
         background:
@@ -244,127 +258,41 @@ export default function UserHome() {
       <HomeBanner />
 
       {/* =================================================
-          SEARCH + CATEGORY CONTENT
+          SEARCH + CATEGORY
       ================================================= */}
 
       <div className="p-4 md:p-6">
 
         {/* =================================================
-            SEARCH
+            SEARCH ROW
         ================================================= */}
 
         <div
           className="
+            mb-4
             flex
+            w-full
             items-center
             gap-2
-            w-full
-            mb-4
           "
         >
 
-          {/* ---------------------------------------------
-              SEARCH INPUT
-          --------------------------------------------- */}
+          {/* SEARCH */}
 
-          <div className="relative flex-1">
-
-            <input
+          <div className="min-w-0 flex-1">
+            <SearchBar
               value={search}
-              onChange={(e) =>
-                handleSearchChange(
-                  e.target.value
-                )
+              onChange={
+                handleSearchChange
               }
-              placeholder="Search brand..."
-              autoComplete="off"
-              className="
-                w-full
-                px-4
-                py-3
-                rounded-full
-                bg-white
-                shadow-sm
-                outline-none
-                border
-                border-transparent
-                focus:border-black/10
-                focus:ring-2
-                focus:ring-black/5
-                transition-all
-              "
+              allCars={cars}
+              onSearch={
+                handleSearchSubmit
+              }
             />
-
-            {/* -------------------------------------------
-                SEARCH SUGGESTIONS
-            ------------------------------------------- */}
-
-            <AnimatePresence>
-              {suggestions.length > 0 && (
-                <motion.div
-                  initial={{
-                    opacity: 0,
-                    y: -5,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                  }}
-                  exit={{
-                    opacity: 0,
-                    y: -5,
-                  }}
-                  transition={{
-                    duration: 0.15,
-                  }}
-                  className="
-                    absolute
-                    left-0
-                    right-0
-                    mt-2
-                    bg-white
-                    rounded-xl
-                    shadow-xl
-                    z-[100]
-                    overflow-hidden
-                  "
-                >
-
-                  {suggestions.map(
-                    (brand) => (
-                      <button
-                        key={brand}
-                        type="button"
-                        onClick={() =>
-                          handleSuggestionClick(
-                            brand
-                          )
-                        }
-                        className="
-                          block
-                          w-full
-                          px-4
-                          py-3
-                          text-left
-                          cursor-pointer
-                          hover:bg-gray-100
-                          transition
-                        "
-                      >
-                        {brand}
-                      </button>
-                    )
-                  )}
-
-                </motion.div>
-              )}
-            </AnimatePresence>
-
           </div>
 
-          {/* ---------------------------------------------
-              FILTER
-          --------------------------------------------- */}
+          {/* FILTER */}
 
           <button
             type="button"
@@ -372,55 +300,86 @@ export default function UserHome() {
               navigate("/filter")
             }
             className="
-              w-12
-              h-12
-              shrink-0
-              rounded-xl
-              bg-white
-              shadow-sm
               flex
+              h-12
+              w-12
+              shrink-0
               items-center
               justify-center
-              hover:bg-gray-50
-              active:scale-95
+              rounded-xl
+              border
+              border-white/50
+              bg-white/55
+              shadow-sm
+              backdrop-blur-xl
               transition-all
+              hover:bg-white/70
+              active:scale-95
             "
             aria-label="Filter"
           >
-            ⚙
-          </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line
+                x1="4"
+                y1="6"
+                x2="20"
+                y2="6"
+              />
 
+              <line
+                x1="7"
+                y1="12"
+                x2="17"
+                y2="12"
+              />
+
+              <line
+                x1="10"
+                y1="18"
+                x2="14"
+                y2="18"
+              />
+            </svg>
+          </button>
         </div>
 
         {/* =================================================
-            TOP TABS
+            CATEGORY TABS
         ================================================= */}
 
         <div
           className="
             mx-3
             my-2
-            px-1.5
-            py-2
-            bg-white/10
-            backdrop-blur-xl
             rounded-3xl
             border
             border-white/20
+            bg-white/10
+            px-1.5
+            py-2
             shadow-sm
+            backdrop-blur-xl
           "
         >
-
           <div
             className="
               flex
-              justify-around
-              items-center
               h-[100px]
+              items-center
+              justify-around
               sm:h-[106px]
             "
           >
-
             {pages.map(
               (page) => (
                 <TabButton
@@ -439,23 +398,21 @@ export default function UserHome() {
                 />
               )
             )}
-
           </div>
-
         </div>
 
         {/* =================================================
-            ACTIVE CATEGORY PAGE
+            ACTIVE CATEGORY
         ================================================= */}
 
         <div className="mt-2">
-
           <AnimatePresence
             mode="wait"
           >
-
             <motion.div
-              key={selectedIndex}
+              key={
+                selectedIndex
+              }
               initial={{
                 opacity: 0,
                 y: 12,
@@ -473,25 +430,16 @@ export default function UserHome() {
                 ease: "easeInOut",
               }}
             >
-
               <ActivePage
                 search={search}
               />
-
             </motion.div>
-
           </AnimatePresence>
-
         </div>
-
       </div>
 
       {/* =================================================
           LOCATION
-          -------------------------------------------------
-          No tab.
-          No button.
-          Just homepage section.
       ================================================= */}
 
       <Location />
@@ -501,7 +449,6 @@ export default function UserHome() {
       ================================================= */}
 
       <Footer />
-
     </div>
   );
 }
@@ -524,19 +471,19 @@ function TabButton({
       }}
       onClick={onClick}
       className={`
-        flex-1
         flex
+        flex-1
         flex-col
         items-center
         justify-center
-        py-2
         rounded-2xl
+        py-2
         transition-all
         duration-200
 
         ${
           isActive
-            ? "bg-white/30 backdrop-blur-sm border border-white/20 shadow-lg"
+            ? "border border-white/20 bg-white/30 shadow-lg backdrop-blur-sm"
             : "bg-transparent"
         }
       `}
@@ -548,24 +495,24 @@ function TabButton({
 
       <motion.div
         animate={{
-          scale:
-            isActive
-              ? 1.05
-              : 1,
+          scale: isActive
+            ? 1.05
+            : 1,
         }}
         transition={{
           duration: 0.2,
         }}
         className={`
-          w-[75px]
-          h-[75px]
-          sm:w-[80px]
-          sm:h-[80px]
-          rounded-full
           flex
+          h-[75px]
+          w-[75px]
           items-center
           justify-center
           overflow-hidden
+          rounded-full
+
+          sm:h-[80px]
+          sm:w-[80px]
 
           ${
             isActive
@@ -574,19 +521,17 @@ function TabButton({
           }
         `}
       >
-
         <img
           src={icon}
           alt={label}
           draggable="false"
           className="
-            w-full
             h-full
-            object-contain
+            w-full
             select-none
+            object-contain
           "
         />
-
       </motion.div>
 
       {/* =================================================
@@ -595,9 +540,9 @@ function TabButton({
 
       <span
         className={`
+          mt-1
           text-xs
           sm:text-sm
-          mt-1
 
           ${
             isActive
@@ -610,7 +555,7 @@ function TabButton({
       </span>
 
       {/* =================================================
-          ACTIVE UNDERLINE
+          UNDERLINE
       ================================================= */}
 
       <motion.div
@@ -625,16 +570,14 @@ function TabButton({
           width: 0,
         }}
         animate={{
-          width:
-            isActive
-              ? 26
-              : 0,
+          width: isActive
+            ? 26
+            : 0,
         }}
         transition={{
           duration: 0.2,
         }}
       />
-
     </motion.button>
   );
 }
