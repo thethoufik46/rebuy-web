@@ -20,8 +20,6 @@ import {
   UserRound,
   Home,
   X,
-  Activity,
-  CircleUserRound,
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
@@ -757,24 +755,10 @@ export default function UserProfile() {
           </button>
 
 
-          <div className="profile-heading">
-
-            <span>
-              RE2BUY
-            </span>
-
-            <strong>
-              Profile
-            </strong>
-
-          </div>
 
 
-          <div className="top-avatar">
-            <CircleUserRound
-              size={18}
-            />
-          </div>
+
+
 
         </div>
 
@@ -858,39 +842,6 @@ export default function UserProfile() {
             </button>
 
 
-            {/* CONTACT */}
-
-            <div className="contact-list">
-
-              <FlatInfo
-                icon={Phone}
-                label="PHONE"
-                value={
-                  phone ||
-                  "Not added"
-                }
-              />
-
-              <FlatInfo
-                icon={Mail}
-                label="EMAIL"
-                value={
-                  email ||
-                  "Not added"
-                }
-              />
-
-              <FlatInfo
-                icon={MapPin}
-                label="DISTRICT"
-                value={
-                  district ||
-                  "Not added"
-                }
-              />
-
-            </div>
-
           </aside>
 
 
@@ -971,40 +922,6 @@ export default function UserProfile() {
                 />
 
               </div>
-
-            </div>
-
-
-            {/* STATS */}
-
-            <div className="stats-grid">
-
-              <Stat
-                number={
-                  district
-                    ? "01"
-                    : "00"
-                }
-                label="LOCATION"
-              />
-
-              <Stat
-                number={
-                  email
-                    ? "01"
-                    : "00"
-                }
-                label="EMAIL"
-              />
-
-              <Stat
-                number={
-                  phone
-                    ? "01"
-                    : "00"
-                }
-                label="CONTACT"
-              />
 
             </div>
 
@@ -1495,57 +1412,6 @@ export default function UserProfile() {
         }
 
 
-        .profile-heading {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-
-          transform:
-            translate(-50%, -50%);
-
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .profile-heading span {
-          font-size: 8px;
-          font-weight: 800;
-          letter-spacing: 0.28em;
-          color: #94a3b8;
-        }
-
-        .profile-heading strong {
-          margin-top: 2px;
-
-          font-size: 15px;
-          font-weight: 900;
-
-          color: #172033;
-        }
-
-
-        .top-avatar {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          width: 40px;
-          height: 40px;
-
-          border-radius: 50%;
-
-          background: rgba(
-            255,
-            255,
-            255,
-            0.48
-          );
-
-          color: #64748b;
-        }
-
-
         /* ===================================================
            MAIN
         =================================================== */
@@ -1729,83 +1595,8 @@ export default function UserProfile() {
         }
 
 
-        .contact-list {
-          display: flex;
-          flex-direction: column;
-          gap: 7px;
-
-          margin-top: 28px;
-        }
 
 
-        .flat-info {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-
-          min-height: 54px;
-
-          padding: 8px 12px;
-
-          border-radius: 16px;
-
-          background: rgba(
-            255,
-            255,
-            255,
-            0.40
-          );
-        }
-
-
-        .flat-info-icon {
-          width: 30px;
-          height: 30px;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          flex-shrink: 0;
-
-          border-radius: 10px;
-
-          background: rgba(
-            255,
-            255,
-            255,
-            0.48
-          );
-
-          color: #607086;
-        }
-
-
-        .flat-info-content {
-          min-width: 0;
-        }
-
-        .flat-info-label {
-          font-size: 8px;
-          font-weight: 800;
-
-          letter-spacing: 0.12em;
-
-          color: #91a0b5;
-        }
-
-        .flat-info-value {
-          margin-top: 2px;
-
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-
-          font-size: 10px;
-          font-weight: 700;
-
-          color: #334155;
-        }
 
 
         /* ===================================================
@@ -1966,52 +1757,7 @@ export default function UserProfile() {
            STATS
         =================================================== */
 
-        .stats-grid {
-          display: grid;
 
-          grid-template-columns:
-            repeat(3, minmax(0, 1fr));
-
-          gap: 10px;
-
-          margin-top: 2px;
-        }
-
-
-        .stat {
-          min-height: 76px;
-
-          padding: 14px;
-
-          border-radius: 20px;
-
-          background: rgba(
-            255,
-            255,
-            255,
-            0.38
-          );
-        }
-
-
-        .stat-number {
-          font-size: 22px;
-          font-weight: 950;
-
-          color: #172033;
-        }
-
-
-        .stat-label {
-          margin-top: 2px;
-
-          font-size: 8px;
-          font-weight: 800;
-
-          letter-spacing: 0.14em;
-
-          color: #91a0b5;
-        }
 
 
         /* ===================================================
@@ -2486,13 +2232,6 @@ export default function UserProfile() {
           }
 
 
-          .contact-list {
-            margin-top: 22px;
-
-            text-align: left;
-          }
-
-
           .profile-right {
             width: 100%;
           }
@@ -2532,26 +2271,6 @@ export default function UserProfile() {
           }
 
 
-          .stats-grid {
-            gap: 7px;
-          }
-
-
-          .stat {
-            min-height: 67px;
-
-            padding: 11px;
-          }
-
-
-          .stat-number {
-            font-size: 19px;
-          }
-
-
-          .stat-label {
-            font-size: 7px;
-          }
 
 
           .settings-section {
@@ -2608,17 +2327,6 @@ export default function UserProfile() {
 
           .back-button span {
             display: none;
-          }
-
-
-          .top-avatar {
-            width: 39px;
-            height: 39px;
-          }
-
-
-          .profile-heading strong {
-            font-size: 14px;
           }
 
 
@@ -2688,41 +2396,6 @@ export default function UserProfile() {
 
 
 /* =========================================================
-   FLAT INFO
-========================================================= */
-
-function FlatInfo({
-  icon: Icon,
-  label,
-  value,
-}) {
-  return (
-    <div className="flat-info">
-
-      <div className="flat-info-icon">
-        <Icon
-          size={14}
-        />
-      </div>
-
-      <div className="flat-info-content">
-
-        <div className="flat-info-label">
-          {label}
-        </div>
-
-        <div className="flat-info-value">
-          {value}
-        </div>
-
-      </div>
-
-    </div>
-  );
-}
-
-
-/* =========================================================
    INFO BOX
 ========================================================= */
 
@@ -2757,30 +2430,6 @@ function InfoBox({
           {value}
         </div>
 
-      </div>
-
-    </div>
-  );
-}
-
-
-/* =========================================================
-   STAT
-========================================================= */
-
-function Stat({
-  number,
-  label,
-}) {
-  return (
-    <div className="stat">
-
-      <div className="stat-number">
-        {number}
-      </div>
-
-      <div className="stat-label">
-        {label}
       </div>
 
     </div>

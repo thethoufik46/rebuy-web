@@ -1,3 +1,4 @@
+
 // src/pages/user/UserHome.jsx
 
 import { useEffect, useMemo, useState } from "react";
@@ -57,43 +58,13 @@ const BASE_URL =
    CATEGORY PAGES
 ========================================================= */
 
-const pages = [
-  {
-    id: 0,
-    label: "Cars",
-    icon: carIcon,
-    component: CarsPage,
-  },
-
-  {
-    id: 1,
-    label: "Bikes",
-    icon: bikeIcon,
-    component: BikesPage,
-  },
-
-  {
-    id: 2,
-    label: "Property",
-    icon: propertyIcon,
-    component: RealEstatePage,
-  },
-
-  {
-    id: 3,
-    label: "Electronics",
-    icon: electronicsIcon,
-    component: ElectronicsPage,
-  },
-];
 
 /* =========================================================
    USER HOME
 ========================================================= */
 
 export default function UserHome() {
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
   const [
     searchParams,
@@ -101,7 +72,7 @@ export default function UserHome() {
   ] = useSearchParams();
 
   /* =======================================================
-     URL TAB
+     URL TAB  
   ======================================================= */
 
   const rawTab = Number(
@@ -119,8 +90,7 @@ export default function UserHome() {
      STATES
   ======================================================= */
 
-  const [cars, setCars] =
-    useState([]);
+  const [cars, setCars] = useState([]);
 
   const [search, setSearch] =
     useState("");
@@ -253,9 +223,14 @@ export default function UserHome() {
 
       {/* =================================================
           HOME VIDEO BANNER
+
+          DESKTOP ONLY
+          Mobile = completely hidden
       ================================================= */}
 
-      <HomeBanner />
+      <div className="hidden md:block">
+        <HomeBanner />
+      </div>
 
       {/* =================================================
           SEARCH + CATEGORY
@@ -280,6 +255,7 @@ export default function UserHome() {
           {/* SEARCH */}
 
           <div className="min-w-0 flex-1">
+
             <SearchBar
               value={search}
               onChange={
@@ -290,6 +266,7 @@ export default function UserHome() {
                 handleSearchSubmit
               }
             />
+
           </div>
 
           {/* FILTER */}
@@ -318,6 +295,7 @@ export default function UserHome() {
             "
             aria-label="Filter"
           >
+
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -329,6 +307,7 @@ export default function UserHome() {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
+
               <line
                 x1="4"
                 y1="6"
@@ -349,8 +328,11 @@ export default function UserHome() {
                 x2="14"
                 y2="18"
               />
+
             </svg>
+
           </button>
+
         </div>
 
         {/* =================================================
@@ -371,6 +353,7 @@ export default function UserHome() {
             backdrop-blur-xl
           "
         >
+
           <div
             className="
               flex
@@ -380,6 +363,7 @@ export default function UserHome() {
               sm:h-[106px]
             "
           >
+
             {pages.map(
               (page) => (
                 <TabButton
@@ -398,7 +382,9 @@ export default function UserHome() {
                 />
               )
             )}
+
           </div>
+
         </div>
 
         {/* =================================================
@@ -406,9 +392,11 @@ export default function UserHome() {
         ================================================= */}
 
         <div className="mt-2">
+
           <AnimatePresence
             mode="wait"
           >
+
             <motion.div
               key={
                 selectedIndex
@@ -430,12 +418,17 @@ export default function UserHome() {
                 ease: "easeInOut",
               }}
             >
+
               <ActivePage
                 search={search}
               />
+
             </motion.div>
+
           </AnimatePresence>
+
         </div>
+
       </div>
 
       {/* =================================================
@@ -449,6 +442,7 @@ export default function UserHome() {
       ================================================= */}
 
       <Footer />
+
     </div>
   );
 }
@@ -521,6 +515,7 @@ function TabButton({
           }
         `}
       >
+
         <img
           src={icon}
           alt={label}
@@ -532,6 +527,7 @@ function TabButton({
             object-contain
           "
         />
+
       </motion.div>
 
       {/* =================================================
@@ -578,6 +574,7 @@ function TabButton({
           duration: 0.2,
         }}
       />
+
     </motion.button>
   );
 }

@@ -13,14 +13,14 @@ import "./HomeBanner.css";
 
 /* =========================================================
    BANNER VIDEO
-========================================================= */
+   ========================================================= */
 
 const BANNER_VIDEO =
   "https://scleasing.dk/wp-content/uploads/2026/07/SCL-Hjemmeside-banner-2026.mp4";
 
 /* =========================================================
    HOME BANNER
-========================================================= */
+   ========================================================= */
 
 export default function HomeBanner() {
   const videoRef = useRef(null);
@@ -28,8 +28,21 @@ export default function HomeBanner() {
   const [videoLoaded, setVideoLoaded] = useState(false);
 
   /*
-   * IMPORTANT:
-   * Banner starts visible every time the website/page opens.
+   * Desktop only video.
+   *
+   * Mobile:
+   * - Video is NOT rendered
+   * - Video is NOT loaded
+   * - Video is NOT played
+   *
+   * Desktop:
+   * - Video renders normally
+   * - Autoplay enabled
+   */
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  /*
+   * Banner starts visible every time website/page opens.
    *
    * No sessionStorage.
    * No localStorage.
@@ -40,11 +53,44 @@ export default function HomeBanner() {
   const [showBanner, setShowBanner] = useState(true);
 
   /* =======================================================
-     AUTOPLAY VIDEO
+     DESKTOP / MOBILE DETECTION
   ======================================================= */
 
   useEffect(() => {
-    if (!showBanner) {
+    const mediaQuery = window.matchMedia(
+      "(min-width: 769px)"
+    );
+
+    const updateDevice = () => {
+      setIsDesktop(mediaQuery.matches);
+    };
+
+    updateDevice();
+
+    mediaQuery.addEventListener(
+      "change",
+      updateDevice
+    );
+
+    return () => {
+      mediaQuery.removeEventListener(
+        "change",
+        updateDevice
+      );
+    };
+  }, []);
+
+  /* =======================================================
+     AUTOPLAY VIDEO
+     DESKTOP ONLY
+  ======================================================= */
+
+  useEffect(() => {
+    /*
+     * Mobile:
+     * Completely skip video logic.
+     */
+    if (!isDesktop || !showBanner) {
       return;
     }
 
@@ -55,7 +101,7 @@ export default function HomeBanner() {
     }
 
     /* -----------------------------------------------
-       Mobile autoplay requirements
+       Desktop autoplay settings
     ----------------------------------------------- */
 
     video.muted = true;
@@ -63,7 +109,10 @@ export default function HomeBanner() {
 
     video.setAttribute("muted", "");
     video.setAttribute("playsinline", "");
-    video.setAttribute("webkit-playsinline", "");
+    video.setAttribute(
+      "webkit-playsinline",
+      ""
+    );
 
     /* -----------------------------------------------
        PLAY VIDEO
@@ -105,9 +154,7 @@ export default function HomeBanner() {
     );
 
     /* -----------------------------------------------
-       Mobile fallback:
-       Some browsers allow playback after first
-       touch/click interaction.
+       Desktop fallback
     ----------------------------------------------- */
 
     const retryVideo = () => {
@@ -158,23 +205,10 @@ export default function HomeBanner() {
         retryVideo
       );
     };
-  }, [showBanner]);
+  }, [isDesktop, showBanner]);
 
   /* =======================================================
      HIDE BANNER ON USER SCROLL
-     
-     Requirement:
-     Website open:
-       -> Video visible
-
-     User scrolls:
-       -> Video/banner disappears
-
-     Scroll back:
-       -> Banner does NOT return
-
-     Refresh:
-       -> Video visible again
   ======================================================= */
 
   useEffect(() => {
@@ -198,9 +232,7 @@ export default function HomeBanner() {
           0;
 
         /*
-         * Hide after even a small amount of scrolling.
-         * 40px gives a natural trigger instead of
-         * accidental 1px browser movement.
+         * Hide after small amount of scrolling.
          */
 
         if (scrollTop > 40) {
@@ -250,11 +282,6 @@ export default function HomeBanner() {
       window.innerHeight;
 
     hideBanner();
-
-    /*
-     * Wait one frame so React can remove the
-     * fullscreen banner before scrolling.
-     */
 
     requestAnimationFrame(() => {
       window.scrollTo({
@@ -315,47 +342,44 @@ export default function HomeBanner() {
         overflow-hidden
       "
     >
-
       {/* ===================================================
           VIDEO BACKGROUND
+          
+          IMPORTANT:
+          Video is rendered ONLY on desktop.
+          
+          Mobile:
+          No <video> element at all.
+          So mobile will not download/play the video.
       =================================================== */}
 
       <div className="re2buy-banner-video-layer">
 
-        <video
-          ref={videoRef}
-
-          className={`
-            re2buy-banner-video
-            ${
-              videoLoaded
-                ? "re2buy-video-ready"
-                : ""
-            }
-          `}
-
-          src={BANNER_VIDEO}
-
-          autoPlay
-
-          muted
-
-          loop
-
-          playsInline
-
-          preload="auto"
-
-          controls={false}
-
-          disablePictureInPicture
-
-          disableRemotePlayback
-
-          onLoadedData={() => {
-            setVideoLoaded(true);
-          }}
-        />
+        {isDesktop && (
+          <video
+            ref={videoRef}
+            className={`
+              re2buy-banner-video
+              ${
+                videoLoaded
+                  ? "re2buy-video-ready"
+                  : ""
+              }
+            `}
+            src={BANNER_VIDEO}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            controls={false}
+            disablePictureInPicture
+            disableRemotePlayback
+            onLoadedData={() => {
+              setVideoLoaded(true);
+            }}
+          />
+        )}
 
         {/* =================================================
             DARK OVERLAY
@@ -399,20 +423,16 @@ export default function HomeBanner() {
           className="
             re2buy-banner-content-inner
           "
-
           initial={{
             opacity: 0,
             y: 30,
           }}
-
           animate={{
             opacity: 1,
             y: 0,
           }}
-
           transition={{
             duration: 0.9,
-
             ease: [
               0.22,
               1,
@@ -430,17 +450,14 @@ export default function HomeBanner() {
             className="
               re2buy-banner-small-text
             "
-
             initial={{
               opacity: 0,
               y: 15,
             }}
-
             animate={{
               opacity: 1,
               y: 0,
             }}
-
             transition={{
               duration: 0.7,
               delay: 0.15,
@@ -457,21 +474,17 @@ export default function HomeBanner() {
             className="
               re2buy-banner-title
             "
-
             initial={{
               opacity: 0,
               y: 25,
             }}
-
             animate={{
               opacity: 1,
               y: 0,
             }}
-
             transition={{
               duration: 0.8,
               delay: 0.25,
-
               ease: [
                 0.22,
                 1,
@@ -496,17 +509,14 @@ export default function HomeBanner() {
             className="
               re2buy-banner-description
             "
-
             initial={{
               opacity: 0,
               y: 15,
             }}
-
             animate={{
               opacity: 1,
               y: 0,
             }}
-
             transition={{
               duration: 0.7,
               delay: 0.4,
@@ -525,17 +535,14 @@ export default function HomeBanner() {
             className="
               re2buy-banner-actions
             "
-
             initial={{
               opacity: 0,
               y: 15,
             }}
-
             animate={{
               opacity: 1,
               y: 0,
             }}
-
             transition={{
               duration: 0.7,
               delay: 0.55,
@@ -548,14 +555,10 @@ export default function HomeBanner() {
 
             <button
               type="button"
-
               className="
                 re2buy-banner-main-button
               "
-
-              onClick={
-                exploreListings
-              }
+              onClick={exploreListings}
             >
               <span>
                 Explore Listings
@@ -576,14 +579,10 @@ export default function HomeBanner() {
 
             <button
               type="button"
-
               className="
                 re2buy-banner-outline-button
               "
-
-              onClick={
-                sellVehicle
-              }
+              onClick={sellVehicle}
             >
               Sell Your Vehicle
             </button>
@@ -600,15 +599,10 @@ export default function HomeBanner() {
 
       <button
         type="button"
-
         className="
           re2buy-banner-scroll
         "
-
-        onClick={
-          scrollDown
-        }
-
+        onClick={scrollDown}
         aria-label="Scroll down"
       >
 
@@ -630,29 +624,22 @@ export default function HomeBanner() {
             className="
               re2buy-scroll-dot
             "
-
             animate={{
               y: [
                 0,
                 65,
                 0,
               ],
-
               opacity: [
                 1,
                 0.35,
                 1,
               ],
             }}
-
             transition={{
               duration: 1.8,
-
-              repeat:
-                Infinity,
-
-              ease:
-                "easeInOut",
+              repeat: Infinity,
+              ease: "easeInOut",
             }}
           />
 

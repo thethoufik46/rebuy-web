@@ -1,4 +1,3 @@
-
 // src/App.jsx
 
 import {
@@ -17,6 +16,8 @@ import Register from "@/auth/Register";
 import Forgot from "@/auth/Forgot";
 import Terms from "@/auth/Terms";
 import DisclaimerDialog from "@/auth/DisclaimerDialog";
+
+import ProtectedRoute from "@/auth/ProtectedRoute";
 
 /* =========================================================
    USER
@@ -44,8 +45,11 @@ import ChangePassword from "@/pages/user/Profile/ChangePassword";
 ========================================================= */
 
 import CarDetails from "@/pages/user/home/Pages/car/car_details/CarDetails";
+
 import BikeDetails from "@/pages/user/home/Pages/bike/bike_details/BikeDetails";
+
 import PropertyDetails from "@/pages/user/home/property/property_sections/PropertyDetails";
+
 import ElectronicsDetails from "@/pages/user/home/Pages/electronics/electronic_sections/ElectronicsDetails";
 
 /* =========================================================
@@ -53,9 +57,11 @@ import ElectronicsDetails from "@/pages/user/home/Pages/electronics/electronic_s
 ========================================================= */
 
 import HomeOwnCardScrollFilter from "@/pages/user/home/HomeOwnCardScrollFilter";
+
 import VariantAll from "@/pages/user/home/Pages/car/VariantAll";
 
 import ViewAllOwnBoardScreen from "@/pages/user/home/Pages/car/ViewAllOwnBoardScreen";
+
 import ViewAllTBoardScreen from "@/pages/user/home/Pages/car/ViewAllTBoardScreen";
 
 /* =========================================================
@@ -70,41 +76,55 @@ import NavScreen from "@/components/NavScreen";
 
 import WishlistPage from "@/pages/Wishlist/WishlistPage";
 
+/* =========================================================
+   APP
+========================================================= */
 
 export default function App() {
   return (
     <BrowserRouter>
+
       <Routes>
 
-        {/* =====================================================
-            AUTH
-        ===================================================== */}
+        {/* =================================================
+            PUBLIC ROUTES
+            -------------------------------------------------
+            Login இல்லாமலும் open ஆகலாம்.
+        ================================================= */}
 
         <Route
           path="/"
-          element={<Welcome />}
+          element={
+            <Welcome />
+          }
         />
 
         <Route
           path="/login"
-          element={<LoginLogic />}
+          element={
+            <LoginLogic />
+          }
         />
-
-        {/* FORGOT PASSWORD */}
 
         <Route
           path="/forgot"
-          element={<Forgot />}
+          element={
+            <Forgot />
+          }
         />
 
         <Route
           path="/register"
-          element={<Register />}
+          element={
+            <Register />
+          }
         />
 
         <Route
           path="/terms"
-          element={<Terms />}
+          element={
+            <Terms />
+          }
         />
 
         <Route
@@ -115,172 +135,225 @@ export default function App() {
         />
 
 
-        {/* =====================================================
-            USER HOME
-        ===================================================== */}
+        {/* =================================================
+            PROTECTED ROUTES
+            -------------------------------------------------
+            இந்த block-க்குள் இருக்கும் எல்லா routes-க்கும்
+            login compulsory.
+        ================================================= */}
 
         <Route
-          path="/home"
-          element={<UserHome />}
-        />
-
-        <Route
-          path="/search-results"
           element={
-            <SearchResults />
+            <ProtectedRoute />
           }
-        />
+        >
 
-        <Route
-          path="/menu"
-          element={<NavScreen />}
-        />
+          {/* ===============================================
+              HOME
+          =============================================== */}
 
-        <Route
-          path="/notifications"
-          element={
-            <NotificationScreen />
-          }
-        />
-
-        <Route
-          path="/filter"
-          element={<FilterScreen />}
-        />
-
-        <Route
-          path="/filter-result"
-          element={
-            <FilterResultScreen />
-          }
-        />
-
-        <Route
-          path="/slide"
-          element={<SlideBanner />}
-        />
+          <Route
+            path="/home"
+            element={
+              <UserHome />
+            }
+          />
 
 
-        {/* =====================================================
-            PROFILE
-        ===================================================== */}
+          {/* ===============================================
+              SEARCH
+          =============================================== */}
 
-        <Route
-          path="/profile"
-          element={
-            <UserProfile />
-          }
-        />
-
-        <Route
-          path="/change-password"
-          element={
-            <ChangePassword />
-          }
-        />
+          <Route
+            path="/search-results"
+            element={
+              <SearchResults />
+            }
+          />
 
 
-        {/* =====================================================
-            CAR
-        ===================================================== */}
+          {/* ===============================================
+              MENU
+          =============================================== */}
 
-        <Route
-          path="/car/:carId"
-          element={
-            <CarDetails />
-          }
-        />
-
-
-        {/* =====================================================
-            BIKE
-        ===================================================== */}
-
-        <Route
-          path="/bike/:bikeId"
-          element={
-            <BikeDetails />
-          }
-        />
+          <Route
+            path="/menu"
+            element={
+              <NavScreen />
+            }
+          />
 
 
-        {/* =====================================================
-            PROPERTY
-        ===================================================== */}
+          {/* ===============================================
+              NOTIFICATIONS
+          =============================================== */}
 
-        <Route
-          path="/property/:propertyId"
-          element={
-            <PropertyDetails />
-          }
-        />
-
-
-        {/* =====================================================
-            ELECTRONICS
-        ===================================================== */}
-
-        <Route
-          path="/electronics/:electronicsId"
-          element={
-            <ElectronicsDetails />
-          }
-        />
+          <Route
+            path="/notifications"
+            element={
+              <NotificationScreen />
+            }
+          />
 
 
-        {/* =====================================================
-            VARIANT
-        ===================================================== */}
+          {/* ===============================================
+              FILTER
+          =============================================== */}
 
-        <Route
-          path="/variant/:variant"
-          element={
-            <HomeOwnCardScrollFilter />
-          }
-        />
+          <Route
+            path="/filter"
+            element={
+              <FilterScreen />
+            }
+          />
 
-        <Route
-          path="/variants"
-          element={
-            <VariantAll />
-          }
-        />
-
-
-        {/* =====================================================
-            WISHLIST
-        ===================================================== */}
-
-        <Route
-          path="/wishlist"
-          element={
-            <WishlistPage />
-          }
-        />
+          <Route
+            path="/filter-result"
+            element={
+              <FilterResultScreen />
+            }
+          />
 
 
-        {/* =====================================================
-            BOARDS
-        ===================================================== */}
+          {/* ===============================================
+              SLIDE
+          =============================================== */}
 
-        <Route
-          path="/own-cars"
-          element={
-            <ViewAllOwnBoardScreen />
-          }
-        />
-
-        <Route
-          path="/t-board-cars"
-          element={
-            <ViewAllTBoardScreen />
-          }
-        />
+          <Route
+            path="/slide"
+            element={
+              <SlideBanner />
+            }
+          />
 
 
-        {/* =====================================================
+          {/* ===============================================
+              PROFILE
+          =============================================== */}
+
+          <Route
+            path="/profile"
+            element={
+              <UserProfile />
+            }
+          />
+
+          <Route
+            path="/change-password"
+            element={
+              <ChangePassword />
+            }
+          />
+
+
+          {/* ===============================================
+              CAR DETAILS
+          =============================================== */}
+
+          <Route
+            path="/car/:carId"
+            element={
+              <CarDetails />
+            }
+          />
+
+
+          {/* ===============================================
+              BIKE DETAILS
+          =============================================== */}
+
+          <Route
+            path="/bike/:bikeId"
+            element={
+              <BikeDetails />
+            }
+          />
+
+
+          {/* ===============================================
+              PROPERTY DETAILS
+          =============================================== */}
+
+          <Route
+            path="/property/:propertyId"
+            element={
+              <PropertyDetails />
+            }
+          />
+
+
+          {/* ===============================================
+              ELECTRONICS DETAILS
+          =============================================== */}
+
+          <Route
+            path="/electronics/:electronicsId"
+            element={
+              <ElectronicsDetails />
+            }
+          />
+
+
+          {/* ===============================================
+              VARIANT
+          =============================================== */}
+
+          <Route
+            path="/variant/:variant"
+            element={
+              <HomeOwnCardScrollFilter />
+            }
+          />
+
+          <Route
+            path="/variants"
+            element={
+              <VariantAll />
+            }
+          />
+
+
+          {/* ===============================================
+              WISHLIST
+          =============================================== */}
+
+          <Route
+            path="/wishlist"
+            element={
+              <WishlistPage />
+            }
+          />
+
+
+          {/* ===============================================
+              OWN CARS
+          =============================================== */}
+
+          <Route
+            path="/own-cars"
+            element={
+              <ViewAllOwnBoardScreen />
+            }
+          />
+
+
+          {/* ===============================================
+              T BOARD CARS
+          =============================================== */}
+
+          <Route
+            path="/t-board-cars"
+            element={
+              <ViewAllTBoardScreen />
+            }
+          />
+
+        </Route>
+
+
+        {/* =================================================
             FALLBACK
-        ===================================================== */}
+        ================================================= */}
 
         <Route
           path="*"
@@ -290,6 +363,7 @@ export default function App() {
         />
 
       </Routes>
+
     </BrowserRouter>
   );
 }
