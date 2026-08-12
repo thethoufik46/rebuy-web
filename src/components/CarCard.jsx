@@ -1,5 +1,9 @@
 // src/components/CarCard.jsx
 
+import React, {
+  useState,
+} from "react";
+
 import {
   FaGasPump,
   FaTachometerAlt,
@@ -8,6 +12,9 @@ import {
   FaMapMarkerAlt,
   FaShareAlt,
 } from "react-icons/fa";
+
+import { motion } from "framer-motion";
+
 
 /* =========================================================
    HELPERS
@@ -47,6 +54,7 @@ const asString = (value) => {
   return String(value);
 };
 
+
 const getImageUrl = (value) => {
   if (!value) return "";
 
@@ -69,23 +77,33 @@ const getImageUrl = (value) => {
   return "";
 };
 
+
 const formatPrice = (value) => {
-  const raw = asString(value);
+  const raw =
+    asString(value);
 
   const number =
     parseInt(
-      raw.replace(/[^0-9]/g, ""),
+      raw.replace(
+        /[^0-9]/g,
+        ""
+      ),
       10
     ) || 0;
 
-  return number.toLocaleString("en-IN");
+  return number.toLocaleString(
+    "en-IN"
+  );
 };
+
 
 /* =========================================================
    COMPONENT
 ========================================================= */
 
 export default function CarCard({
+  loading = false,
+
   carId,
 
   brandName,
@@ -99,8 +117,10 @@ export default function CarCard({
   price,
   fuel,
   year,
+
   status,
   km,
+
   owner,
   transmission,
 
@@ -109,25 +129,63 @@ export default function CarCard({
 
   onTap,
 }) {
-  const normalizedStatus =
-    asString(status).toLowerCase();
+
+  /* =======================================================
+     IMAGE
+  ======================================================= */
 
   const image =
     getImageUrl(imageUrl);
+
+
+  /* =======================================================
+     IMAGE STATE
+  ======================================================= */
+
+  const [
+    imageLoaded,
+    setImageLoaded,
+  ] = useState(false);
+
+  const [
+    imageError,
+    setImageError,
+  ] = useState(false);
+
+
+  /* =======================================================
+     LOADING
+     -------------------------------------------------------
+     YouTube / Amazon style skeleton
+  ======================================================= */
+
+  if (loading) {
+    return (
+      <CarCardSkeleton />
+    );
+  }
+
 
   /* =======================================================
      STATUS
   ======================================================= */
 
+  const normalizedStatus =
+    asString(status).toLowerCase();
+
+
   const getStatusColor = () => {
+
     if (
-      normalizedStatus === "sold"
+      normalizedStatus ===
+      "sold"
     ) {
       return "bg-red-500";
     }
 
     if (
-      normalizedStatus === "booking"
+      normalizedStatus ===
+      "booking"
     ) {
       return "bg-blue-500";
     }
@@ -135,15 +193,19 @@ export default function CarCard({
     return "bg-gray-500";
   };
 
+
   const getStatusText = () => {
+
     if (
-      normalizedStatus === "sold"
+      normalizedStatus ===
+      "sold"
     ) {
       return "SOLD";
     }
 
     if (
-      normalizedStatus === "booking"
+      normalizedStatus ===
+      "booking"
     ) {
       return "BOOKING";
     }
@@ -153,11 +215,15 @@ export default function CarCard({
       : "";
   };
 
+
   /* =======================================================
      SHARE
   ======================================================= */
 
-  const shareCar = async (event) => {
+  const shareCar = async (
+    event
+  ) => {
+
     event.stopPropagation();
 
     const id =
@@ -179,17 +245,30 @@ export default function CarCard({
 👉 ${shareUrl}
 `;
 
+
     if (
       navigator.share
     ) {
+
       try {
+
         await navigator.share({
           title:
-            `${asString(brandName)} ${asString(model)}`,
-          text: shareText,
-          url: shareUrl,
+            `${asString(
+              brandName
+            )} ${asString(
+              model
+            )}`,
+
+          text:
+            shareText,
+
+          url:
+            shareUrl,
         });
+
       } catch (error) {
+
         console.log(
           "Share cancelled",
           error
@@ -199,7 +278,9 @@ export default function CarCard({
       return;
     }
 
+
     try {
+
       await navigator.clipboard.writeText(
         `${shareText}\n${shareUrl}`
       );
@@ -207,7 +288,9 @@ export default function CarCard({
       alert(
         "Car link copied!"
       );
+
     } catch (error) {
+
       console.log(
         "Share not supported",
         error
@@ -215,20 +298,25 @@ export default function CarCard({
     }
   };
 
+
   /* =======================================================
      CARD
   ======================================================= */
 
   return (
-    <div
+    <motion.div
       onClick={onTap}
       role="button"
       tabIndex={0}
+
       onKeyDown={(event) => {
+
         if (
-          event.key === "Enter" ||
+          event.key ===
+            "Enter" ||
           event.key === " "
         ) {
+
           event.preventDefault();
 
           if (onTap) {
@@ -236,6 +324,15 @@ export default function CarCard({
           }
         }
       }}
+
+      whileHover={{
+        y: -2,
+      }}
+
+      whileTap={{
+        scale: 0.985,
+      }}
+
       className="
         group
         relative
@@ -244,18 +341,16 @@ export default function CarCard({
         cursor-pointer
         flex-col
         overflow-hidden
-        rounded-2xl
+        rounded-[22px]
+        border
+        border-white/70
         bg-white
+        shadow-[0_5px_18px_rgba(15,23,42,0.07)]
         transition-all
-        duration-200
-        hover:-translate-y-[1px]
-        hover:shadow-md
-        active:scale-[0.985]
+        duration-300
+
+        hover:shadow-[0_12px_32px_rgba(15,23,42,0.12)]
       "
-      style={{
-        boxShadow:
-          "0 3px 8px rgba(0,0,0,0.06)",
-      }}
     >
 
       {/* =================================================
@@ -269,11 +364,28 @@ export default function CarCard({
           w-full
           shrink-0
           overflow-hidden
-          bg-[#f1f2f4]
+          bg-slate-100
         "
       >
 
-        {image ? (
+        {/* =================================================
+            IMAGE SKELETON
+        ================================================= */}
+
+        {!imageLoaded &&
+          !imageError &&
+          image && (
+            <PremiumImageSkeleton />
+          )}
+
+
+        {/* =================================================
+            IMAGE
+        ================================================= */}
+
+        {image &&
+        !imageError ? (
+
           <img
             src={image}
             alt={`${asString(
@@ -281,27 +393,66 @@ export default function CarCard({
             )} ${asString(
               model
             )}`}
-            className="
+
+            className={`
               block
               h-full
               w-full
               object-cover
-              transition-transform
-              duration-500
-              group-hover:scale-[1.03]
-            "
+              transition-all
+              duration-700
+
+              ${
+                imageLoaded
+                  ? "scale-100 opacity-100"
+                  : "scale-[1.04] opacity-0"
+              }
+
+              group-hover:scale-[1.04]
+            `}
+
             loading="lazy"
+
+            onLoad={() =>
+              setImageLoaded(
+                true
+              )
+            }
+
             onError={(event) => {
+
               event.currentTarget.onerror =
                 null;
 
-              event.currentTarget.style.display =
-                "none";
+              setImageError(
+                true
+              );
             }}
           />
+
         ) : (
-          <ImagePlaceholder />
+          <PremiumImageFallback />
         )}
+
+
+        {/* =================================================
+            IMAGE TOP GLASS
+        ================================================= */}
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            inset-x-0
+            top-0
+            z-10
+            h-16
+            bg-gradient-to-b
+            from-black/10
+            to-transparent
+          "
+        />
+
 
         {/* =================================================
             YEAR
@@ -311,16 +462,21 @@ export default function CarCard({
           <div
             className="
               absolute
-              left-2
-              top-2
-              z-10
+              left-2.5
+              top-2.5
+              z-20
             "
           >
             <Chip
               text={asString(year)}
+              className="
+                bg-black/60
+                backdrop-blur-md
+              "
             />
           </div>
         )}
+
 
         {/* =================================================
             STATUS
@@ -329,6 +485,7 @@ export default function CarCard({
         {normalizedStatus &&
           normalizedStatus !==
             "available" && (
+
             <div
               className="
                 absolute
@@ -340,12 +497,20 @@ export default function CarCard({
                 bg-black/[0.04]
               "
             >
+
               <Chip
-                text={getStatusText()}
-                className={getStatusColor()}
+                text={
+                  getStatusText()
+                }
+                className={`
+                  ${getStatusColor()}
+                  shadow-lg
+                `}
               />
+
             </div>
           )}
+
 
         {/* =================================================
             SHARE
@@ -353,31 +518,63 @@ export default function CarCard({
 
         <button
           type="button"
-          onClick={shareCar}
+          onClick={
+            shareCar
+          }
+
           className="
             absolute
-            right-2
-            top-2
+            right-2.5
+            top-2.5
             z-30
             flex
-            h-7
-            w-7
+            h-8
+            w-8
             items-center
             justify-center
             rounded-full
-            bg-black/60
+            border
+            border-white/30
+            bg-black/55
             text-white
+            shadow-lg
+            backdrop-blur-md
             transition
-            hover:bg-black/75
+            hover:bg-black/70
             active:scale-90
           "
+
           aria-label="Share car"
         >
+
           <FaShareAlt
             size={11}
           />
+
         </button>
+
+
+        {/* =================================================
+            BOTTOM GRADIENT
+        ================================================= */}
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            inset-x-0
+            bottom-0
+            z-10
+            h-20
+            bg-gradient-to-t
+            from-black/35
+            via-black/5
+            to-transparent
+          "
+        />
+
       </div>
+
 
       {/* =================================================
           CONTENT
@@ -390,12 +587,14 @@ export default function CarCard({
           flex-1
           flex-col
           px-3
-          pb-2.5
-          pt-1
+          pb-3
+          pt-2
         "
       >
 
-        {/* PRICE + TRANSMISSION */}
+        {/* =================================================
+            PRICE + TRANSMISSION
+        ================================================= */}
 
         <div
           className="
@@ -404,18 +603,24 @@ export default function CarCard({
             items-center
           "
         >
+
           <div
             className="
               min-w-0
               flex-1
               truncate
-              text-xs
-              font-bold
+              text-sm
+              font-extrabold
+              tracking-tight
               text-black
             "
           >
-            ₹{formatPrice(price)}
+            ₹
+            {formatPrice(
+              price
+            )}
           </div>
+
 
           {transmission && (
             <IconText
@@ -430,19 +635,24 @@ export default function CarCard({
               textSize="text-[8px]"
             />
           )}
+
         </div>
 
-        {/* VARIANT + MODEL */}
+
+        {/* =================================================
+            VARIANT + MODEL
+        ================================================= */}
 
         <div
           className="
-            mt-0.5
+            mt-1
             truncate
             text-xs
             font-semibold
             text-black
           "
         >
+
           {variant
             ? `${asString(
                 variant
@@ -450,13 +660,17 @@ export default function CarCard({
             : ""}
 
           {asString(model)}
+
         </div>
 
-        {/* FUEL / KM / OWNER */}
+
+        {/* =================================================
+            FUEL / KM / OWNER
+        ================================================= */}
 
         <div
           className="
-            mt-1.5
+            mt-2
             flex
             min-w-0
             gap-2.5
@@ -479,9 +693,11 @@ export default function CarCard({
             />
           )}
 
+
           {km !== "" &&
             km !== null &&
             km !== undefined && (
+
               <IconText
                 icon={
                   <FaTachometerAlt
@@ -493,7 +709,9 @@ export default function CarCard({
                 )} km`}
                 textSize="text-[8px]"
               />
+
             )}
+
 
           {owner && (
             <IconText
@@ -508,40 +726,467 @@ export default function CarCard({
               textSize="text-[8px]"
             />
           )}
+
         </div>
 
-        {/* LOCATION */}
+
+        {/* =================================================
+            LOCATION
+        ================================================= */}
 
         {(district ||
           city) && (
+
           <div
             className="
-              mt-1.5
+              mt-2
               min-w-0
               truncate
             "
           >
+
             <IconText
               icon={
                 <FaMapMarkerAlt
                   size={8}
                 />
               }
+
               text={`${asString(
                 district
               )}${
-                district && city
+                district &&
+                city
                   ? ", "
                   : ""
-              }${asString(city)}`}
+              }${asString(
+                city
+              )}`}
+
               textSize="text-[8px]"
             />
+
           </div>
         )}
+
       </div>
+
+    </motion.div>
+  );
+}
+
+
+/* =========================================================
+   PREMIUM CARD SKELETON
+   ---------------------------------------------------------
+   YouTube / Amazon inspired
+   ========================================================= */
+
+function CarCardSkeleton() {
+
+  return (
+    <div
+      className="
+        relative
+        flex
+        w-full
+        flex-col
+        overflow-hidden
+        rounded-[22px]
+        border
+        border-white/70
+        bg-white
+        shadow-[0_5px_18px_rgba(15,23,42,0.06)]
+      "
+    >
+
+      {/* =================================================
+          IMAGE SKELETON
+      ================================================= */}
+
+      <div
+        className="
+          relative
+          aspect-[13/11]
+          w-full
+          overflow-hidden
+          bg-slate-100
+        "
+      >
+
+        <motion.div
+          animate={{
+            x: [
+              "-120%",
+              "180%",
+            ],
+          }}
+
+          transition={{
+            duration: 1.45,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+
+          className="
+            absolute
+            inset-y-0
+            -left-1/2
+            z-10
+            w-1/2
+            rotate-12
+            bg-gradient-to-r
+            from-transparent
+            via-white/70
+            to-transparent
+            blur-lg
+          "
+        />
+
+
+        <div
+          className="
+            absolute
+            inset-0
+            bg-gradient-to-br
+            from-slate-100
+            via-slate-200/70
+            to-slate-100
+          "
+        />
+
+
+        {/* Fake image light */}
+
+        <div
+          className="
+            absolute
+            left-1/2
+            top-1/2
+            h-16
+            w-20
+            -translate-x-1/2
+            -translate-y-1/2
+            rounded-2xl
+            bg-white/35
+            blur-xl
+          "
+        />
+
+
+        {/* Year skeleton */}
+
+        <SkeletonLine
+          className="
+            absolute
+            left-2.5
+            top-2.5
+            z-20
+            h-5
+            w-12
+            rounded-full
+          "
+        />
+
+
+        {/* Share skeleton */}
+
+        <SkeletonCircle
+          className="
+            absolute
+            right-2.5
+            top-2.5
+            z-20
+            h-8
+            w-8
+          "
+        />
+
+      </div>
+
+
+      {/* =================================================
+          CONTENT SKELETON
+      ================================================= */}
+
+      <div
+        className="
+          space-y-2.5
+          px-3
+          pb-3
+          pt-3
+        "
+      >
+
+        {/* Price */}
+
+        <SkeletonLine
+          className="
+            h-4
+            w-24
+          "
+        />
+
+
+        {/* Model */}
+
+        <SkeletonLine
+          className="
+            h-3
+            w-32
+          "
+        />
+
+
+        {/* Details */}
+
+        <div
+          className="
+            flex
+            gap-2
+          "
+        >
+
+          <SkeletonLine
+            className="
+              h-2.5
+              w-12
+            "
+          />
+
+          <SkeletonLine
+            className="
+              h-2.5
+              w-14
+            "
+          />
+
+          <SkeletonLine
+            className="
+              h-2.5
+              w-12
+            "
+          />
+
+        </div>
+
+
+        {/* Location */}
+
+        <SkeletonLine
+          className="
+            h-2.5
+            w-28
+          "
+        />
+
+      </div>
+
     </div>
   );
 }
+
+
+/* =========================================================
+   SKELETON LINE
+========================================================= */
+
+function SkeletonLine({
+  className = "",
+}) {
+
+  return (
+    <div
+      className={`
+        relative
+        overflow-hidden
+        rounded-full
+        bg-slate-200
+        ${className}
+      `}
+    >
+
+      <motion.div
+        animate={{
+          x: [
+            "-120%",
+            "180%",
+          ],
+        }}
+
+        transition={{
+          duration: 1.25,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+
+        className="
+          absolute
+          inset-y-0
+          -left-1/2
+          w-1/2
+          rotate-12
+          bg-gradient-to-r
+          from-transparent
+          via-white/80
+          to-transparent
+          blur-[2px]
+        "
+      />
+
+    </div>
+  );
+}
+
+
+/* =========================================================
+   SKELETON CIRCLE
+========================================================= */
+
+function SkeletonCircle({
+  className = "",
+}) {
+
+  return (
+    <div
+      className={`
+        relative
+        overflow-hidden
+        rounded-full
+        bg-slate-200
+        ${className}
+      `}
+    >
+
+      <motion.div
+        animate={{
+          x: [
+            "-120%",
+            "180%",
+          ],
+        }}
+
+        transition={{
+          duration: 1.25,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+
+        className="
+          absolute
+          inset-y-0
+          -left-1/2
+          w-1/2
+          rotate-12
+          bg-gradient-to-r
+          from-transparent
+          via-white/80
+          to-transparent
+        "
+      />
+
+    </div>
+  );
+}
+
+
+/* =========================================================
+   PREMIUM IMAGE SKELETON
+========================================================= */
+
+function PremiumImageSkeleton() {
+
+  return (
+    <div
+      className="
+        absolute
+        inset-0
+        z-10
+        overflow-hidden
+        bg-gradient-to-br
+        from-slate-100
+        via-slate-200/70
+        to-slate-100
+      "
+    >
+
+      <motion.div
+        animate={{
+          x: [
+            "-120%",
+            "180%",
+          ],
+        }}
+
+        transition={{
+          duration: 1.35,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+
+        className="
+          absolute
+          inset-y-0
+          -left-1/2
+          w-1/2
+          rotate-12
+          bg-gradient-to-r
+          from-transparent
+          via-white/75
+          to-transparent
+          blur-lg
+        "
+      />
+
+    </div>
+  );
+}
+
+
+/* =========================================================
+   PREMIUM IMAGE FALLBACK
+========================================================= */
+
+function PremiumImageFallback() {
+
+  return (
+    <div
+      className="
+        flex
+        h-full
+        w-full
+        items-center
+        justify-center
+        bg-gradient-to-br
+        from-slate-100
+        via-slate-200
+        to-slate-100
+      "
+    >
+
+      <div
+        className="
+          flex
+          h-14
+          w-14
+          items-center
+          justify-center
+          rounded-2xl
+          bg-white/60
+          text-xl
+          font-black
+          text-black/15
+          shadow-sm
+          backdrop-blur-xl
+        "
+      >
+        R
+      </div>
+
+    </div>
+  );
+}
+
 
 /* =========================================================
    CHIP
@@ -549,8 +1194,10 @@ export default function CarCard({
 
 function Chip({
   text,
-  className = "bg-black/60",
+  className =
+    "bg-black/60",
 }) {
+
   return (
     <span
       className={`
@@ -571,6 +1218,7 @@ function Chip({
   );
 }
 
+
 /* =========================================================
    ICON TEXT
 ========================================================= */
@@ -578,8 +1226,10 @@ function Chip({
 function IconText({
   icon,
   text,
-  textSize = "text-[8px]",
+  textSize =
+    "text-[8px]",
 }) {
+
   return (
     <div
       className="
@@ -591,9 +1241,15 @@ function IconText({
         text-gray-500
       "
     >
-      <span className="shrink-0">
+
+      <span
+        className="
+          shrink-0
+        "
+      >
         {icon}
       </span>
+
 
       <span
         className={`
@@ -604,53 +1260,7 @@ function IconText({
       >
         {text}
       </span>
-    </div>
-  );
-}
 
-/* =========================================================
-   IMAGE PLACEHOLDER
-========================================================= */
-
-function ImagePlaceholder() {
-  return (
-    <div
-      className="
-        flex
-        h-full
-        w-full
-        items-center
-        justify-center
-        bg-[#f1f2f4]
-      "
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="30"
-        height="30"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#d5d8dc"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M5 17h14" />
-
-        <path d="M6 17V9l2-3h8l2 3v8" />
-
-        <circle
-          cx="8"
-          cy="17"
-          r="1.5"
-        />
-
-        <circle
-          cx="16"
-          cy="17"
-          r="1.5"
-        />
-      </svg>
     </div>
   );
 }

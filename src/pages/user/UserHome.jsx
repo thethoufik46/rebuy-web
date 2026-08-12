@@ -1,7 +1,10 @@
-
 // src/pages/user/UserHome.jsx
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import {
   useNavigate,
@@ -27,6 +30,7 @@ import SearchBar from "./Search/SearchBar";
 
 import HomeBanner from "@/pages/user/home/HomeBanner";
 import Location from "@/pages/user/home/Location";
+import Testimonials from "@/pages/user/Testimonials/Testimonials";
 import Footer from "@/pages/user/home/Footer";
 
 /* =========================================================
@@ -56,8 +60,36 @@ const BASE_URL =
 
 /* =========================================================
    CATEGORY PAGES
+
+   IMPORTANT:
+   pages MUST be declared before rawTab / selectedIndex.
 ========================================================= */
 
+const pages = [
+  {
+    id: 0,
+    icon: carIcon,
+    component: CarsPage,
+  },
+
+  {
+    id: 1,
+    icon: bikeIcon,
+    component: BikesPage,
+  },
+
+  {
+    id: 2,
+    icon: propertyIcon,
+    component: RealEstatePage,
+  },
+
+  {
+    id: 3,
+    icon: electronicsIcon,
+    component: ElectronicsPage,
+  },
+];
 
 /* =========================================================
    USER HOME
@@ -72,12 +104,17 @@ export default function UserHome() {
   ] = useSearchParams();
 
   /* =======================================================
-     URL TAB  
+     URL TAB
   ======================================================= */
 
-  const rawTab = Number(
-    searchParams.get("tab") || 0
-  );
+  const tabParam =
+    searchParams.get("tab");
+
+  const rawTab =
+    tabParam === null ||
+    tabParam.trim() === ""
+      ? 0
+      : Number(tabParam);
 
   const selectedIndex =
     Number.isInteger(rawTab) &&
@@ -90,10 +127,15 @@ export default function UserHome() {
      STATES
   ======================================================= */
 
-  const [cars, setCars] = useState([]);
+  const [
+    cars,
+    setCars,
+  ] = useState([]);
 
-  const [search, setSearch] =
-    useState("");
+  const [
+    search,
+    setSearch,
+  ] = useState("");
 
   /* =======================================================
      FETCH CARS
@@ -161,6 +203,7 @@ export default function UserHome() {
       {
         state: {
           query,
+
           filteredCars:
             Array.isArray(
               matchedCars
@@ -179,8 +222,16 @@ export default function UserHome() {
   function handleTabChange(
     index
   ) {
+    if (
+      !Number.isInteger(index) ||
+      index < 0 ||
+      index >= pages.length
+    ) {
+      return;
+    }
+
     setSearchParams({
-      tab: index,
+      tab: String(index),
     });
   }
 
@@ -222,13 +273,21 @@ export default function UserHome() {
       <Navbar />
 
       {/* =================================================
-          HOME VIDEO BANNER
+          HOME BANNER
 
-          DESKTOP ONLY
-          Mobile = completely hidden
+          Desktop:
+          visible
+
+          Mobile:
+          completely hidden
       ================================================= */}
 
-      <div className="hidden md:block">
+      <div
+        className="
+          hidden
+          md:block
+        "
+      >
         <HomeBanner />
       </div>
 
@@ -236,7 +295,12 @@ export default function UserHome() {
           SEARCH + CATEGORY
       ================================================= */}
 
-      <div className="p-4 md:p-6">
+      <div
+        className="
+          p-4
+          md:p-6
+        "
+      >
 
         {/* =================================================
             SEARCH ROW
@@ -254,8 +318,12 @@ export default function UserHome() {
 
           {/* SEARCH */}
 
-          <div className="min-w-0 flex-1">
-
+          <div
+            className="
+              min-w-0
+              flex-1
+            "
+          >
             <SearchBar
               value={search}
               onChange={
@@ -266,7 +334,6 @@ export default function UserHome() {
                 handleSearchSubmit
               }
             />
-
           </div>
 
           {/* FILTER */}
@@ -276,6 +343,7 @@ export default function UserHome() {
             onClick={() =>
               navigate("/filter")
             }
+            aria-label="Filter"
             className="
               flex
               h-12
@@ -293,9 +361,7 @@ export default function UserHome() {
               hover:bg-white/70
               active:scale-95
             "
-            aria-label="Filter"
           >
-
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -307,7 +373,6 @@ export default function UserHome() {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-
               <line
                 x1="4"
                 y1="6"
@@ -328,48 +393,46 @@ export default function UserHome() {
                 x2="14"
                 y2="18"
               />
-
             </svg>
-
           </button>
-
         </div>
 
         {/* =================================================
-            CATEGORY TABS
+            MODERN GLASS CATEGORY BAR
+
+            ICON ONLY
+            NO LABEL
         ================================================= */}
 
         <div
           className="
-            mx-3
-            my-2
-            rounded-3xl
+            mx-1
+            my-3
+            rounded-[32px]
             border
-            border-white/20
+            border-white/30
             bg-white/10
-            px-1.5
-            py-2
-            shadow-sm
-            backdrop-blur-xl
+            p-2
+            shadow-[0_20px_60px_rgba(80,60,120,0.10)]
+            backdrop-blur-2xl
+            sm:mx-3
           "
         >
-
           <div
             className="
               flex
-              h-[100px]
+              h-[92px]
               items-center
               justify-around
-              sm:h-[106px]
+              gap-2
+              sm:h-[100px]
             "
           >
-
             {pages.map(
               (page) => (
                 <TabButton
                   key={page.id}
                   icon={page.icon}
-                  label={page.label}
                   isActive={
                     selectedIndex ===
                     page.id
@@ -382,21 +445,21 @@ export default function UserHome() {
                 />
               )
             )}
-
           </div>
-
         </div>
 
         {/* =================================================
             ACTIVE CATEGORY
         ================================================= */}
 
-        <div className="mt-2">
-
+        <div
+          className="
+            mt-2
+          "
+        >
           <AnimatePresence
             mode="wait"
           >
-
             <motion.div
               key={
                 selectedIndex
@@ -418,163 +481,214 @@ export default function UserHome() {
                 ease: "easeInOut",
               }}
             >
-
               <ActivePage
                 search={search}
               />
-
             </motion.div>
-
           </AnimatePresence>
-
         </div>
-
       </div>
 
       {/* =================================================
           LOCATION
       ================================================= */}
 
-      <Location />
+      {/*
+        <Location />
+      */}
+
+      {/* =================================================
+          TESTIMONIALS
+          FOOTER-KKU MELAE
+      ================================================= */}
+
+      <section
+        className="
+          w-full
+          overflow-hidden
+          px-3
+          pb-4
+          pt-2
+          sm:px-5
+          lg:px-8
+        "
+      >
+        <Testimonials />
+      </section>
 
       {/* =================================================
           FOOTER
       ================================================= */}
 
       <Footer />
-
     </div>
   );
 }
 
 /* =========================================================
-   TAB BUTTON
+   MODERN GLASS CATEGORY BUTTON
+
+   ICON ONLY
+   NO NAME
 ========================================================= */
 
 function TabButton({
   icon,
-  label,
   isActive,
   onClick,
 }) {
   return (
     <motion.button
       type="button"
-      whileTap={{
-        scale: 0.95,
-      }}
       onClick={onClick}
+      whileTap={{
+        scale: 0.92,
+      }}
+      animate={{
+        scale: isActive
+          ? 1.08
+          : 1,
+      }}
+      transition={{
+        type: "spring",
+        stiffness: 320,
+        damping: 22,
+      }}
+      aria-label="Category"
       className={`
+        relative
         flex
-        flex-1
-        flex-col
+        h-[76px]
+        w-[76px]
+        shrink-0
         items-center
         justify-center
-        rounded-2xl
-        py-2
+        rounded-[26px]
+        border
         transition-all
-        duration-200
+        duration-300
 
         ${
           isActive
-            ? "border border-white/20 bg-white/30 shadow-lg backdrop-blur-sm"
-            : "bg-transparent"
+            ? `
+              border-white/70
+              bg-white/45
+              shadow-[0_12px_35px_rgba(80,60,120,0.18)]
+              backdrop-blur-2xl
+            `
+            : `
+              border-white/30
+              bg-white/15
+              backdrop-blur-xl
+              hover:bg-white/30
+              hover:border-white/50
+            `
         }
+
+        max-[380px]:h-[64px]
+        max-[380px]:w-[64px]
+        max-[380px]:rounded-[22px]
       `}
     >
+
+      {/* =================================================
+          GLASS HIGHLIGHT
+      ================================================= */}
+
+      <span
+        className="
+          pointer-events-none
+          absolute
+          inset-[1px]
+          rounded-[25px]
+          bg-gradient-to-br
+          from-white/50
+          via-white/10
+          to-transparent
+          opacity-80
+          max-[380px]:rounded-[21px]
+        "
+      />
+
+      {/* =================================================
+          ACTIVE GLOW
+      ================================================= */}
+
+      {isActive && (
+        <motion.span
+          layoutId="activeCategoryGlow"
+          className="
+            pointer-events-none
+            absolute
+            -inset-1
+            rounded-[28px]
+            bg-white/20
+            blur-xl
+            max-[380px]:rounded-[24px]
+          "
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 25,
+          }}
+        />
+      )}
 
       {/* =================================================
           ICON
       ================================================= */}
 
-      <motion.div
+      <motion.img
+        src={icon}
+        alt=""
+        draggable="false"
         animate={{
           scale: isActive
-            ? 1.05
+            ? 1.08
             : 1,
-        }}
-        transition={{
-          duration: 0.2,
-        }}
-        className={`
-          flex
-          h-[75px]
-          w-[75px]
-          items-center
-          justify-center
-          overflow-hidden
-          rounded-full
 
-          sm:h-[80px]
-          sm:w-[80px]
-
-          ${
-            isActive
-              ? "bg-white/20"
-              : ""
-          }
-        `}
-      >
-
-        <img
-          src={icon}
-          alt={label}
-          draggable="false"
-          className="
-            h-full
-            w-full
-            select-none
-            object-contain
-          "
-        />
-
-      </motion.div>
-
-      {/* =================================================
-          LABEL
-      ================================================= */}
-
-      <span
-        className={`
-          mt-1
-          text-xs
-          sm:text-sm
-
-          ${
-            isActive
-              ? "font-bold text-black"
-              : "font-medium text-black/80"
-          }
-        `}
-      >
-        {label}
-      </span>
-
-      {/* =================================================
-          UNDERLINE
-      ================================================= */}
-
-      <motion.div
-        className="
-          h-1
-          rounded-full
-          bg-gradient-to-r
-          from-black/80
-          to-black/50
-        "
-        initial={{
-          width: 0,
-        }}
-        animate={{
-          width: isActive
-            ? 26
+          y: isActive
+            ? -1
             : 0,
         }}
         transition={{
-          duration: 0.2,
+          type: "spring",
+          stiffness: 350,
+          damping: 20,
         }}
+        className="
+          relative
+          z-10
+          h-[58px]
+          w-[58px]
+          select-none
+          object-contain
+          max-[380px]:h-[50px]
+          max-[380px]:w-[50px]
+        "
       />
 
+      {/* =================================================
+          ACTIVE DOT
+      ================================================= */}
+
+      {isActive && (
+        <motion.span
+          layoutId="activeCategoryDot"
+          className="
+            absolute
+            -bottom-[5px]
+            left-1/2
+            z-20
+            h-[7px]
+            w-[7px]
+            -translate-x-1/2
+            rounded-full
+            bg-black/80
+            shadow-[0_0_12px_rgba(0,0,0,0.25)]
+          "
+        />
+      )}
     </motion.button>
   );
 }

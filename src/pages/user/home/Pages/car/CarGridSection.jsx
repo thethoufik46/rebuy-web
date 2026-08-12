@@ -9,10 +9,6 @@ import {
   useSearchParams,
 } from "react-router-dom";
 
-import {
-  motion,
-} from "framer-motion";
-
 import CarCard from "@/components/CarCard";
 
 import {
@@ -136,8 +132,41 @@ const CACHE_TIME =
    COMPONENT
 ========================================================= */
 
+
+function SkeletonAnimationStyles() {
+  return (
+    <style>{`
+      @keyframes carSkeletonShimmer {
+        0% {
+          transform: translateX(-180%) skewX(-12deg);
+        }
+
+        100% {
+          transform: translateX(380%) skewX(-12deg);
+        }
+      }
+
+      .animate-car-skeleton-shimmer {
+        animation:
+          carSkeletonShimmer
+          1.25s
+          linear
+          infinite;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .animate-car-skeleton-shimmer {
+          animation: none;
+        }
+      }
+    `}</style>
+  );
+}
+
+
 export default function CarGridSection({
   cars = [],
+  loading = false,
   onViewAll,
   showViewAllButton = false,
 
@@ -162,6 +191,27 @@ export default function CarGridSection({
     variantMap,
     setVariantMap,
   ] = useState({});
+
+  /*
+   * Parent should pass loading=true while the
+   * car API request is still running.
+   *
+   * If loading is not supplied, the component
+   * falls back to false for backward compatibility.
+   */
+  const [
+    carLoading,
+    setCarLoading,
+  ] = useState(false);
+
+  /* =======================================================
+     CAR API LOADING
+  ======================================================= */
+
+  useEffect(() => {
+    setCarLoading(Boolean(loading));
+  }, [loading]);
+
 
   /* =======================================================
      LOAD VARIANTS
@@ -302,6 +352,21 @@ export default function CarGridSection({
           .slice(0, 6)
       : [];
 
+  /*
+   * Never show a blank section while the car API
+   * is still loading. Show premium skeleton cards
+   * with the same responsive grid shape instead.
+   */
+  if (carLoading) {
+    return (
+      <CarGridSkeleton />
+    );
+  }
+
+  /*
+   * API finished but returned no visible cars.
+   * Keep the previous behavior: render nothing.
+   */
   if (!visibleCars.length) {
     return null;
   }
@@ -341,49 +406,15 @@ export default function CarGridSection({
     };
 
   /* =======================================================
-     ANIMATION
-  ======================================================= */
-
-  const container = {
-    hidden: {
-      opacity: 0,
-    },
-
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren:
-          0.06,
-      },
-    },
-  };
-
-  const item = {
-    hidden: {
-      opacity: 0,
-      y: 15,
-    },
-
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.35,
-      },
-    },
-  };
-
-  /* =======================================================
      UI
   ======================================================= */
 
   return (
-    <div className="w-full">
+    <>
+      <SkeletonAnimationStyles />
+      <div className="w-full">
 
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
+      <div
         className="
           grid
           grid-cols-2
@@ -403,12 +434,11 @@ export default function CarGridSection({
               );
 
             return (
-              <motion.div
+              <div
                 key={
                   carId ||
                   `car-${index}`
                 }
-                variants={item}
                 className="min-w-0 w-full"
               >
                 <CarCard
@@ -490,11 +520,11 @@ export default function CarGridSection({
                     )
                   }
                 />
-              </motion.div>
+              </div>
             );
           }
         )}
-      </motion.div>
+      </div>
 
       {showViewAllButton && (
         <div className="py-3.5">
@@ -535,6 +565,306 @@ export default function CarGridSection({
           </button>
         </div>
       )}
+      </div>
+    </>
+  );
+}
+
+
+/* =========================================================
+   PREMIUM CAR GRID SKELETON
+   ---------------------------------------------------------
+   YouTube / Amazon inspired shimmer loading.
+   Same 2 / 4 / 6 column responsive structure as real cards.
+========================================================= */
+
+function CarGridSkeleton() {
+  return (
+    <div className="w-full">
+
+      <div
+        className="
+          grid
+          grid-cols-2
+          gap-x-3
+          gap-y-3.5
+          md:grid-cols-4
+          lg:grid-cols-6
+        "
+      >
+        {Array.from({
+          length: 6,
+        }).map((_, index) => (
+          <div
+            key={`car-skeleton-${index}`}
+            className="min-w-0 w-full"
+          >
+            <CarSkeletonCard />
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 }
+
+
+/* =========================================================
+   PREMIUM CAR SKELETON CARD
+========================================================= */
+
+function CarSkeletonCard() {
+  return (
+    <div
+      className="
+        relative
+        w-full
+        min-w-0
+        overflow-hidden
+        rounded-[22px]
+        border
+        border-white/70
+        bg-white
+        shadow-[0_5px_18px_rgba(15,23,42,0.06)]
+      "
+    >
+
+      {/* =================================================
+          IMAGE AREA
+      ================================================= */}
+
+      <div
+        className="
+          relative
+          aspect-[13/11]
+          w-full
+          overflow-hidden
+          bg-gradient-to-br
+          from-slate-100
+          via-slate-200/70
+          to-slate-100
+        "
+      >
+
+        {/* Main cinematic shimmer */}
+        <div
+          className="
+            pointer-events-none
+            absolute
+            inset-y-0
+            left-0
+            z-20
+            w-[48%]
+            -skew-x-12
+            bg-gradient-to-r
+            from-transparent
+            via-white/80
+            to-transparent
+            blur-lg
+          "
+        />
+
+        {/* Soft moving light */}
+        <div
+          className="
+            pointer-events-none
+            absolute
+            left-1/2
+            top-1/2
+            h-20
+            w-24
+            -translate-x-1/2
+            -translate-y-1/2
+            rounded-[28px]
+            bg-white
+            blur-2xl
+          "
+        />
+
+        {/* Image-like center placeholder */}
+        <div
+          className="
+            absolute
+            left-1/2
+            top-1/2
+            h-12
+            w-16
+            -translate-x-1/2
+            -translate-y-1/2
+            rounded-2xl
+            bg-white/45
+            shadow-inner
+            backdrop-blur-sm
+          "
+        />
+
+        {/* Year */}
+        <SkeletonBlock
+          className="
+            absolute
+            left-2.5
+            top-2.5
+            z-30
+            h-5
+            w-12
+            rounded-full
+          "
+        />
+
+        {/* Share */}
+        <SkeletonBlock
+          className="
+            absolute
+            right-2.5
+            top-2.5
+            z-30
+            h-8
+            w-8
+            rounded-full
+          "
+        />
+
+        {/* Bottom image fade */}
+        <div
+          className="
+            pointer-events-none
+            absolute
+            inset-x-0
+            bottom-0
+            z-10
+            h-16
+            bg-gradient-to-t
+            from-black/[0.04]
+            to-transparent
+          "
+        />
+
+      </div>
+
+
+      {/* =================================================
+          CONTENT AREA
+      ================================================= */}
+
+      <div
+        className="
+          space-y-2.5
+          px-3
+          pb-3
+          pt-3
+        "
+      >
+
+        {/* Price */}
+        <SkeletonBlock
+          className="
+            h-4
+            w-24
+            rounded-full
+          "
+        />
+
+        {/* Model */}
+        <SkeletonBlock
+          className="
+            h-3
+            w-[74%]
+            rounded-full
+          "
+        />
+
+        {/* Details */}
+        <div className="flex gap-2">
+          <SkeletonBlock
+            className="
+              h-2.5
+              w-12
+              rounded-full
+            "
+          />
+
+          <SkeletonBlock
+            className="
+              h-2.5
+              w-14
+              rounded-full
+            "
+          />
+
+          <SkeletonBlock
+            className="
+              h-2.5
+              w-12
+              rounded-full
+            "
+          />
+        </div>
+
+        {/* Location */}
+        <SkeletonBlock
+          className="
+            h-2.5
+            w-[68%]
+            rounded-full
+          "
+        />
+
+      </div>
+
+    </div>
+  );
+}
+
+
+/* =========================================================
+   SKELETON BLOCK
+========================================================= */
+
+
+/* =========================================================
+   SKELETON SHIMMER
+   ONLY LOADING ANIMATION — no card entrance/floating animation
+========================================================= */
+
+const SkeletonShimmer = () => (
+  <span
+    aria-hidden="true"
+    className="
+      pointer-events-none
+      absolute
+      inset-y-0
+      left-0
+      z-20
+      w-1/2
+      -skew-x-12
+      bg-gradient-to-r
+      from-transparent
+      via-white/80
+      to-transparent
+      blur-md
+      animate-car-skeleton-shimmer
+    "
+  />
+);
+
+function SkeletonBlock({
+  className = "",
+}) {
+  return (
+    <div
+      className={`
+        relative
+        overflow-hidden
+        bg-slate-200
+        ${className}
+      `}
+    >
+      <SkeletonShimmer />
+    </div>
+  );
+}
+
+
+/* =========================================================
+   SHIMMER
+========================================================= */

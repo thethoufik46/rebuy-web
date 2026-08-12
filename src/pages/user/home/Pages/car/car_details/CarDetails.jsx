@@ -12,10 +12,10 @@ import {
   useSearchParams,
 } from "react-router-dom";
 
-import CarTopbar from "./CarTopbar";
 import CarGallery from "./CarGallery";
 import CarBottomDetails from "./CarBottomDetails";
 import CarActionButton from "./CarActionButton";
+import CallScreen from "@/components/CallScreen";
 
 import CarCard from "@/components/CarCard";
 
@@ -411,6 +411,35 @@ export default function CarDetails() {
   }, [stopAutoSlide]);
 
   /* =======================================================
+     ALWAYS OPEN CAR DETAILS FROM THE TOP
+
+     Gallery is the FIRST thing visible when CarDetails opens.
+     This also fixes cases where the previous page was already
+     scrolled down before opening the car.
+  ======================================================= */
+
+  useEffect(() => {
+    const scrollToTop = () => {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "instant",
+      });
+
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    scrollToTop();
+
+    const frame = requestAnimationFrame(scrollToTop);
+
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [carId]);
+
+  /* =======================================================
      LOAD SIMILAR CARS
   ======================================================= */
 
@@ -506,14 +535,33 @@ export default function CarDetails() {
        Home
   ======================================================= */
 
-  const handleBack = () => {
+  /* =======================================================
+     BACK HANDLER
+
+     IMPORTANT:
+     - Return to the exact page that opened this details page.
+     - Do NOT always send the user to Home.
+     - Search -> Search Results
+     - Home -> Home
+     - Filter/category page -> that exact page
+     - Similar Car -> previous Car Details page
+     - Browser/mobile back history is preserved.
+  ======================================================= */
+
+  const handleBack = useCallback(() => {
+    /*
+      If this details page was opened from Search Results, keep the
+      existing search state so the user returns to the same results.
+    */
     if (fromSearch) {
       navigate(
         "/search-results",
         {
+          replace: false,
           state: {
             query: searchQuery,
             filteredCars: searchCars,
+            restoreSearch: true,
           },
         }
       );
@@ -521,10 +569,34 @@ export default function CarDetails() {
       return;
     }
 
-    navigate(
-      `/home?tab=${tab}`
-    );
-  };
+    /*
+      For every other entry point, use the browser/router history.
+      This is the important part: never hard-code Home here.
+
+      Example:
+        Home -> Details        => back to Home
+        Cars -> Details        => back to Cars
+        Filter -> Details      => back to Filter
+        Category -> Details    => back to Category
+        Details A -> Similar B => back to Details A
+    */
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    /*
+      Only a directly opened URL with no usable history reaches here.
+      Keep the fallback inside the current tab context.
+    */
+    navigate(`/home?tab=${tab}`, { replace: true });
+  }, [
+    fromSearch,
+    navigate,
+    searchQuery,
+    searchCars,
+    tab,
+  ]);
 
   /* =======================================================
      SIMILAR CAR OPEN
@@ -712,12 +784,116 @@ export default function CarDetails() {
       className="
         min-h-screen
         w-full
+        overflow-x-hidden
         bg-white
+        scroll-mt-0
       "
     >
 
+      <style>{`
+        .car-details-title-wrap {
+          animation: carDetailsTitleReveal 0.72s
+            cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .car-details-title-line {
+          animation: carDetailsLineReveal 0.85s
+            cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .car-details-title-eyebrow {
+          animation: carDetailsTextReveal 0.58s
+            0.08s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .car-details-title {
+          animation: carDetailsTextReveal 0.68s
+            0.13s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .car-details-title-dot {
+          animation: carDetailsDotIn 0.52s
+            0.2s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .car-details-open {
+          animation: carDetailsOpen 0.72s
+            0.08s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        @keyframes carDetailsTitleReveal {
+          from {
+            opacity: 0;
+            transform: translateY(18px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes carDetailsTextReveal {
+          from {
+            opacity: 0;
+            transform: translateX(-18px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes carDetailsLineReveal {
+          from {
+            opacity: 0;
+            transform: scaleX(0);
+          }
+          to {
+            opacity: 1;
+            transform: scaleX(1);
+          }
+        }
+
+        @keyframes carDetailsDotIn {
+          from {
+            opacity: 0;
+            transform: scale(0);
+          }
+          70% {
+            transform: scale(1.18);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        @keyframes carDetailsOpen {
+          from {
+            opacity: 0;
+            transform: translateY(14px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .car-details-title-wrap,
+          .car-details-title-line,
+          .car-details-title-eyebrow,
+          .car-details-title,
+          .car-details-title-dot,
+          .car-details-open {
+            animation: none !important;
+          }
+        }
+      `}</style>
+
       {/* ===================================================
-          BACK BAR
+          SINGLE BACK BAR
+          Returns to the exact previous page
       =================================================== */}
 
       <div
@@ -734,6 +910,7 @@ export default function CarDetails() {
           bg-white/90
           px-3
           backdrop-blur-xl
+          sm:px-5
         "
       >
 
@@ -800,11 +977,6 @@ export default function CarDetails() {
 
       </div>
 
-      {/* ===================================================
-          EXISTING CAR TOP BAR
-      =================================================== */}
-
-      <CarTopbar car={car} />
 
       {/* ===================================================
           PAGE BODY
@@ -813,47 +985,171 @@ export default function CarDetails() {
       <div className="pb-10">
 
         {/* =================================================
-            GALLERY
+            GALLERY — FIRST CONTENT AFTER THE SINGLE BACK BAR
         ================================================= */}
 
-        <CarGallery
-          galleryImages={
-            galleryImages
-          }
-          isLoading={false}
-          currentIndex={
-            currentIndex
-          }
-          onPageChange={
-            setCurrentIndex
-          }
-        />
+        {/* =================================================
+            GALLERY
+            Full-width on desktop + mobile
+        ================================================= */}
 
-        {/* SPACE */}
-
-        <div className="mt-5" />
+        <section
+          className="
+            w-full
+            overflow-hidden
+            bg-white
+          "
+        >
+          <CarGallery
+            galleryImages={galleryImages}
+            isLoading={false}
+            currentIndex={currentIndex}
+            onPageChange={setCurrentIndex}
+          />
+        </section>
 
         {/* =================================================
-            DETAILS BOX
+            SPACE AFTER GALLERY
         ================================================= */}
 
         <div
           className="
-            mx-4
-            rounded-2xl
-            bg-[#FFF3CD]
-            p-5
+            h-8
+            bg-white
+            sm:h-10
+            lg:h-14
+          "
+        />
+
+        {/* =================================================
+            ANIMATED DETAILS TITLE
+        ================================================= */}
+
+        <section
+          className="
+            w-full
+            bg-white
+            px-4
+            sm:px-6
+            lg:px-10
+            xl:px-14
+            2xl:px-16
           "
         >
+          <div
+            className="
+              car-details-title-wrap
+              w-full
+              overflow-hidden
+            "
+          >
+            <div className="car-details-title-line h-px w-full origin-left bg-black/10" />
 
-          <CarBottomDetails
-            car={car}
-          />
+            <div
+              className="
+                flex
+                items-center
+                justify-between
+                gap-4
+                py-5
+                sm:py-6
+                lg:py-7
+              "
+            >
+              <div className="min-w-0">
+                <p
+                  className="
+                    car-details-title-eyebrow
+                    text-[10px]
+                    font-semibold
+                    uppercase
+                    tracking-[0.22em]
+                    text-black/40
+                    sm:text-xs
+                  "
+                >
+                  Vehicle information
+                </p>
 
-          <div className="h-5" />
+                <h2
+                  className="
+                    car-details-title
+                    mt-1
+                    text-2xl
+                    font-extrabold
+                    tracking-[-0.04em]
+                    text-black
+                    sm:text-3xl
+                    lg:text-4xl
+                  "
+                >
+                  Car Details
+                </h2>
+              </div>
 
+              <span
+                className="
+                  car-details-title-dot
+                  h-2.5
+                  w-2.5
+                  shrink-0
+                  rounded-full
+                  bg-[#FFE19A]
+                  sm:h-3
+                  sm:w-3
+                "
+              />
+            </div>
+
+            <div className="car-details-title-line h-px w-full origin-right bg-black/10" />
+          </div>
+        </section>
+
+        {/* =================================================
+            DETAILS — NO YELLOW OUTER BOX
+        ================================================= */}
+
+        <section
+          className="
+            car-details-open
+            w-full
+            bg-white
+            pt-6
+            sm:pt-8
+            lg:pt-10
+          "
+        >
+          <CarBottomDetails car={car} />
+        </section>
+
+        {/* =================================================
+            ACTION
+        ================================================= */}
+
+        <div
+          className="
+            w-full
+            bg-white
+            px-4
+            pt-6
+            sm:px-6
+            sm:pt-8
+            lg:px-10
+            lg:pt-10
+            xl:px-14
+            2xl:px-16
+          "
+        >
           <CarActionButton />
+        </div>
 
+        {/* =================================================
+            CALL SUPPORT
+            Below car details / action button
+        ================================================= */}
+
+        <div className="mt-4">
+          <CallScreen />
         </div>
 
         {/* SPACE */}

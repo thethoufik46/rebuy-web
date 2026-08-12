@@ -1,8 +1,11 @@
+import logo from "@/assets/logo/logo_1.webp";
+
 // src/screens/NavScreen.jsx
 
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { logout } from "@/services/apiService";
+
 
 export default function NavScreen() {
   const navigate = useNavigate();
@@ -91,7 +94,7 @@ export default function NavScreen() {
           className="logo-button"
         >
           <img
-            src="/assets/logo/logo_1.webp"
+            src={logo}
             alt="Re2buy"
           />
         </motion.button>
@@ -910,8 +913,10 @@ styleElement.innerHTML = `
 .nav-screen {
   min-height: 100vh;
   width: 100%;
+  max-width: 100vw;
   position: relative;
   overflow-x: hidden;
+  box-sizing: border-box;
 
   background:
     linear-gradient(
@@ -1143,9 +1148,11 @@ styleElement.innerHTML = `
 
   width:
     min(
-      1450px,
-      calc(100% - 80px)
+      1500px,
+      calc(100% - 48px)
     );
+
+  box-sizing: border-box;
 
   margin: 0 auto;
 
@@ -1197,14 +1204,17 @@ styleElement.innerHTML = `
   display: grid;
 
   grid-template-columns:
-    1fr
-    1fr
-    .72fr;
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    minmax(0, 0.82fr);
 
-  gap:
-    clamp(45px, 6vw, 120px);
+  gap: clamp(24px, 4vw, 72px);
+
+  width: 100%;
+  max-width: 100%;
 
   align-items: start;
+  min-width: 0;
 }
 
 
@@ -1214,7 +1224,9 @@ styleElement.innerHTML = `
 
 
 .desktop-legal-column {
-  padding-left: 10px;
+  padding-left: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 
@@ -1226,6 +1238,8 @@ styleElement.innerHTML = `
   position: relative;
 
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
 
   border: none;
 
@@ -1246,6 +1260,7 @@ styleElement.innerHTML = `
   cursor: pointer;
 
   overflow: hidden;
+  box-sizing: border-box;
 
   color: #17151b;
 }
@@ -1268,26 +1283,25 @@ styleElement.innerHTML = `
 .desktop-item-text {
   display: block;
 
-  font-size:
-    clamp(
-      35px,
-      3.8vw,
-      63px
-    );
+  font-size: clamp(
+    30px,
+    3.25vw,
+    58px
+  );
 
-  line-height: 1.04;
+  line-height: 1.02;
 
   font-weight: 750;
 
-  letter-spacing:
-    -.055em;
+  letter-spacing: -0.055em;
 
-  white-space: nowrap;
+  white-space: normal;
 
-  transition:
-    transform .45s
-    cubic-bezier(.22,1,.36,1),
-    color .35s ease;
+  overflow-wrap: anywhere;
+  word-break: normal;
+
+  max-width: 100%;
+  min-width: 0;
 }
 
 
@@ -1567,16 +1581,16 @@ styleElement.innerHTML = `
 
 
   .desktop-menu-grid {
-    gap: 45px;
+    gap: 30px;
   }
 
 
   .desktop-item-text {
     font-size:
       clamp(
-        32px,
-        4.5vw,
-        52px
+        30px,
+        4vw,
+        50px
       );
   }
 
@@ -1989,4 +2003,8 @@ if (!document.head.querySelector("[data-nav-screen-style]")) {
   );
 
   document.head.appendChild(styleElement);
+
+
+  
 }
+

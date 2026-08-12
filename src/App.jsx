@@ -16,7 +16,6 @@ import Register from "@/auth/Register";
 import Forgot from "@/auth/Forgot";
 import Terms from "@/auth/Terms";
 import DisclaimerDialog from "@/auth/DisclaimerDialog";
-
 import ProtectedRoute from "@/auth/ProtectedRoute";
 
 /* =========================================================
@@ -28,6 +27,7 @@ import UserHome from "@/pages/user/UserHome";
 import SearchResults from "@/pages/user/Search/SearchResults";
 
 import NotificationScreen from "@/pages/user/Notification/NotificationScreen";
+
 import FilterScreen from "@/pages/user/filter/FilterScreen";
 import FilterResultScreen from "@/pages/user/filter/FilterResultScreen";
 
@@ -39,6 +39,17 @@ import SlideBanner from "@/pages/user/home/SlideBanner";
 
 import UserProfile from "@/pages/user/Profile/UserProfile";
 import ChangePassword from "@/pages/user/Profile/ChangePassword";
+
+/* =========================================================
+   FINANCE
+========================================================= */
+
+import Finance from "@/pages/user/finance/Finance";
+
+/* =========================================================
+   TESTIMONIALS
+========================================================= */
+import Testimonials from "@/pages/user/Testimonials/Testimonials";
 
 /* =========================================================
    DETAILS
@@ -83,69 +94,50 @@ import WishlistPage from "@/pages/Wishlist/WishlistPage";
 export default function App() {
   return (
     <BrowserRouter>
-
       <Routes>
 
         {/* =================================================
             PUBLIC ROUTES
-            -------------------------------------------------
             Login இல்லாமலும் open ஆகலாம்.
         ================================================= */}
 
         <Route
           path="/"
-          element={
-            <Welcome />
-          }
+          element={<Welcome />}
         />
 
         <Route
           path="/login"
-          element={
-            <LoginLogic />
-          }
+          element={<LoginLogic />}
         />
 
         <Route
           path="/forgot"
-          element={
-            <Forgot />
-          }
+          element={<Forgot />}
         />
 
         <Route
           path="/register"
-          element={
-            <Register />
-          }
+          element={<Register />}
         />
 
         <Route
           path="/terms"
-          element={
-            <Terms />
-          }
+          element={<Terms />}
         />
 
         <Route
           path="/disclaimer"
-          element={
-            <DisclaimerDialog />
-          }
+          element={<DisclaimerDialog />}
         />
-
 
         {/* =================================================
             PROTECTED ROUTES
-            -------------------------------------------------
-            இந்த block-க்குள் இருக்கும் எல்லா routes-க்கும்
-            login compulsory.
+            Login compulsory.
         ================================================= */}
 
         <Route
-          element={
-            <ProtectedRoute />
-          }
+          element={<ProtectedRoute />}
         >
 
           {/* ===============================================
@@ -154,11 +146,8 @@ export default function App() {
 
           <Route
             path="/home"
-            element={
-              <UserHome />
-            }
+            element={<UserHome />}
           />
-
 
           {/* ===============================================
               SEARCH
@@ -166,11 +155,8 @@ export default function App() {
 
           <Route
             path="/search-results"
-            element={
-              <SearchResults />
-            }
+            element={<SearchResults />}
           />
-
 
           {/* ===============================================
               MENU
@@ -178,11 +164,8 @@ export default function App() {
 
           <Route
             path="/menu"
-            element={
-              <NavScreen />
-            }
+            element={<NavScreen />}
           />
-
 
           {/* ===============================================
               NOTIFICATIONS
@@ -190,11 +173,8 @@ export default function App() {
 
           <Route
             path="/notifications"
-            element={
-              <NotificationScreen />
-            }
+            element={<NotificationScreen />}
           />
-
 
           {/* ===============================================
               FILTER
@@ -202,18 +182,13 @@ export default function App() {
 
           <Route
             path="/filter"
-            element={
-              <FilterScreen />
-            }
+            element={<FilterScreen />}
           />
 
           <Route
             path="/filter-result"
-            element={
-              <FilterResultScreen />
-            }
+            element={<FilterResultScreen />}
           />
-
 
           {/* ===============================================
               SLIDE
@@ -221,11 +196,8 @@ export default function App() {
 
           <Route
             path="/slide"
-            element={
-              <SlideBanner />
-            }
+            element={<SlideBanner />}
           />
-
 
           {/* ===============================================
               PROFILE
@@ -233,18 +205,31 @@ export default function App() {
 
           <Route
             path="/profile"
-            element={
-              <UserProfile />
-            }
+            element={<UserProfile />}
           />
 
           <Route
             path="/change-password"
-            element={
-              <ChangePassword />
-            }
+            element={<ChangePassword />}
           />
 
+          {/* ===============================================
+              FINANCE
+          =============================================== */}
+
+          <Route
+            path="/finance"
+            element={<Finance />}
+          />
+
+          {/* ===============================================
+              TESTIMONIALS
+          =============================================== */}
+
+          <Route
+            path="/testimonials"
+            element={<Testimonials />}
+          />
 
           {/* ===============================================
               CAR DETAILS
@@ -252,11 +237,8 @@ export default function App() {
 
           <Route
             path="/car/:carId"
-            element={
-              <CarDetails />
-            }
+            element={<CarDetails />}
           />
-
 
           {/* ===============================================
               BIKE DETAILS
@@ -264,11 +246,8 @@ export default function App() {
 
           <Route
             path="/bike/:bikeId"
-            element={
-              <BikeDetails />
-            }
+            element={<BikeDetails />}
           />
-
 
           {/* ===============================================
               PROPERTY DETAILS
@@ -276,11 +255,8 @@ export default function App() {
 
           <Route
             path="/property/:propertyId"
-            element={
-              <PropertyDetails />
-            }
+            element={<PropertyDetails />}
           />
-
 
           {/* ===============================================
               ELECTRONICS DETAILS
@@ -288,11 +264,8 @@ export default function App() {
 
           <Route
             path="/electronics/:electronicsId"
-            element={
-              <ElectronicsDetails />
-            }
+            element={<ElectronicsDetails />}
           />
-
 
           {/* ===============================================
               VARIANT
@@ -300,18 +273,13 @@ export default function App() {
 
           <Route
             path="/variant/:variant"
-            element={
-              <HomeOwnCardScrollFilter />
-            }
+            element={<HomeOwnCardScrollFilter />}
           />
 
           <Route
             path="/variants"
-            element={
-              <VariantAll />
-            }
+            element={<VariantAll />}
           />
-
 
           {/* ===============================================
               WISHLIST
@@ -319,11 +287,8 @@ export default function App() {
 
           <Route
             path="/wishlist"
-            element={
-              <WishlistPage />
-            }
+            element={<WishlistPage />}
           />
-
 
           {/* ===============================================
               OWN CARS
@@ -331,11 +296,8 @@ export default function App() {
 
           <Route
             path="/own-cars"
-            element={
-              <ViewAllOwnBoardScreen />
-            }
+            element={<ViewAllOwnBoardScreen />}
           />
-
 
           {/* ===============================================
               T BOARD CARS
@@ -343,13 +305,10 @@ export default function App() {
 
           <Route
             path="/t-board-cars"
-            element={
-              <ViewAllTBoardScreen />
-            }
+            element={<ViewAllTBoardScreen />}
           />
 
         </Route>
-
 
         {/* =================================================
             FALLBACK
@@ -357,13 +316,10 @@ export default function App() {
 
         <Route
           path="*"
-          element={
-            <Welcome />
-          }
+          element={<Welcome />}
         />
 
       </Routes>
-
     </BrowserRouter>
   );
 }
