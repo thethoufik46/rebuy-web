@@ -7,18 +7,21 @@ import React, {
   useState,
 } from "react";
 
-import { AnimatePresence, motion } from "framer-motion";
-import TestimonialApi from "@/services/testimonialApi";
+import {
+  AnimatePresence,
+  motion,
+} from "framer-motion";
 
-/* =========================================================
-   API
-========================================================= */
+import TestimonialApi from "@/services/testimonialApi";
 
 /* =========================================================
    HELPERS
 ========================================================= */
 
-const text = (value, fallback = "-") => {
+const text = (
+  value,
+  fallback = "-"
+) => {
   if (
     value === null ||
     value === undefined ||
@@ -30,14 +33,22 @@ const text = (value, fallback = "-") => {
   return String(value);
 };
 
-const getImageUrl = (value) => {
+const getImageUrl = (
+  value
+) => {
   if (!value) return "";
 
-  if (typeof value === "string") {
+  if (
+    typeof value ===
+    "string"
+  ) {
     return value;
   }
 
-  if (value.url) return value.url;
+  if (value.url) {
+    return value.url;
+  }
+
   if (value.secure_url) {
     return value.secure_url;
   }
@@ -45,11 +56,14 @@ const getImageUrl = (value) => {
   return "";
 };
 
-const normalizeTestimonial = (item = {}) => {
-  const rating = Number.parseInt(
-    item.rating,
-    10
-  );
+const normalizeTestimonial = (
+  item = {}
+) => {
+  const rating =
+    Number.parseInt(
+      item.rating,
+      10
+    );
 
   return {
     _id:
@@ -60,11 +74,16 @@ const normalizeTestimonial = (item = {}) => {
         .toString(36)
         .slice(2),
 
-    name: text(item.name, ""),
+    name: text(
+      item.name,
+      ""
+    ),
+
     description: text(
       item.description,
       ""
     ),
+
     location: text(
       item.location,
       ""
@@ -74,7 +93,9 @@ const normalizeTestimonial = (item = {}) => {
       0,
       Math.min(
         5,
-        Number.isNaN(rating)
+        Number.isNaN(
+          rating
+        )
           ? 0
           : rating
       )
@@ -85,10 +106,11 @@ const normalizeTestimonial = (item = {}) => {
       ""
     ),
 
-    image: getImageUrl(
-      item.imageUrl ||
-        item.image
-    ),
+    image:
+      getImageUrl(
+        item.imageUrl ||
+          item.image
+      ),
 
     video:
       item.videoUrl ||
@@ -98,7 +120,7 @@ const normalizeTestimonial = (item = {}) => {
 };
 
 /* =========================================================
-   STAR ICON
+   STAR
 ========================================================= */
 
 function StarIcon({
@@ -141,7 +163,7 @@ function StarIcon({
 }
 
 /* =========================================================
-   LOCATION ICON
+   LOCATION
 ========================================================= */
 
 function LocationIcon({
@@ -178,7 +200,7 @@ function LocationIcon({
 }
 
 /* =========================================================
-   CLOSE ICON
+   CLOSE
 ========================================================= */
 
 function CloseIcon() {
@@ -200,7 +222,7 @@ function CloseIcon() {
 }
 
 /* =========================================================
-   SHIMMER LOADER
+   LOADING
 ========================================================= */
 
 function TestimonialShimmer() {
@@ -274,7 +296,6 @@ function TestimonialCard({
         lg:w-[calc((100vw-72px)/5)]
       "
     >
-      {/* IMAGE */}
       <img
         src={image}
         alt={
@@ -292,13 +313,13 @@ function TestimonialCard({
           group-hover:scale-[1.025]
         "
         loading="lazy"
+        decoding="async"
         onError={(event) => {
           event.currentTarget.src =
             "/assets/logo/logo.webp";
         }}
       />
 
-      {/* GLASS CONTENT */}
       <div
         className="
           absolute
@@ -315,7 +336,6 @@ function TestimonialCard({
           backdrop-blur-[10px]
         "
       >
-        {/* RATING */}
         <div
           className="
             flex
@@ -340,7 +360,6 @@ function TestimonialCard({
           )}
         </div>
 
-        {/* NAME + LOCATION */}
         <div
           className="
             mt-1.5
@@ -377,13 +396,14 @@ function TestimonialCard({
                   text-white/90
                 "
               >
-                {data.location}
+                {
+                  data.location
+                }
               </span>
             </>
           )}
         </div>
 
-        {/* DESCRIPTION */}
         <p
           className="
             mt-1.5
@@ -397,7 +417,6 @@ function TestimonialCard({
             "No description available."}
         </p>
 
-        {/* READ MORE */}
         <div
           className="
             mt-1
@@ -414,7 +433,9 @@ function TestimonialCard({
 }
 
 /* =========================================================
-   FULL DETAILS MODAL
+   MODAL
+   ---------------------------------------------------------
+   Vertical scrolling explicitly enabled.
 ========================================================= */
 
 function TestimonialModal({
@@ -492,7 +513,6 @@ function TestimonialModal({
           shadow-2xl
         "
       >
-        {/* CLOSE */}
         <button
           type="button"
           onClick={onClose}
@@ -510,8 +530,6 @@ function TestimonialModal({
             bg-black
             text-white
             shadow-lg
-            transition
-            hover:scale-105
             active:scale-90
           "
           aria-label="Close"
@@ -519,13 +537,17 @@ function TestimonialModal({
           <CloseIcon />
         </button>
 
+        {/* IMPORTANT:
+            Vertical page inside modal */}
         <div
           className="
             max-h-[92vh]
             overflow-y-auto
+            overscroll-contain
+            touch-pan-y
+            [-webkit-overflow-scrolling:touch]
           "
         >
-          {/* IMAGE */}
           <img
             src={image}
             alt={
@@ -539,20 +561,20 @@ function TestimonialModal({
               object-cover
               sm:h-[340px]
             "
+            loading="lazy"
+            decoding="async"
             onError={(event) => {
               event.currentTarget.src =
                 "/assets/logo/logo.webp";
             }}
           />
 
-          {/* DETAILS */}
           <div
             className="
               p-5
               sm:p-6
             "
           >
-            {/* RATING */}
             <div
               className="
                 flex
@@ -577,7 +599,6 @@ function TestimonialModal({
               )}
             </div>
 
-            {/* NAME */}
             <h2
               className="
                 mt-3
@@ -590,7 +611,6 @@ function TestimonialModal({
               {data.name}
             </h2>
 
-            {/* LOCATION */}
             {data.location && (
               <div
                 className="
@@ -607,12 +627,13 @@ function TestimonialModal({
                 />
 
                 <span>
-                  {data.location}
+                  {
+                    data.location
+                  }
                 </span>
               </div>
             )}
 
-            {/* DESCRIPTION */}
             <p
               className="
                 mt-5
@@ -622,10 +643,11 @@ function TestimonialModal({
                 text-gray-700
               "
             >
-              {data.description}
+              {
+                data.description
+              }
             </p>
 
-            {/* PHONE */}
             {data.phone && (
               <p
                 className="
@@ -639,7 +661,6 @@ function TestimonialModal({
               </p>
             )}
 
-            {/* OPTIONAL VIDEO */}
             {data.video && (
               <div
                 className="
@@ -653,6 +674,7 @@ function TestimonialModal({
                   src={data.video}
                   controls
                   playsInline
+                  preload="metadata"
                   className="
                     max-h-[360px]
                     w-full
@@ -660,6 +682,9 @@ function TestimonialModal({
                 />
               </div>
             )}
+
+            {/* Extra bottom space for easy mobile scroll */}
+            <div className="h-6" />
           </div>
         </div>
       </motion.div>
@@ -668,7 +693,7 @@ function TestimonialModal({
 }
 
 /* =========================================================
-   MAIN PAGE
+   MAIN
 ========================================================= */
 
 export default function Testimonials() {
@@ -699,7 +724,7 @@ export default function Testimonials() {
     useRef(null);
 
   /* =======================================================
-     FETCH TESTIMONIALS
+     FETCH
   ======================================================= */
 
   const fetchTestimonials =
@@ -712,9 +737,11 @@ export default function Testimonials() {
             await TestimonialApi.getTestimonials();
 
           setTestimonials(
-            list.map(
-              normalizeTestimonial
-            )
+            Array.isArray(list)
+              ? list.map(
+                  normalizeTestimonial
+                )
+              : []
           );
         } catch (error) {
           console.error(
@@ -730,10 +757,6 @@ export default function Testimonials() {
       []
     );
 
-  /* =======================================================
-     INITIAL LOAD
-  ======================================================= */
-
   useEffect(() => {
     fetchTestimonials();
   }, [
@@ -742,6 +765,8 @@ export default function Testimonials() {
 
   /* =======================================================
      AUTO SCROLL
+     -------------------------------------------------------
+     Doesn't block manual vertical page scrolling.
   ======================================================= */
 
   useEffect(() => {
@@ -862,10 +887,10 @@ export default function Testimonials() {
     }, []);
 
   /* =======================================================
-     GO TO SLIDE
+     SLIDE
   ======================================================= */
 
-  const goToSlide =
+  const goToSlide = useCallback(
     (index) => {
       const container =
         scrollRef.current;
@@ -888,8 +913,12 @@ export default function Testimonials() {
         behavior: "smooth",
       });
 
-      setCurrentIndex(index);
-    };
+      setCurrentIndex(
+        index
+      );
+    },
+    []
+  );
 
   /* =======================================================
      RENDER
@@ -900,27 +929,19 @@ export default function Testimonials() {
       className="
         w-full
         overflow-x-hidden
+        overflow-y-visible
         bg-transparent
       "
     >
-      {/* =================================================
-          HOME TESTIMONIAL SLIDER
-          Home screen only
-          No AppBar / no extra page spacing
-      ================================================= */}
-
       <main
         className="
-          w-screen
+          w-full
           max-w-none
           px-0
           py-0
         "
       >
-
-        {/* =================================================
-            LOADING
-        ================================================= */}
+        {/* LOADING */}
 
         {loading && (
           <div className="mt-0">
@@ -928,9 +949,7 @@ export default function Testimonials() {
           </div>
         )}
 
-        {/* =================================================
-            EMPTY
-        ================================================= */}
+        {/* EMPTY */}
 
         {!loading &&
           testimonials.length ===
@@ -945,6 +964,7 @@ export default function Testimonials() {
                 rounded-[24px]
                 bg-white/55
                 px-6
+                py-8
                 text-center
                 backdrop-blur-xl
               "
@@ -961,7 +981,8 @@ export default function Testimonials() {
                   text-gray-600
                 "
               >
-                No testimonials available
+                No testimonials
+                available
               </p>
 
               <button
@@ -978,8 +999,6 @@ export default function Testimonials() {
                   text-sm
                   font-semibold
                   text-white
-                  transition
-                  hover:opacity-90
                   active:scale-95
                 "
               >
@@ -990,61 +1009,79 @@ export default function Testimonials() {
 
         {/* =================================================
             TESTIMONIAL SLIDER
+
+            IMPORTANT FIX:
+            overflow-y-visible
+            touch-pan-x + touch-pan-y
+            overscroll-y-auto
+
+            So horizontal card swipe works AND
+            vertical page scroll works.
         ================================================= */}
 
         {!loading &&
           testimonials.length >
             0 && (
-            <>
-              <div
-                ref={scrollRef}
-                onScroll={
-                  handleScroll
-                }
-                className="
-                  testimonial-scrollbar-hidden
-                  mt-0
-                  flex
-                  w-full
-                  gap-2
-                  overflow-x-auto
-                  overflow-y-hidden
-                  scroll-smooth
-                  pb-0
-                  overscroll-x-contain
-                  touch-pan-x
-                  lg:overflow-x-hidden
-                  lg:px-3
-                "
-              >
-                {testimonials.map(
-                  (data) => (
-                    <div
-                      key={
-                        data._id
+            <div
+              ref={scrollRef}
+              onScroll={
+                handleScroll
+              }
+              className="
+                testimonial-scrollbar-hidden
+
+                mt-0
+                flex
+                w-full
+                gap-2
+
+                overflow-x-auto
+                overflow-y-visible
+
+                scroll-smooth
+                pb-0
+
+                overscroll-x-contain
+                overscroll-y-auto
+
+                touch-pan-x
+                touch-pan-y
+
+                select-none
+
+                lg:overflow-x-hidden
+                lg:px-3
+              "
+              style={{
+                WebkitOverflowScrolling:
+                  "touch",
+              }}
+            >
+              {testimonials.map(
+                (data) => (
+                  <div
+                    key={
+                      data._id
+                    }
+                    data-testimonial-card
+                    className="
+                      shrink-0
+                    "
+                  >
+                    <TestimonialCard
+                      data={data}
+                      onOpen={
+                        setSelectedTestimonial
                       }
-                      data-testimonial-card
-                      className="shrink-0"
-                    >
-                      <TestimonialCard
-                        data={data}
-                        onOpen={
-                          setSelectedTestimonial
-                        }
-                      />
-                    </div>
-                  )
-                )}
-              </div>
-
-
-            </>
+                    />
+                  </div>
+                )
+              )}
+            </div>
           )}
       </main>
 
-      {/* =================================================
-          DETAILS MODAL
-      ================================================= */}
+      {/* MODAL */}
 
       <AnimatePresence>
         {selectedTestimonial && (
@@ -1061,9 +1098,7 @@ export default function Testimonials() {
         )}
       </AnimatePresence>
 
-      {/* =================================================
-          HIDE HORIZONTAL SCROLLBAR
-      ================================================= */}
+      {/* SCROLLBAR */}
 
       <style>{`
         .testimonial-scrollbar-hidden {
@@ -1084,6 +1119,15 @@ export default function Testimonials() {
         .testimonial-scrollbar-hidden::-webkit-scrollbar-thumb {
           display: none !important;
           background: transparent !important;
+        }
+
+        /*
+          IMPORTANT:
+          Don't disable vertical touch scrolling
+          on testimonial cards/container.
+        */
+        .testimonial-scrollbar-hidden {
+          touch-action: pan-x pan-y;
         }
       `}</style>
     </div>

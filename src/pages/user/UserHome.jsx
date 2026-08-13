@@ -530,19 +530,20 @@ export default function UserHome() {
         </div>
       </div>
 
-      <section
-        className="
-          w-full
-          overflow-hidden
-          px-3
-          pb-4
-          pt-2
-          sm:px-5
-          lg:px-8
-        "
-      >
-        <Testimonials />
-      </section>
+    <section
+  className="
+    w-full
+    overflow-x-hidden
+    overflow-y-visible
+    px-3
+    pb-4
+    pt-2
+    sm:px-5
+    lg:px-8
+  "
+>
+  <Testimonials />
+</section>
 
       <Footer />
     </main>
