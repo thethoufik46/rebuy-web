@@ -1,16 +1,13 @@
-/* =========================================================
-   src/pages/user/UserHome.jsx
-   RE2BUY — FAST MARKETPLACE HOME
-   ========================================================= */
+// src/pages/user/UserHome.jsx
 
 import React, {
   Suspense,
   lazy,
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
-
 import {
   useNavigate,
   useSearchParams,
@@ -28,49 +25,46 @@ import propertyIcon from "@/assets/home/home.webp";
 import electronicsIcon from "@/assets/home/electronic.webp";
 
 /* =========================================================
-   API
-   ========================================================= */
+   CONFIG
+========================================================= */
 
 const BASE_URL =
+  import.meta.env.VITE_API_URL ||
   "https://rebuy-api.onrender.com/api";
 
 const HOME_LIMIT = 6;
 
 /* =========================================================
-   LAZY CATEGORY BUNDLES
-   ========================================================= */
+   LAZY CATEGORY PAGES
+========================================================= */
 
-const CarsPage = lazy(
-  () =>
-    import(
-      "@/pages/user/home/Pages/CarsPage"
-    )
+const CarsPage = lazy(() =>
+  import(
+    "@/pages/user/home/Pages/CarsPage"
+  )
 );
 
-const BikesPage = lazy(
-  () =>
-    import(
-      "@/pages/user/home/Pages/BikesPage"
-    )
+const BikesPage = lazy(() =>
+  import(
+    "@/pages/user/home/Pages/BikesPage"
+  )
 );
 
-const RealEstatePage = lazy(
-  () =>
-    import(
-      "@/pages/user/home/Pages/RealEstatePage"
-    )
+const RealEstatePage = lazy(() =>
+  import(
+    "@/pages/user/home/Pages/RealEstatePage"
+  )
 );
 
-const ElectronicsPage = lazy(
-  () =>
-    import(
-      "@/pages/user/home/Pages/ElectronicsPage"
-    )
+const ElectronicsPage = lazy(() =>
+  import(
+    "@/pages/user/home/Pages/ElectronicsPage"
+  )
 );
 
 /* =========================================================
    CATEGORY DATA
-   ========================================================= */
+========================================================= */
 
 const pages = [
   {
@@ -96,22 +90,70 @@ const pages = [
 ];
 
 /* =========================================================
-   MEMORY CACHE
+   HOME CAR MEMORY CACHE
    ---------------------------------------------------------
-   ONE cars request per SPA session.
+   One request per SPA session.
 ========================================================= */
 
 let carsMemoryCache = null;
 let carsRequest = null;
 
 /* =========================================================
+   PRELOAD CATEGORY BUNDLES
+   ---------------------------------------------------------
+   This removes the "wait after click" feeling.
+========================================================= */
+
+let bikesPagePromise = null;
+let propertyPagePromise = null;
+let electronicsPagePromise = null;
+
+function preloadCategory(index) {
+  if (index === 1) {
+    if (!bikesPagePromise) {
+      bikesPagePromise = import(
+        "@/pages/user/home/Pages/BikesPage"
+      );
+    }
+
+    return bikesPagePromise;
+  }
+
+  if (index === 2) {
+    if (!propertyPagePromise) {
+      propertyPagePromise = import(
+        "@/pages/user/home/Pages/RealEstatePage"
+      );
+    }
+
+    return propertyPagePromise;
+  }
+
+  if (index === 3) {
+    if (!electronicsPagePromise) {
+      electronicsPagePromise = import(
+        "@/pages/user/home/Pages/ElectronicsPage"
+      );
+    }
+
+    return electronicsPagePromise;
+  }
+
+  return Promise.resolve();
+}
+
+/* =========================================================
    FETCH HOME CARS
 ========================================================= */
 
 async function fetchHomeCars(signal) {
+  /* CACHE */
+
   if (Array.isArray(carsMemoryCache)) {
     return carsMemoryCache;
   }
+
+  /* DUPLICATE REQUEST PROTECTION */
 
   if (carsRequest) {
     return carsRequest;
@@ -138,22 +180,19 @@ async function fetchHomeCars(signal) {
       const data =
         await response.json();
 
-      const result = Array.isArray(
-        data?.cars
-      )
-        ? data.cars.slice(
-            0,
-            HOME_LIMIT
-          )
-        : [];
+      const result =
+        Array.isArray(data?.cars)
+          ? data.cars.slice(
+              0,
+              HOME_LIMIT
+            )
+          : [];
 
       carsMemoryCache = result;
 
       return result;
     })
     .catch((error) => {
-      carsRequest = null;
-
       if (
         error?.name !==
         "AbortError"
@@ -174,6 +213,14 @@ async function fetchHomeCars(signal) {
 }
 
 /* =========================================================
+   OPTIONAL CACHE RESET
+========================================================= */
+
+export function clearHomeCarsCache() {
+  carsMemoryCache = null;
+}
+
+/* =========================================================
    USER HOME
 ========================================================= */
 
@@ -184,6 +231,10 @@ export default function UserHome() {
     searchParams,
     setSearchParams,
   ] = useSearchParams();
+
+  /* =======================================================
+     TAB
+  ======================================================= */
 
   const tabValue =
     searchParams.get("tab");
@@ -204,14 +255,14 @@ export default function UserHome() {
      CARS
   ======================================================= */
 
-  const [cars, setCars] = useState(
-    () =>
+  const [cars, setCars] =
+    useState(() =>
       Array.isArray(
         carsMemoryCache
       )
         ? carsMemoryCache
         : []
-  );
+    );
 
   const [
     carsLoading,
@@ -230,7 +281,7 @@ export default function UserHome() {
     useState("");
 
   /* =======================================================
-     LOAD ONCE
+     LOAD CARS ONCE
   ======================================================= */
 
   useEffect(() => {
@@ -242,7 +293,9 @@ export default function UserHome() {
       setCars(
         carsMemoryCache
       );
+
       setCarsLoading(false);
+
       return;
     }
 
@@ -284,6 +337,64 @@ export default function UserHome() {
   }, []);
 
   /* =======================================================
+     PRELOAD OTHER CATEGORIES
+     -------------------------------------------------------
+     Start after browser becomes idle.
+  ======================================================= */
+
+  useEffect(() => {
+    let idleId;
+    let timeoutId;
+
+    const preload = () => {
+      preloadCategory(1);
+      preloadCategory(2);
+      preloadCategory(3);
+    };
+
+    if (
+      typeof window !==
+        "undefined" &&
+      "requestIdleCallback" in
+        window
+    ) {
+      idleId =
+        window.requestIdleCallback(
+          preload,
+          {
+            timeout: 1800,
+          }
+        );
+    } else {
+      timeoutId =
+        window.setTimeout(
+          preload,
+          900
+        );
+    }
+
+    return () => {
+      if (
+        idleId !== undefined &&
+        "cancelIdleCallback" in
+          window
+      ) {
+        window.cancelIdleCallback(
+          idleId
+        );
+      }
+
+      if (
+        timeoutId !== undefined
+      ) {
+        window.clearTimeout(
+          timeoutId
+        );
+      }
+    };
+  }, []);
+
+  /* =======================================================
      SEARCH
   ======================================================= */
 
@@ -300,7 +411,10 @@ export default function UserHome() {
 
   const handleSearchSubmit =
     useCallback(
-      (query, matchedCars) => {
+      (
+        query,
+        matchedCars
+      ) => {
         navigate(
           "/search-results",
           {
@@ -320,7 +434,7 @@ export default function UserHome() {
     );
 
   /* =======================================================
-     TAB
+     TAB CHANGE
   ======================================================= */
 
   const handleTabChange =
@@ -332,6 +446,11 @@ export default function UserHome() {
         ) {
           return;
         }
+
+        /* Start bundle loading
+           immediately on click. */
+
+        preloadCategory(index);
 
         setSearchParams(
           {
@@ -345,9 +464,31 @@ export default function UserHome() {
       [setSearchParams]
     );
 
+  /* =======================================================
+     ACTIVE PAGE
+  ======================================================= */
+
   const ActivePage =
     pages[selectedIndex]
       ?.component || CarsPage;
+
+  /* =======================================================
+     ACTIVE PAGE PROPS
+  ======================================================= */
+
+  const activePageProps =
+    useMemo(
+      () => ({
+        cars,
+        carsLoading,
+        search,
+      }),
+      [
+        cars,
+        carsLoading,
+        search,
+      ]
+    );
 
   /* =======================================================
      RENDER
@@ -362,15 +503,25 @@ export default function UserHome() {
         text-black
       "
     >
+      {/* =================================================
+          NAVBAR
+      ================================================= */}
+
       <Navbar />
 
       {/* =================================================
           DESKTOP BANNER
+          -------------------------------------------------
+          Hidden on mobile to save initial bandwidth.
       ================================================= */}
 
       <div className="hidden md:block">
         <HomeBanner />
       </div>
+
+      {/* =================================================
+          MAIN CONTENT
+      ================================================= */}
 
       <div
         className="
@@ -409,7 +560,9 @@ export default function UserHome() {
             type="button"
             aria-label="Filter"
             onClick={() =>
-              navigate("/filter")
+              navigate(
+                "/filter"
+              )
             }
             className="
               flex
@@ -511,39 +664,54 @@ export default function UserHome() {
 
         {/* =================================================
             ACTIVE CATEGORY
+            -------------------------------------------------
+            No heavy page spinner.
+            Existing content remains stable while
+            lazy bundle is resolving.
         ================================================= */}
 
-        <div className="mt-2 min-h-[180px]">
+        <div
+          className="
+            mt-2
+            min-h-[180px]
+          "
+        >
           <Suspense
             fallback={
-              <PageLoader />
+              <FastPagePlaceholder />
             }
           >
             <ActivePage
-              cars={cars}
-              carsLoading={
-                carsLoading
-              }
-              search={search}
+              {...activePageProps}
             />
           </Suspense>
         </div>
       </div>
 
-    <section
-  className="
-    w-full
-    overflow-x-hidden
-    overflow-y-visible
-    px-3
-    pb-4
-    pt-2
-    sm:px-5
-    lg:px-8
-  "
->
-  <Testimonials />
-</section>
+      {/* =================================================
+          TESTIMONIALS
+          -------------------------------------------------
+          Keep below primary marketplace content.
+      ================================================= */}
+
+      <section
+        className="
+          w-full
+          overflow-x-hidden
+          overflow-y-visible
+          px-3
+          pb-4
+          pt-2
+          sm:px-5
+          lg:px-8
+        "
+      >
+        <Testimonials />
+      </section>
+
+      {/* =================================================
+          FOOTER
+      ================================================= */}
 
       <Footer />
     </main>
@@ -552,133 +720,131 @@ export default function UserHome() {
 
 /* =========================================================
    CATEGORY BUTTON
-========================================================= */
+   ========================================================= */
 
-const CategoryButton = React.memo(
-  function CategoryButton({
-    icon,
-    active,
-    onClick,
-  }) {
-    return (
-      <button
-        type="button"
-        aria-label="Category"
-        aria-pressed={active}
-        onClick={onClick}
-        className={`
-          relative
-          flex
-          h-[72px]
-          w-[72px]
-          shrink-0
-          items-center
-          justify-center
-          rounded-[24px]
-          border
-          transition
-          duration-150
-          active:scale-95
-          max-[380px]:h-[62px]
-          max-[380px]:w-[62px]
-
-          ${
-            active
-              ? `
-                border-white/80
-                bg-white/55
-                shadow-[0_10px_28px_rgba(80,60,120,0.14)]
-              `
-              : `
-                border-white/30
-                bg-white/15
-                hover:bg-white/30
-              `
-          }
-        `}
-      >
-        <span
-          className="
-            pointer-events-none
-            absolute
-            inset-[1px]
-            rounded-[23px]
-            bg-gradient-to-br
-            from-white/45
-            via-white/10
-            to-transparent
-          "
-        />
-
-        <img
-          src={icon}
-          alt=""
-          draggable="false"
-          width="54"
-          height="54"
-          loading="eager"
-          decoding="async"
+const CategoryButton =
+  React.memo(
+    function CategoryButton({
+      icon,
+      active,
+      onClick,
+    }) {
+      return (
+        <button
+          type="button"
+          aria-label="Category"
+          aria-pressed={active}
+          onClick={onClick}
           className={`
             relative
-            z-10
-            h-[54px]
-            w-[54px]
-            object-contain
+            flex
+            h-[72px]
+            w-[72px]
+            shrink-0
+            items-center
+            justify-center
+            rounded-[24px]
+            border
             transition
             duration-150
+            active:scale-95
+            max-[380px]:h-[62px]
+            max-[380px]:w-[62px]
+
             ${
               active
-                ? "scale-[1.05]"
-                : ""
+                ? `
+                  border-white/80
+                  bg-white/55
+                  shadow-[0_10px_28px_rgba(80,60,120,0.14)]
+                `
+                : `
+                  border-white/30
+                  bg-white/15
+                  hover:bg-white/30
+                `
             }
           `}
-        />
-
-        {active && (
+        >
           <span
             className="
+              pointer-events-none
               absolute
-              -bottom-[4px]
-              left-1/2
-              z-20
-              h-[6px]
-              w-[6px]
-              -translate-x-1/2
-              rounded-full
-              bg-black/80
+              inset-[1px]
+              rounded-[23px]
+              bg-gradient-to-br
+              from-white/45
+              via-white/10
+              to-transparent
             "
           />
-        )}
-      </button>
-    );
-  }
-);
+
+          <img
+            src={icon}
+            alt=""
+            draggable="false"
+            width="54"
+            height="54"
+            loading="eager"
+            decoding="async"
+            fetchPriority={
+              active
+                ? "high"
+                : "low"
+            }
+            className={`
+              relative
+              z-10
+              h-[54px]
+              w-[54px]
+              object-contain
+              transition
+              duration-150
+
+              ${
+                active
+                  ? "scale-[1.05]"
+                  : ""
+              }
+            `}
+          />
+
+          {active && (
+            <span
+              className="
+                absolute
+                -bottom-[4px]
+                left-1/2
+                z-20
+                h-[6px]
+                w-[6px]
+                -translate-x-1/2
+                rounded-full
+                bg-black/80
+              "
+            />
+          )}
+        </button>
+      );
+    }
+  );
 
 /* =========================================================
-   PAGE LOADER
+   FAST PAGE PLACEHOLDER
+   ---------------------------------------------------------
+   NO SPINNER
+   NO ANIMATION
+   NO BLUR
 ========================================================= */
 
-function PageLoader() {
+function FastPagePlaceholder() {
   return (
     <div
       className="
-        flex
         min-h-[180px]
-        items-center
-        justify-center
+        w-full
       "
-    >
-      <span
-        className="
-          h-7
-          w-7
-          animate-spin
-          rounded-full
-          border-2
-          border-black/10
-          border-t-black/70
-        "
-      />
-    </div>
+      aria-hidden="true"
+    />
   );
 }

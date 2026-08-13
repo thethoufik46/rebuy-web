@@ -1,14 +1,12 @@
-// src/services/electronics.js
+// src/services/bike.js
 
 const BASE_URL =
   import.meta.env.VITE_API_URL ||
   "https://rebuy-api.onrender.com/api";
 
-const ELECTRONICS_URL =
-  `${BASE_URL}/electronics`;
-
-const LOCATIONS_URL =
-  `${BASE_URL}/locations`;
+const BIKES_URL = `${BASE_URL}/bikes`;
+const BRANDS_URL = `${BASE_URL}/bike-brands`;
+const LOCATIONS_URL = `${BASE_URL}/locations`;
 
 /* =========================================================
    FAST MEMORY CACHE
@@ -17,24 +15,20 @@ const LOCATIONS_URL =
 const cache = new Map();
 const pending = new Map();
 
-const PUBLIC_CACHE_TTL =
-  60 * 1000;
+const PUBLIC_CACHE_TTL = 60 * 1000; // 60 seconds
+const LOCATION_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const BRAND_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-const LOCATION_CACHE_TTL =
-  24 * 60 * 60 * 1000;
+/* =========================================================
+   CACHE HELPERS
+========================================================= */
 
 function getCached(key) {
-  const item =
-    cache.get(key);
+  const item = cache.get(key);
 
-  if (!item) {
-    return null;
-  }
+  if (!item) return null;
 
-  if (
-    Date.now() - item.time >
-    item.ttl
-  ) {
+  if (Date.now() - item.time > item.ttl) {
     cache.delete(key);
     return null;
   }
@@ -56,24 +50,24 @@ function setCached(
   return data;
 }
 
-function clearCache(
-  prefix = ""
-) {
+function clearCache(prefix = "") {
   if (!prefix) {
     cache.clear();
     return;
   }
 
-  for (
-    const key of cache.keys()
-  ) {
-    if (
-      key.startsWith(prefix)
-    ) {
+  for (const key of cache.keys()) {
+    if (key.startsWith(prefix)) {
       cache.delete(key);
     }
   }
 }
+
+/* =========================================================
+   FAST FETCH
+   ---------------------------------------------------------
+   Same API request at same time = only ONE network call
+========================================================= */
 
 async function cachedFetchJSON(
   url,
@@ -84,51 +78,34 @@ async function cachedFetchJSON(
     options = {},
   } = {}
 ) {
-  /* -------------------------------------------------------
-     CACHE HIT
-  ------------------------------------------------------- */
+  /* CACHE HIT */
 
   if (!force) {
-    const cached =
-      getCached(cacheKey);
+    const cached = getCached(cacheKey);
 
     if (cached !== null) {
       return cached;
     }
   }
 
-  /* -------------------------------------------------------
-     DUPLICATE REQUEST PROTECTION
-  ------------------------------------------------------- */
+  /* DUPLICATE REQUEST */
 
-  if (
-    !force &&
-    pending.has(cacheKey)
-  ) {
-    return pending.get(
-      cacheKey
-    );
+  if (!force && pending.has(cacheKey)) {
+    return pending.get(cacheKey);
   }
 
-  /* -------------------------------------------------------
-     REQUEST
-  ------------------------------------------------------- */
+  /* NETWORK REQUEST */
 
-  const request = fetch(
-    url,
-    {
-      ...options,
-      headers: {
-        Accept:
-          "application/json",
-        ...(options.headers || {}),
-      },
-    }
-  )
+  const request = fetch(url, {
+    ...options,
+    headers: {
+      Accept: "application/json",
+      ...(options.headers || {}),
+    },
+  })
     .then(async (res) => {
       if (!res.ok) {
-        const text =
-          await res.text();
+        const text = await res.text();
 
         throw new Error(
           `API error (${res.status}): ${text}`
@@ -138,24 +115,14 @@ async function cachedFetchJSON(
       return res.json();
     })
     .then((data) => {
-      setCached(
-        cacheKey,
-        data,
-        ttl
-      );
-
+      setCached(cacheKey, data, ttl);
       return data;
     })
     .finally(() => {
-      pending.delete(
-        cacheKey
-      );
+      pending.delete(cacheKey);
     });
 
-  pending.set(
-    cacheKey,
-    request
-  );
+  pending.set(cacheKey, request);
 
   return request;
 }
@@ -166,52 +133,159 @@ async function cachedFetchJSON(
 
 function getAuthHeaders() {
   const token =
-    localStorage.getItem(
-      "auth_token"
-    );
+    localStorage.getItem("auth_token");
 
   if (!token) {
-    throw new Error(
-      "Login required"
-    );
+    throw new Error("Login required");
   }
 
   return {
-    Authorization:
-      `Bearer ${token}`,
-    Accept:
-      "application/json",
+    Authorization: `Bearer ${token}`,
+    Accept: "application/json",
   };
 }
 
 /* =========================================================
-   PUBLIC ELECTRONICS
+   ID HELPER
 ========================================================= */
 
-export async function getElectronics({
-  category,
+export function extractId(value) {
+  if (!value) return "";
+
+  if (typeof value === "object") {
+    if (value.$oid) {
+      return value.$oid.toString();
+    }
+
+    if (value._id) {
+      return value._id.toString();
+    }
+
+    if (value.id) {
+      return value.id.toString();
+    }
+  }
+
+  return value.toString();
+}
+
+/* =========================================================
+   GET LOCATIONS
+   ---------------------------------------------------------
+   PUBLIC + 24H CACHE
+========================================================= */
+
+export async function getLocations() {
+  try {
+    const data = await cachedFetchJSON(
+      LOCATIONS_URL,
+      {
+        cacheKey: "bike:locations",
+        ttl: LOCATION_CACHE_TTL,
+      }
+    );
+
+    return data?.locations || {};
+  } catch (err) {
+    console.error(
+      "Bike locations error:",
+      err
+    );
+
+    return {};
+  }
+}
+
+/* =========================================================
+   GET BIKE BRANDS
+   ---------------------------------------------------------
+   PUBLIC + 24H CACHE
+========================================================= */
+
+export async function getBikeBrands({
+  force = false,
+} = {}) {
+  try {
+    const data = await cachedFetchJSON(
+      BRANDS_URL,
+      {
+        cacheKey: "bike:brands",
+        ttl: BRAND_CACHE_TTL,
+        force,
+      }
+    );
+
+    const brands =
+      data?.brands ||
+      data?.data ||
+      data ||
+      [];
+
+    return Array.isArray(brands)
+      ? brands
+      : [];
+  } catch (err) {
+    console.error(
+      "Bike brands error:",
+      err
+    );
+
+    return [];
+  }
+}
+
+/* =========================================================
+   ALIAS
+   ---------------------------------------------------------
+   Some existing components may use getBrands()
+========================================================= */
+
+export async function getBrands(options = {}) {
+  return getBikeBrands(options);
+}
+
+/* =========================================================
+   GET PUBLIC BIKES
+   ---------------------------------------------------------
+   FILTERS:
+   brand
+   model
+   district
+   city
+   minPrice
+   maxPrice
+   minYear
+   maxYear
+
+   CACHE: 60 seconds
+========================================================= */
+
+export async function getBikes({
   brand,
+  model,
   district,
   city,
   minPrice,
   maxPrice,
+  minYear,
+  maxYear,
   force = false,
 } = {}) {
   try {
     const params =
       new URLSearchParams();
 
-    if (category) {
-      params.set(
-        "category",
-        String(category)
-      );
-    }
-
     if (brand) {
       params.set(
         "brand",
         String(brand)
+      );
+    }
+
+    if (model) {
+      params.set(
+        "model",
+        String(model)
       );
     }
 
@@ -251,20 +325,41 @@ export async function getElectronics({
       );
     }
 
+    if (
+      minYear !== undefined &&
+      minYear !== null &&
+      minYear !== ""
+    ) {
+      params.set(
+        "minYear",
+        String(minYear)
+      );
+    }
+
+    if (
+      maxYear !== undefined &&
+      maxYear !== null &&
+      maxYear !== ""
+    ) {
+      params.set(
+        "maxYear",
+        String(maxYear)
+      );
+    }
+
     const query =
       params.toString();
 
-    const url =
-      query
-        ? `${ELECTRONICS_URL}?${query}`
-        : ELECTRONICS_URL;
+    const url = query
+      ? `${BIKES_URL}?${query}`
+      : BIKES_URL;
 
     const data =
       await cachedFetchJSON(
         url,
         {
           cacheKey:
-            `electronics?${query}`,
+            `bikes?${query}`,
           ttl:
             PUBLIC_CACHE_TTL,
           force,
@@ -272,17 +367,13 @@ export async function getElectronics({
       );
 
     return Array.isArray(
-      data?.electronics
+      data?.bikes
     )
-      ? data.electronics
-      : Array.isArray(
-          data?.items
-        )
-        ? data.items
-        : [];
+      ? data.bikes
+      : [];
   } catch (err) {
     console.error(
-      "getElectronics error:",
+      "getBikes error:",
       err
     );
 
@@ -291,29 +382,36 @@ export async function getElectronics({
 }
 
 /* =========================================================
-   SINGLE ELECTRONICS
+   GET SINGLE BIKE
 ========================================================= */
 
-export async function getElectronicsById(
-  id,
+export async function getBike(
+  bikeId,
   {
     force = false,
   } = {}
 ) {
+  if (!bikeId) {
+    return null;
+  }
+
+  const id =
+    extractId(bikeId);
+
   if (!id) {
     return null;
   }
 
   try {
     const url =
-      `${ELECTRONICS_URL}/${id}`;
+      `${BIKES_URL}/${id}`;
 
     const data =
       await cachedFetchJSON(
         url,
         {
           cacheKey:
-            `electronics:${id}`,
+            `bike:${id}`,
           ttl:
             PUBLIC_CACHE_TTL,
           force,
@@ -321,15 +419,14 @@ export async function getElectronicsById(
       );
 
     return (
-      data?.electronics ||
-      data?.item ||
+      data?.bike ||
       data?.data ||
       data ||
       null
     );
   } catch (err) {
     console.error(
-      "getElectronicsById error:",
+      "getBike error:",
       err
     );
 
@@ -338,63 +435,46 @@ export async function getElectronicsById(
 }
 
 /* =========================================================
-   LOCATIONS
+   GET BIKE VARIANTS BY BRAND
 ========================================================= */
 
-export async function getLocations() {
+export async function getVariantsByBrand(
+  brandId,
+  {
+    force = false,
+  } = {}
+) {
+  if (!brandId) {
+    return [];
+  }
+
+  const id =
+    extractId(brandId);
+
   try {
+    const url =
+      `${BASE_URL}/variants/brand/${id}`;
+
     const data =
       await cachedFetchJSON(
-        LOCATIONS_URL,
+        url,
         {
           cacheKey:
-            "electronics:locations",
+            `bike:variants:${id}`,
           ttl:
-            LOCATION_CACHE_TTL,
+            BRAND_CACHE_TTL,
+          force,
         }
       );
 
-    return (
-      data?.locations ||
-      {}
-    );
+    return Array.isArray(
+      data?.variants
+    )
+      ? data.variants
+      : [];
   } catch (err) {
     console.error(
-      "getLocations error:",
-      err
-    );
-
-    return {};
-  }
-}
-
-/* =========================================================
-   ADMIN
-   ---------------------------------------------------------
-   NO CACHE
-========================================================= */
-
-export async function getAllElectronicsAdmin() {
-  try {
-    const headers =
-      getAuthHeaders();
-
-    const data =
-      await fetchJSON(
-        ELECTRONICS_URL,
-        {
-          headers,
-        }
-      );
-
-    return (
-      data?.electronics ||
-      data?.items ||
-      []
-    );
-  } catch (err) {
-    console.error(
-      "getAllElectronicsAdmin error:",
+      "Bike variants error:",
       err
     );
 
@@ -403,10 +483,94 @@ export async function getAllElectronicsAdmin() {
 }
 
 /* =========================================================
-   ADD
+   GET BIKE MODELS BY BRAND
+   ---------------------------------------------------------
+   Supports existing API naming if backend uses
+   /bike-models/brand/:id
 ========================================================= */
 
-export async function addElectronics({
+export async function getBikeModelsByBrand(
+  brandId,
+  {
+    force = false,
+  } = {}
+) {
+  if (!brandId) {
+    return [];
+  }
+
+  const id =
+    extractId(brandId);
+
+  try {
+    const url =
+      `${BASE_URL}/bike-models/brand/${id}`;
+
+    const data =
+      await cachedFetchJSON(
+        url,
+        {
+          cacheKey:
+            `bike:models:${id}`,
+          ttl:
+            BRAND_CACHE_TTL,
+          force,
+        }
+      );
+
+    return (
+      data?.models ||
+      data?.bikeModels ||
+      data?.variants ||
+      []
+    );
+  } catch (err) {
+    console.error(
+      "Bike models error:",
+      err
+    );
+
+    return [];
+  }
+}
+
+/* =========================================================
+   ADMIN → GET ALL BIKES
+   ---------------------------------------------------------
+   PRIVATE DATA = NO CACHE
+========================================================= */
+
+export async function getAllBikesAdmin() {
+  try {
+    const data =
+      await fetchJSON(
+        BIKES_URL,
+        {
+          headers:
+            getAuthHeaders(),
+        }
+      );
+
+    return Array.isArray(
+      data?.bikes
+    )
+      ? data.bikes
+      : [];
+  } catch (err) {
+    console.error(
+      "Admin bikes error:",
+      err
+    );
+
+    return [];
+  }
+}
+
+/* =========================================================
+   ADMIN ADD BIKE
+========================================================= */
+
+export async function addBike({
   data,
   banner,
   gallery = [],
@@ -434,6 +598,8 @@ export async function addElectronics({
       }
     );
 
+    /* VIDEO LINK */
+
     if (
       videoLink &&
       videoLink.trim()
@@ -444,12 +610,16 @@ export async function addElectronics({
       );
     }
 
+    /* BANNER */
+
     if (banner) {
       formData.append(
         "banner",
         banner
       );
     }
+
+    /* GALLERY */
 
     gallery.forEach(
       (file) => {
@@ -460,12 +630,16 @@ export async function addElectronics({
       }
     );
 
+    /* AUDIO */
+
     if (audio) {
       formData.append(
         "audio",
         audio
       );
     }
+
+    /* VIDEOS */
 
     videos.forEach(
       (file) => {
@@ -478,7 +652,7 @@ export async function addElectronics({
 
     const res =
       await fetch(
-        `${ELECTRONICS_URL}/add`,
+        `${BIKES_URL}/add`,
         {
           method: "POST",
           headers:
@@ -495,10 +669,11 @@ export async function addElectronics({
       await res.json();
 
     if (
-      result?.success === true
+      result?.success === true ||
+      res.status === 201
     ) {
       clearCache(
-        "electronics?"
+        "bikes?"
       );
 
       return true;
@@ -507,7 +682,7 @@ export async function addElectronics({
     return false;
   } catch (err) {
     console.error(
-      "addElectronics error:",
+      "addBike error:",
       err
     );
 
@@ -516,11 +691,11 @@ export async function addElectronics({
 }
 
 /* =========================================================
-   UPDATE
+   UPDATE BIKE
 ========================================================= */
 
-export async function updateElectronics({
-  id,
+export async function updateBike({
+  bikeId,
   data,
   banner = null,
   gallery = [],
@@ -530,6 +705,13 @@ export async function updateElectronics({
   existingGallery = [],
   existingVideos = [],
 }) {
+  const id =
+    extractId(bikeId);
+
+  if (!id) {
+    return false;
+  }
+
   try {
     const formData =
       new FormData();
@@ -542,26 +724,40 @@ export async function updateElectronics({
           value !== null &&
           value !== undefined
         ) {
-          formData.append(
-            key,
-            String(value)
-          );
+          if (
+            Array.isArray(
+              value
+            )
+          ) {
+            formData.append(
+              key,
+              JSON.stringify(
+                value
+              )
+            );
+          } else {
+            formData.append(
+              key,
+              String(value)
+            );
+          }
         }
       }
     );
 
-    if (
-      videoLink &&
-      videoLink.trim()
-    ) {
+    /* VIDEO LINK */
+
+    if (videoLink !== null) {
       formData.append(
         "videoLink",
-        videoLink.trim()
+        String(videoLink)
       );
     }
 
+    /* EXISTING GALLERY */
+
     if (
-      existingGallery.length
+      existingGallery !== null
     ) {
       formData.append(
         "existingGallery",
@@ -571,8 +767,10 @@ export async function updateElectronics({
       );
     }
 
+    /* EXISTING VIDEOS */
+
     if (
-      existingVideos.length
+      existingVideos !== null
     ) {
       formData.append(
         "existingVideos",
@@ -582,12 +780,16 @@ export async function updateElectronics({
       );
     }
 
+    /* NEW BANNER */
+
     if (banner) {
       formData.append(
         "banner",
         banner
       );
     }
+
+    /* NEW GALLERY */
 
     gallery.forEach(
       (file) => {
@@ -598,12 +800,16 @@ export async function updateElectronics({
       }
     );
 
+    /* AUDIO */
+
     if (audio) {
       formData.append(
         "audio",
         audio
       );
     }
+
+    /* VIDEOS */
 
     videos.forEach(
       (file) => {
@@ -616,7 +822,7 @@ export async function updateElectronics({
 
     const res =
       await fetch(
-        `${ELECTRONICS_URL}/${id}`,
+        `${BIKES_URL}/${id}`,
         {
           method: "PUT",
           headers:
@@ -633,14 +839,15 @@ export async function updateElectronics({
       await res.json();
 
     if (
-      result?.success === true
+      result?.success === true ||
+      res.status === 200
     ) {
       clearCache(
-        "electronics?"
+        "bikes?"
       );
 
       clearCache(
-        `electronics:${id}`
+        `bike:${id}`
       );
 
       return true;
@@ -649,7 +856,7 @@ export async function updateElectronics({
     return false;
   } catch (err) {
     console.error(
-      "updateElectronics error:",
+      "updateBike error:",
       err
     );
 
@@ -658,16 +865,23 @@ export async function updateElectronics({
 }
 
 /* =========================================================
-   DELETE
+   DELETE BIKE
 ========================================================= */
 
-export async function deleteElectronics(
-  id
+export async function deleteBike(
+  bikeId
 ) {
+  const id =
+    extractId(bikeId);
+
+  if (!id) {
+    return false;
+  }
+
   try {
     const res =
       await fetch(
-        `${ELECTRONICS_URL}/${id}`,
+        `${BIKES_URL}/${id}`,
         {
           method: "DELETE",
           headers:
@@ -679,27 +893,18 @@ export async function deleteElectronics(
       return false;
     }
 
-    const result =
-      await res.json();
+    clearCache(
+      "bikes?"
+    );
 
-    if (
-      result?.success === true
-    ) {
-      clearCache(
-        "electronics?"
-      );
+    clearCache(
+      `bike:${id}`
+    );
 
-      clearCache(
-        `electronics:${id}`
-      );
-
-      return true;
-    }
-
-    return false;
+    return true;
   } catch (err) {
     console.error(
-      "deleteElectronics error:",
+      "deleteBike error:",
       err
     );
 
@@ -708,10 +913,10 @@ export async function deleteElectronics(
 }
 
 /* =========================================================
-   USER ADD
+   USER ADD BIKE
 ========================================================= */
 
-export async function userAddElectronics({
+export async function userAddBike({
   data,
   gallery = [],
   audio = null,
@@ -739,6 +944,8 @@ export async function userAddElectronics({
       }
     );
 
+    /* VIDEO LINK */
+
     if (
       videoLink &&
       videoLink.trim()
@@ -749,6 +956,8 @@ export async function userAddElectronics({
       );
     }
 
+    /* GALLERY */
+
     gallery.forEach(
       (file) => {
         formData.append(
@@ -758,12 +967,16 @@ export async function userAddElectronics({
       }
     );
 
+    /* AUDIO */
+
     if (audio) {
       formData.append(
         "audio",
         audio
       );
     }
+
+    /* VIDEOS */
 
     videos.forEach(
       (file) => {
@@ -776,7 +989,7 @@ export async function userAddElectronics({
 
     const res =
       await fetch(
-        `${ELECTRONICS_URL}/user-add`,
+        `${BIKES_URL}/user-add`,
         {
           method: "POST",
           headers:
@@ -793,10 +1006,11 @@ export async function userAddElectronics({
       await res.json();
 
     if (
-      result?.success === true
+      result?.success === true ||
+      res.status === 201
     ) {
       clearCache(
-        "electronics?"
+        "bikes?"
       );
 
       return true;
@@ -805,7 +1019,7 @@ export async function userAddElectronics({
     return false;
   } catch (err) {
     console.error(
-      "userAddElectronics error:",
+      "userAddBike error:",
       err
     );
 
@@ -814,40 +1028,40 @@ export async function userAddElectronics({
 }
 
 /* =========================================================
-   MY ELECTRONICS
+   GET MY BIKES
    ---------------------------------------------------------
    PRIVATE = NO CACHE
 ========================================================= */
 
-export async function getMyElectronicsGrouped() {
+export async function getMyBikesGrouped() {
   try {
-    const headers =
-      getAuthHeaders();
-
     const data =
       await fetchJSON(
-        `${ELECTRONICS_URL}/my`,
+        `${BIKES_URL}/my`,
         {
-          headers,
+          headers:
+            getAuthHeaders(),
         }
       );
 
-    const list =
-      data?.electronics ||
-      data?.items ||
-      [];
+    const bikes =
+      Array.isArray(
+        data?.bikes
+      )
+        ? data.bikes
+        : [];
 
     const draft =
-      list.filter(
-        (item) =>
-          item.status ===
+      bikes.filter(
+        (bike) =>
+          bike.status ===
           "draft"
       );
 
     const live =
-      list.filter(
-        (item) =>
-          item.status !==
+      bikes.filter(
+        (bike) =>
+          bike.status !==
           "draft"
       );
 
@@ -857,7 +1071,7 @@ export async function getMyElectronicsGrouped() {
     };
   } catch (err) {
     console.error(
-      "getMyElectronicsGrouped error:",
+      "getMyBikesGrouped error:",
       err
     );
 
@@ -869,16 +1083,23 @@ export async function getMyElectronicsGrouped() {
 }
 
 /* =========================================================
-   REQUEST DELETE
+   REQUEST DELETE BIKE
 ========================================================= */
 
-export async function requestDeleteElectronics(
-  id
+export async function requestDeleteBike(
+  bikeId
 ) {
+  const id =
+    extractId(bikeId);
+
+  if (!id) {
+    return false;
+  }
+
   try {
     const res =
       await fetch(
-        `${ELECTRONICS_URL}/${id}/request-delete`,
+        `${BIKES_URL}/${id}/request-delete`,
         {
           method: "PUT",
           headers:
@@ -897,11 +1118,11 @@ export async function requestDeleteElectronics(
       result?.success === true
     ) {
       clearCache(
-        "electronics?"
+        "bikes?"
       );
 
       clearCache(
-        `electronics:${id}`
+        `bike:${id}`
       );
 
       return true;
@@ -910,7 +1131,7 @@ export async function requestDeleteElectronics(
     return false;
   } catch (err) {
     console.error(
-      "requestDeleteElectronics error:",
+      "requestDeleteBike error:",
       err
     );
 
@@ -952,15 +1173,13 @@ async function fetchJSON(
 }
 
 /* =========================================================
-   MANUAL CACHE CONTROL
+   CACHE CONTROL
 ========================================================= */
 
-export function clearElectronicsCache() {
+export function clearBikeCache() {
   clearCache();
 }
 
-export function refreshElectronicsCache() {
-  clearCache(
-    "electronics?"
-  );
+export function refreshBikeCache() {
+  clearCache("bikes?");
 }
