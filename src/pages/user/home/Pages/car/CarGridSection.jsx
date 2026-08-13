@@ -1,6 +1,10 @@
+// src/pages/user/home/Pages/car/CarGridSection.jsx
+
 import React, {
+  memo,
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -16,40 +20,20 @@ import {
 } from "@/services/carVariantApi";
 
 /* =========================================================
-   ID
+   HELPERS
 ========================================================= */
 
 const extractId = (value) => {
   if (!value) return "";
 
-  if (
-    typeof value === "object"
-  ) {
-    if (value.$oid) {
-      return String(
-        value.$oid
-      );
-    }
-
-    if (value._id) {
-      return String(
-        value._id
-      );
-    }
-
-    if (value.id) {
-      return String(
-        value.id
-      );
-    }
+  if (typeof value === "object") {
+    if (value.$oid) return String(value.$oid);
+    if (value._id) return String(value._id);
+    if (value.id) return String(value.id);
   }
 
   return String(value);
 };
-
-/* =========================================================
-   IMAGE
-========================================================= */
 
 const getImage = (car) => {
   const images = [
@@ -64,23 +48,14 @@ const getImage = (car) => {
     car?.media?.[0],
   ];
 
-  for (
-    const item of images
-  ) {
+  for (const item of images) {
     if (!item) continue;
 
-    if (
-      typeof item === "string"
-    ) {
-      if (item.trim()) {
-        return item.trim();
-      }
+    if (typeof item === "string" && item.trim()) {
+      return item.trim();
     }
 
-    if (
-      typeof item ===
-      "object"
-    ) {
+    if (typeof item === "object") {
       const url =
         item.url ||
         item.secure_url ||
@@ -88,26 +63,15 @@ const getImage = (car) => {
         item.path ||
         item.imageUrl;
 
-      if (url) {
-        return String(
-          url
-        );
-      }
+      if (url) return String(url);
     }
   }
 
   return "";
 };
 
-/* =========================================================
-   BRAND
-========================================================= */
-
 const getBrand = (car) => {
-  if (
-    typeof car?.brand ===
-    "object"
-  ) {
+  if (typeof car?.brand === "object") {
     return (
       car.brand.name ||
       car.brand.brandName ||
@@ -120,51 +84,73 @@ const getBrand = (car) => {
 
 /* =========================================================
    VARIANT CACHE
+   ---------------------------------------------------------
+   Variants are auxiliary data. Cache them for 15 minutes
+   so CarGrid never waits on the variant API.
 ========================================================= */
 
 let variantCache = {};
 let variantCacheTime = 0;
+let variantPromise = null;
 
-const CACHE_TIME =
-  15 * 60 * 1000;
+const CACHE_TIME = 15 * 60 * 1000;
+
+const getVariantMap = async () => {
+  if (
+    Object.keys(variantCache).length &&
+    Date.now() - variantCacheTime < CACHE_TIME
+  ) {
+    return variantCache;
+  }
+
+  if (variantPromise) {
+    return variantPromise;
+  }
+
+  variantPromise = getAllVariants()
+    .then((variants) => {
+      if (!Array.isArray(variants)) {
+        return variantCache;
+      }
+
+      const map = {};
+
+      for (const item of variants) {
+        const id = extractId(item?._id);
+
+        if (id) {
+          map[id] =
+            item?.variantName ||
+            item?.name ||
+            "";
+        }
+      }
+
+      variantCache = map;
+      variantCacheTime = Date.now();
+
+      return map;
+    })
+    .catch((error) => {
+      console.error(
+        "Variant error:",
+        error
+      );
+
+      return variantCache;
+    })
+    .finally(() => {
+      variantPromise = null;
+    });
+
+  return variantPromise;
+};
 
 /* =========================================================
    COMPONENT
 ========================================================= */
 
-
-function SkeletonAnimationStyles() {
-  return (
-    <style>{`
-      @keyframes carSkeletonShimmer {
-        0% {
-          transform: translateX(-180%) skewX(-12deg);
-        }
-
-        100% {
-          transform: translateX(380%) skewX(-12deg);
-        }
-      }
-
-      .animate-car-skeleton-shimmer {
-        animation:
-          carSkeletonShimmer
-          1.25s
-          linear
-          infinite;
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        .animate-car-skeleton-shimmer {
-          animation: none;
-        }
-      }
-    `}</style>
-  );
-}
-
-
-export default function CarGridSection({
+function CarGridSection({
   cars = [],
   loading = false,
   onViewAll,
@@ -175,117 +161,33 @@ export default function CarGridSection({
   searchQuery = "",
   searchCars = [],
 }) {
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
-  const [
-    searchParams,
-  ] = useSearchParams();
+  const [searchParams] =
+    useSearchParams();
 
   const currentTab =
-    searchParams.get(
-      "tab"
-    ) || "0";
+    searchParams.get("tab") || "0";
 
-  const [
-    variantMap,
-    setVariantMap,
-  ] = useState({});
-
-  /*
-   * Parent should pass loading=true while the
-   * car API request is still running.
-   *
-   * If loading is not supplied, the component
-   * falls back to false for backward compatibility.
-   */
-  const [
-    carLoading,
-    setCarLoading,
-  ] = useState(false);
+  const [variantMap, setVariantMap] =
+    useState(variantCache);
 
   /* =======================================================
-     CAR API LOADING
-  ======================================================= */
-
-  useEffect(() => {
-    setCarLoading(Boolean(loading));
-  }, [loading]);
-
-
-  /* =======================================================
-     LOAD VARIANTS
+     LOAD VARIANTS WITHOUT BLOCKING CAR GRID
   ======================================================= */
 
   useEffect(() => {
     let active = true;
 
-    const load = async () => {
-      if (
-        Date.now() -
-          variantCacheTime <
-          CACHE_TIME &&
-        Object.keys(
-          variantCache
-        ).length
-      ) {
-        setVariantMap(
-          variantCache
-        );
-
-        return;
+    /*
+     * Fire and forget.
+     * Cars render immediately.
+     */
+    getVariantMap().then((map) => {
+      if (active) {
+        setVariantMap(map);
       }
-
-      try {
-        const variants =
-          await getAllVariants();
-
-        if (
-          !Array.isArray(
-            variants
-          )
-        ) {
-          return;
-        }
-
-        const map = {};
-
-        variants.forEach(
-          (item) => {
-            const id =
-              extractId(
-                item?._id
-              );
-
-            if (id) {
-              map[id] =
-                item?.variantName ||
-                item?.name ||
-                "";
-            }
-          }
-        );
-
-        variantCache =
-          map;
-
-        variantCacheTime =
-          Date.now();
-
-        if (active) {
-          setVariantMap(
-            map
-          );
-        }
-      } catch (error) {
-        console.error(
-          "Variant error:",
-          error
-        );
-      }
-    };
-
-    load();
+    });
 
     return () => {
       active = false;
@@ -293,127 +195,111 @@ export default function CarGridSection({
   }, []);
 
   /* =======================================================
-     VARIANT
+     VARIANT NAME
   ======================================================= */
 
-  const getVariantName =
-    useCallback(
-      (value) => {
-        if (!value) {
-          return "";
-        }
+  const getVariantName = useCallback(
+    (value) => {
+      if (!value) return "";
 
-        if (
-          typeof value ===
-          "object"
-        ) {
-          return (
-            value.variantName ||
-            value.name ||
-            value.title ||
-            ""
-          );
-        }
-
-        const id =
-          extractId(value);
-
+      if (typeof value === "object") {
         return (
-          variantMap[id] ||
+          value.variantName ||
+          value.name ||
+          value.title ||
           ""
         );
-      },
-      [variantMap]
-    );
+      }
+
+      return (
+        variantMap[extractId(value)] ||
+        ""
+      );
+    },
+    [variantMap]
+  );
 
   /* =======================================================
-     VISIBLE
+     VISIBLE CARS
+     -------------------------------------------------------
+     Only 6 cards on home grid.
   ======================================================= */
 
-  const visibleCars =
-    Array.isArray(cars)
-      ? cars
-          .filter((car) => {
-            const status =
-              String(
-                car?.status ||
-                  ""
-              ).toLowerCase();
+  const visibleCars = useMemo(() => {
+    if (!Array.isArray(cars)) {
+      return [];
+    }
 
-            return (
-              status !==
-                "draft" &&
-              status !==
-                "deleted" &&
-              status !==
-                "drift"
-            );
-          })
-          .slice(0, 6)
-      : [];
+    return cars
+      .filter((car) => {
+        const status = String(
+          car?.status || ""
+        ).toLowerCase();
 
-  /*
-   * Never show a blank section while the car API
-   * is still loading. Show premium skeleton cards
-   * with the same responsive grid shape instead.
-   */
-  if (carLoading) {
-    return (
-      <CarGridSkeleton />
-    );
+        return (
+          status !== "draft" &&
+          status !== "deleted" &&
+          status !== "drift"
+        );
+      })
+      .slice(0, 6);
+  }, [cars]);
+
+  /* =======================================================
+     LOADING
+     -------------------------------------------------------
+     No shimmer.
+     No animation.
+     Static lightweight placeholders only.
+  ======================================================= */
+
+  if (loading) {
+    return <CarGridLoading />;
   }
 
-  /*
-   * API finished but returned no visible cars.
-   * Keep the previous behavior: render nothing.
-   */
+  /* =======================================================
+     EMPTY
+  ======================================================= */
+
   if (!visibleCars.length) {
     return null;
   }
 
   /* =======================================================
-     OPEN DETAILS
+     DETAILS
   ======================================================= */
 
-  const openDetails =
-    (car) => {
-      const id =
-        extractId(
-          car?._id ||
-            car?.id ||
-            car?.carId
-        );
+  const openDetails = (car) => {
+    const id = extractId(
+      car?._id ||
+        car?.id ||
+        car?.carId
+    );
 
-      if (!id) {
-        console.error(
-          "Car ID missing",
-          car
-        );
-
-        return;
-      }
-
-      navigate(
-        `/car/${encodeURIComponent(
-          id
-        )}?tab=${currentTab}`,
-        {
-          state: {
-            car,
-          },
-        }
+    if (!id) {
+      console.error(
+        "Car ID missing",
+        car
       );
-    };
+      return;
+    }
+
+    navigate(
+      `/car/${encodeURIComponent(id)}?tab=${currentTab}`,
+      {
+        state: {
+          car,
+        },
+      }
+    );
+  };
 
   /* =======================================================
      UI
   ======================================================= */
 
   return (
-    <>
-      <SkeletonAnimationStyles />
-      <div className="w-full">
-
+    <div className="w-full">
       <div
         className="
           grid
@@ -426,12 +312,11 @@ export default function CarGridSection({
       >
         {visibleCars.map(
           (car, index) => {
-            const carId =
-              extractId(
-                car?._id ||
-                  car?.id ||
-                  car?.carId
-              );
+            const carId = extractId(
+              car?._id ||
+                car?.id ||
+                car?.carId
+            );
 
             return (
               <div
@@ -443,6 +328,7 @@ export default function CarGridSection({
               >
                 <CarCard
                   carId={carId}
+                  priority={index < 2}
 
                   brandName={
                     getBrand(car)
@@ -455,10 +341,8 @@ export default function CarGridSection({
                   }
 
                   model={
-                    car?.model
-                      ?.name ||
-                    car?.model
-                      ?.modelName ||
+                    car?.model?.name ||
+                    car?.model?.modelName ||
                     car?.model ||
                     ""
                   }
@@ -468,8 +352,7 @@ export default function CarGridSection({
                   }
 
                   price={
-                    car?.price ??
-                    "0"
+                    car?.price ?? "0"
                   }
 
                   fuel={
@@ -479,8 +362,7 @@ export default function CarGridSection({
                   }
 
                   year={
-                    car?.year ||
-                    "-"
+                    car?.year || "-"
                   }
 
                   status={
@@ -495,8 +377,7 @@ export default function CarGridSection({
                   }
 
                   owner={
-                    car?.owner ||
-                    "1"
+                    car?.owner || "1"
                   }
 
                   transmission={
@@ -505,19 +386,15 @@ export default function CarGridSection({
                   }
 
                   district={
-                    car?.district ||
-                    ""
+                    car?.district || ""
                   }
 
                   city={
-                    car?.city ||
-                    ""
+                    car?.city || ""
                   }
 
                   onTap={() =>
-                    openDetails(
-                      car
-                    )
+                    openDetails(car)
                   }
                 />
               </div>
@@ -530,9 +407,7 @@ export default function CarGridSection({
         <div className="py-3.5">
           <button
             type="button"
-            onClick={
-              onViewAll
-            }
+            onClick={onViewAll}
             className="
               flex
               h-[42px]
@@ -542,6 +417,7 @@ export default function CarGridSection({
               rounded-[18px]
               bg-white/45
               px-5
+              transition-colors
               hover:bg-white/65
             "
           >
@@ -565,306 +441,69 @@ export default function CarGridSection({
           </button>
         </div>
       )}
-      </div>
-    </>
+    </div>
   );
 }
 
-
 /* =========================================================
-   PREMIUM CAR GRID SKELETON
+   STATIC LOADING
    ---------------------------------------------------------
-   YouTube / Amazon inspired shimmer loading.
-   Same 2 / 4 / 6 column responsive structure as real cards.
+   No shimmer.
+   No Framer Motion.
+   No infinite animation.
+   Minimal DOM.
 ========================================================= */
 
-function CarGridSkeleton() {
-  return (
-    <div className="w-full">
-
-      <div
-        className="
-          grid
-          grid-cols-2
-          gap-x-3
-          gap-y-3.5
-          md:grid-cols-4
-          lg:grid-cols-6
-        "
-      >
-        {Array.from({
-          length: 6,
-        }).map((_, index) => (
-          <div
-            key={`car-skeleton-${index}`}
-            className="min-w-0 w-full"
-          >
-            <CarSkeletonCard />
-          </div>
-        ))}
-      </div>
-
-    </div>
-  );
-}
-
-
-/* =========================================================
-   PREMIUM CAR SKELETON CARD
-========================================================= */
-
-function CarSkeletonCard() {
-  return (
-    <div
-      className="
-        relative
-        w-full
-        min-w-0
-        overflow-hidden
-        rounded-[22px]
-        border
-        border-white/70
-        bg-white
-        shadow-[0_5px_18px_rgba(15,23,42,0.06)]
-      "
-    >
-
-      {/* =================================================
-          IMAGE AREA
-      ================================================= */}
-
-      <div
-        className="
-          relative
-          aspect-[13/11]
-          w-full
-          overflow-hidden
-          bg-gradient-to-br
-          from-slate-100
-          via-slate-200/70
-          to-slate-100
-        "
-      >
-
-        {/* Main cinematic shimmer */}
+const CarGridLoading = memo(
+  function CarGridLoading() {
+    return (
+      <div className="w-full">
         <div
           className="
-            pointer-events-none
-            absolute
-            inset-y-0
-            left-0
-            z-20
-            w-[48%]
-            -skew-x-12
-            bg-gradient-to-r
-            from-transparent
-            via-white/80
-            to-transparent
-            blur-lg
+            grid
+            grid-cols-2
+            gap-x-3
+            gap-y-3.5
+            md:grid-cols-4
+            lg:grid-cols-6
           "
-        />
+        >
+          {Array.from({
+            length: 6,
+          }).map((_, index) => (
+            <div
+              key={index}
+              className="
+                min-w-0
+                w-full
+                overflow-hidden
+                rounded-[22px]
+                border
+                border-white/60
+                bg-white/60
+              "
+            >
+              <div
+                className="
+                  aspect-[13/11]
+                  w-full
+                  bg-slate-100
+                "
+              />
 
-        {/* Soft moving light */}
-        <div
-          className="
-            pointer-events-none
-            absolute
-            left-1/2
-            top-1/2
-            h-20
-            w-24
-            -translate-x-1/2
-            -translate-y-1/2
-            rounded-[28px]
-            bg-white
-            blur-2xl
-          "
-        />
-
-        {/* Image-like center placeholder */}
-        <div
-          className="
-            absolute
-            left-1/2
-            top-1/2
-            h-12
-            w-16
-            -translate-x-1/2
-            -translate-y-1/2
-            rounded-2xl
-            bg-white/45
-            shadow-inner
-            backdrop-blur-sm
-          "
-        />
-
-        {/* Year */}
-        <SkeletonBlock
-          className="
-            absolute
-            left-2.5
-            top-2.5
-            z-30
-            h-5
-            w-12
-            rounded-full
-          "
-        />
-
-        {/* Share */}
-        <SkeletonBlock
-          className="
-            absolute
-            right-2.5
-            top-2.5
-            z-30
-            h-8
-            w-8
-            rounded-full
-          "
-        />
-
-        {/* Bottom image fade */}
-        <div
-          className="
-            pointer-events-none
-            absolute
-            inset-x-0
-            bottom-0
-            z-10
-            h-16
-            bg-gradient-to-t
-            from-black/[0.04]
-            to-transparent
-          "
-        />
-
-      </div>
-
-
-      {/* =================================================
-          CONTENT AREA
-      ================================================= */}
-
-      <div
-        className="
-          space-y-2.5
-          px-3
-          pb-3
-          pt-3
-        "
-      >
-
-        {/* Price */}
-        <SkeletonBlock
-          className="
-            h-4
-            w-24
-            rounded-full
-          "
-        />
-
-        {/* Model */}
-        <SkeletonBlock
-          className="
-            h-3
-            w-[74%]
-            rounded-full
-          "
-        />
-
-        {/* Details */}
-        <div className="flex gap-2">
-          <SkeletonBlock
-            className="
-              h-2.5
-              w-12
-              rounded-full
-            "
-          />
-
-          <SkeletonBlock
-            className="
-              h-2.5
-              w-14
-              rounded-full
-            "
-          />
-
-          <SkeletonBlock
-            className="
-              h-2.5
-              w-12
-              rounded-full
-            "
-          />
+              <div className="space-y-2 px-3 py-3">
+                <div className="h-3.5 w-20 rounded-full bg-slate-100" />
+                <div className="h-3 w-3/4 rounded-full bg-slate-100" />
+                <div className="h-2.5 w-1/2 rounded-full bg-slate-100" />
+              </div>
+            </div>
+          ))}
         </div>
-
-        {/* Location */}
-        <SkeletonBlock
-          className="
-            h-2.5
-            w-[68%]
-            rounded-full
-          "
-        />
-
       </div>
-
-    </div>
-  );
-}
-
-
-/* =========================================================
-   SKELETON BLOCK
-========================================================= */
-
-
-/* =========================================================
-   SKELETON SHIMMER
-   ONLY LOADING ANIMATION — no card entrance/floating animation
-========================================================= */
-
-const SkeletonShimmer = () => (
-  <span
-    aria-hidden="true"
-    className="
-      pointer-events-none
-      absolute
-      inset-y-0
-      left-0
-      z-20
-      w-1/2
-      -skew-x-12
-      bg-gradient-to-r
-      from-transparent
-      via-white/80
-      to-transparent
-      blur-md
-      animate-car-skeleton-shimmer
-    "
-  />
+    );
+  }
 );
 
-function SkeletonBlock({
-  className = "",
-}) {
-  return (
-    <div
-      className={`
-        relative
-        overflow-hidden
-        bg-slate-200
-        ${className}
-      `}
-    >
-      <SkeletonShimmer />
-    </div>
-  );
-}
-
-
-/* =========================================================
-   SHIMMER
-========================================================= */
+export default memo(
+  CarGridSection
+);

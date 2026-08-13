@@ -1,8 +1,4 @@
-// src/components/CarCard.jsx
-
-import React, {
-  useState,
-} from "react";
+import React, { memo, useState } from "react";
 
 import {
   FaGasPump,
@@ -12,9 +8,6 @@ import {
   FaMapMarkerAlt,
   FaShareAlt,
 } from "react-icons/fa";
-
-import { motion } from "framer-motion";
-
 
 /* =========================================================
    HELPERS
@@ -54,6 +47,9 @@ const asString = (value) => {
   return String(value);
 };
 
+/* =========================================================
+   IMAGE URL
+========================================================= */
 
 const getImageUrl = (value) => {
   if (!value) return "";
@@ -77,10 +73,12 @@ const getImageUrl = (value) => {
   return "";
 };
 
+/* =========================================================
+   PRICE
+========================================================= */
 
 const formatPrice = (value) => {
-  const raw =
-    asString(value);
+  const raw = asString(value);
 
   const number =
     parseInt(
@@ -96,12 +94,11 @@ const formatPrice = (value) => {
   );
 };
 
-
 /* =========================================================
-   COMPONENT
+   CARD
 ========================================================= */
 
-export default function CarCard({
+function CarCard({
   loading = false,
 
   carId,
@@ -129,18 +126,12 @@ export default function CarCard({
 
   onTap,
 }) {
-
   /* =======================================================
      IMAGE
   ======================================================= */
 
   const image =
     getImageUrl(imageUrl);
-
-
-  /* =======================================================
-     IMAGE STATE
-  ======================================================= */
 
   const [
     imageLoaded,
@@ -152,30 +143,89 @@ export default function CarCard({
     setImageError,
   ] = useState(false);
 
-
   /* =======================================================
-     LOADING
-     -------------------------------------------------------
-     YouTube / Amazon style skeleton
+     SHARE
   ======================================================= */
 
-  if (loading) {
-    return (
-      <CarCardSkeleton />
-    );
-  }
+  const shareCar = async (
+    event
+  ) => {
+    event.stopPropagation();
 
+    const id =
+      asString(carId);
+
+    if (!id) return;
+
+    const shareUrl =
+      `${window.location.origin}/car/${id}`;
+
+    const shareText =
+      `🚗 ${asString(
+        brandName
+      )} ${asString(
+        variant
+      )} ${asString(model)}
+
+💰 Price: ₹${formatPrice(
+        price
+      )}
+⛽ Fuel: ${asString(fuel)}
+⚙️ Transmission: ${asString(
+        transmission
+      )}
+📍 Location: ${asString(
+        district
+      )}, ${asString(city)}
+🛣️ KM: ${asString(km)} km
+👤 Owner: ${asString(owner)}
+
+👉 ${shareUrl}`;
+
+    if (
+      navigator.share
+    ) {
+      try {
+        await navigator.share({
+          title:
+            `${asString(
+              brandName
+            )} ${asString(
+              model
+            )}`,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch {
+        // User cancelled share
+      }
+
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(
+        `${shareText}\n${shareUrl}`
+      );
+
+      alert(
+        "Car link copied!"
+      );
+    } catch {
+      // Clipboard unavailable
+    }
+  };
 
   /* =======================================================
      STATUS
   ======================================================= */
 
   const normalizedStatus =
-    asString(status).toLowerCase();
-
+    asString(
+      status
+    ).toLowerCase();
 
   const getStatusColor = () => {
-
     if (
       normalizedStatus ===
       "sold"
@@ -193,9 +243,7 @@ export default function CarCard({
     return "bg-gray-500";
   };
 
-
   const getStatusText = () => {
-
     if (
       normalizedStatus ===
       "sold"
@@ -215,108 +263,71 @@ export default function CarCard({
       : "";
   };
 
-
   /* =======================================================
-     SHARE
+     LIGHTWEIGHT LOADING
+     -------------------------------------------------------
+     NO animation
+     NO shimmer
+     NO Framer Motion
   ======================================================= */
 
-  const shareCar = async (
-    event
-  ) => {
+  if (loading) {
+    return (
+      <div
+        className="
+          relative
+          w-full
+          overflow-hidden
+          rounded-[22px]
+          border
+          border-white/70
+          bg-white
+          shadow-[0_4px_14px_rgba(15,23,42,0.05)]
+        "
+      >
+        <div
+          className="
+            aspect-[13/11]
+            w-full
+            bg-slate-100
+          "
+        />
 
-    event.stopPropagation();
+        <div
+          className="
+            space-y-2
+            px-3
+            pb-3
+            pt-3
+          "
+        >
+          <div className="h-4 w-24 rounded bg-slate-100" />
 
-    const id =
-      asString(carId);
+          <div className="h-3 w-32 rounded bg-slate-100" />
 
-    const shareUrl =
-      `${window.location.origin}/car/${id}`;
+          <div className="h-2.5 w-20 rounded bg-slate-100" />
 
-    const shareText = `
-🚗 ${asString(brandName)} ${asString(variant)} ${asString(model)}
-
-💰 Price: ₹${formatPrice(price)}
-⛽ Fuel: ${asString(fuel)}
-⚙️ Transmission: ${asString(transmission)}
-📍 Location: ${asString(district)}, ${asString(city)}
-🛣️ KM: ${asString(km)} km
-👤 Owner: ${asString(owner)}
-
-👉 ${shareUrl}
-`;
-
-
-    if (
-      navigator.share
-    ) {
-
-      try {
-
-        await navigator.share({
-          title:
-            `${asString(
-              brandName
-            )} ${asString(
-              model
-            )}`,
-
-          text:
-            shareText,
-
-          url:
-            shareUrl,
-        });
-
-      } catch (error) {
-
-        console.log(
-          "Share cancelled",
-          error
-        );
-      }
-
-      return;
-    }
-
-
-    try {
-
-      await navigator.clipboard.writeText(
-        `${shareText}\n${shareUrl}`
-      );
-
-      alert(
-        "Car link copied!"
-      );
-
-    } catch (error) {
-
-      console.log(
-        "Share not supported",
-        error
-      );
-    }
-  };
-
+          <div className="h-2.5 w-28 rounded bg-slate-100" />
+        </div>
+      </div>
+    );
+  }
 
   /* =======================================================
      CARD
   ======================================================= */
 
   return (
-    <motion.div
+    <div
       onClick={onTap}
       role="button"
       tabIndex={0}
-
       onKeyDown={(event) => {
-
         if (
           event.key ===
             "Enter" ||
           event.key === " "
         ) {
-
           event.preventDefault();
 
           if (onTap) {
@@ -324,15 +335,6 @@ export default function CarCard({
           }
         }
       }}
-
-      whileHover={{
-        y: -2,
-      }}
-
-      whileTap={{
-        scale: 0.985,
-      }}
-
       className="
         group
         relative
@@ -346,13 +348,9 @@ export default function CarCard({
         border-white/70
         bg-white
         shadow-[0_5px_18px_rgba(15,23,42,0.07)]
-        transition-all
-        duration-300
-
-        hover:shadow-[0_12px_32px_rgba(15,23,42,0.12)]
+        active:scale-[0.99]
       "
     >
-
       {/* =================================================
           IMAGE
       ================================================= */}
@@ -367,25 +365,10 @@ export default function CarCard({
           bg-slate-100
         "
       >
-
-        {/* =================================================
-            IMAGE SKELETON
-        ================================================= */}
-
-        {!imageLoaded &&
-          !imageError &&
-          image && (
-            <PremiumImageSkeleton />
-          )}
-
-
-        {/* =================================================
-            IMAGE
-        ================================================= */}
+        {/* IMAGE */}
 
         {image &&
         !imageError ? (
-
           <img
             src={image}
             alt={`${asString(
@@ -393,51 +376,90 @@ export default function CarCard({
             )} ${asString(
               model
             )}`}
-
-            className={`
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
+            draggable="false"
+            className="
               block
               h-full
               w-full
               object-cover
-              transition-all
-              duration-700
-
-              ${
-                imageLoaded
-                  ? "scale-100 opacity-100"
-                  : "scale-[1.04] opacity-0"
-              }
-
-              group-hover:scale-[1.04]
-            `}
-
-            loading="lazy"
-
-            onLoad={() =>
+            "
+            onLoad={() => {
               setImageLoaded(
-                true
-              )
-            }
-
-            onError={(event) => {
-
-              event.currentTarget.onerror =
-                null;
-
-              setImageError(
                 true
               );
             }}
+            onError={() => {
+              setImageError(
+                true
+              );
+              setImageLoaded(
+                false
+              );
+            }}
           />
-
         ) : (
-          <PremiumImageFallback />
+          /* =================================================
+             INLINE FALLBACK
+             -------------------------------------------------
+             No PremiumImageFallback component needed.
+          ================================================= */
+          <div
+            className="
+              flex
+              h-full
+              w-full
+              items-center
+              justify-center
+              bg-gradient-to-br
+              from-slate-100
+              via-slate-200
+              to-slate-100
+            "
+          >
+            <div
+              className="
+                flex
+                h-12
+                w-12
+                items-center
+                justify-center
+                rounded-2xl
+                bg-white/70
+                text-xl
+                font-black
+                text-black/15
+              "
+            >
+              R
+            </div>
+          </div>
         )}
 
-
         {/* =================================================
-            IMAGE TOP GLASS
+            SIMPLE IMAGE PLACEHOLDER
+            -------------------------------------------------
+            Only static background while image loads.
+            No animation.
         ================================================= */}
+
+        {!imageLoaded &&
+          !imageError &&
+          image && (
+            <div
+              className="
+                pointer-events-none
+                absolute
+                inset-0
+                -z-0
+                bg-slate-100
+              "
+            />
+          )}
+
+        {/* TOP GRADIENT */}
 
         <div
           className="
@@ -453,10 +475,7 @@ export default function CarCard({
           "
         />
 
-
-        {/* =================================================
-            YEAR
-        ================================================= */}
+        {/* YEAR */}
 
         {year && (
           <div
@@ -467,25 +486,30 @@ export default function CarCard({
               z-20
             "
           >
-            <Chip
-              text={asString(year)}
+            <span
               className="
+                inline-flex
+                items-center
+                rounded-full
                 bg-black/60
-                backdrop-blur-md
+                px-2
+                py-1
+                text-[10px]
+                font-bold
+                leading-none
+                text-white
               "
-            />
+            >
+              {asString(year)}
+            </span>
           </div>
         )}
 
-
-        {/* =================================================
-            STATUS
-        ================================================= */}
+        {/* STATUS */}
 
         {normalizedStatus &&
           normalizedStatus !==
             "available" && (
-
             <div
               className="
                 absolute
@@ -497,31 +521,31 @@ export default function CarCard({
                 bg-black/[0.04]
               "
             >
-
-              <Chip
-                text={
-                  getStatusText()
-                }
+              <span
                 className={`
                   ${getStatusColor()}
+                  rounded-full
+                  px-2.5
+                  py-1.5
+                  text-[10px]
+                  font-bold
+                  text-white
                   shadow-lg
                 `}
-              />
-
+              >
+                {getStatusText()}
+              </span>
             </div>
           )}
 
-
-        {/* =================================================
-            SHARE
-        ================================================= */}
+        {/* SHARE */}
 
         <button
           type="button"
           onClick={
             shareCar
           }
-
+          aria-label="Share car"
           className="
             absolute
             right-2.5
@@ -539,24 +563,15 @@ export default function CarCard({
             text-white
             shadow-lg
             backdrop-blur-md
-            transition
-            hover:bg-black/70
             active:scale-90
           "
-
-          aria-label="Share car"
         >
-
           <FaShareAlt
             size={11}
           />
-
         </button>
 
-
-        {/* =================================================
-            BOTTOM GRADIENT
-        ================================================= */}
+        {/* BOTTOM GRADIENT */}
 
         <div
           className="
@@ -572,9 +587,7 @@ export default function CarCard({
             to-transparent
           "
         />
-
       </div>
-
 
       {/* =================================================
           CONTENT
@@ -591,10 +604,7 @@ export default function CarCard({
           pt-2
         "
       >
-
-        {/* =================================================
-            PRICE + TRANSMISSION
-        ================================================= */}
+        {/* PRICE */}
 
         <div
           className="
@@ -603,7 +613,6 @@ export default function CarCard({
             items-center
           "
         >
-
           <div
             className="
               min-w-0
@@ -621,7 +630,6 @@ export default function CarCard({
             )}
           </div>
 
-
           {transmission && (
             <IconText
               icon={
@@ -632,16 +640,11 @@ export default function CarCard({
               text={asString(
                 transmission
               )}
-              textSize="text-[8px]"
             />
           )}
-
         </div>
 
-
-        {/* =================================================
-            VARIANT + MODEL
-        ================================================= */}
+        {/* VARIANT + MODEL */}
 
         <div
           className="
@@ -652,21 +655,15 @@ export default function CarCard({
             text-black
           "
         >
-
           {variant
             ? `${asString(
                 variant
               )}, `
             : ""}
-
           {asString(model)}
-
         </div>
 
-
-        {/* =================================================
-            FUEL / KM / OWNER
-        ================================================= */}
+        {/* FUEL / KM / OWNER */}
 
         <div
           className="
@@ -678,7 +675,6 @@ export default function CarCard({
             text-gray-500
           "
         >
-
           {fuel && (
             <IconText
               icon={
@@ -689,15 +685,12 @@ export default function CarCard({
               text={asString(
                 fuel
               )}
-              textSize="text-[8px]"
             />
           )}
-
 
           {km !== "" &&
             km !== null &&
             km !== undefined && (
-
               <IconText
                 icon={
                   <FaTachometerAlt
@@ -707,11 +700,8 @@ export default function CarCard({
                 text={`${asString(
                   km
                 )} km`}
-                textSize="text-[8px]"
               />
-
             )}
-
 
           {owner && (
             <IconText
@@ -723,20 +713,14 @@ export default function CarCard({
               text={`${asString(
                 owner
               )} Own`}
-              textSize="text-[8px]"
             />
           )}
-
         </div>
 
-
-        {/* =================================================
-            LOCATION
-        ================================================= */}
+        {/* LOCATION */}
 
         {(district ||
           city) && (
-
           <div
             className="
               mt-2
@@ -744,14 +728,12 @@ export default function CarCard({
               truncate
             "
           >
-
             <IconText
               icon={
                 <FaMapMarkerAlt
                   size={8}
                 />
               }
-
               text={`${asString(
                 district
               )}${
@@ -762,505 +744,60 @@ export default function CarCard({
               }${asString(
                 city
               )}`}
-
-              textSize="text-[8px]"
             />
-
           </div>
         )}
-
       </div>
-
-    </motion.div>
-  );
-}
-
-
-/* =========================================================
-   PREMIUM CARD SKELETON
-   ---------------------------------------------------------
-   YouTube / Amazon inspired
-   ========================================================= */
-
-function CarCardSkeleton() {
-
-  return (
-    <div
-      className="
-        relative
-        flex
-        w-full
-        flex-col
-        overflow-hidden
-        rounded-[22px]
-        border
-        border-white/70
-        bg-white
-        shadow-[0_5px_18px_rgba(15,23,42,0.06)]
-      "
-    >
-
-      {/* =================================================
-          IMAGE SKELETON
-      ================================================= */}
-
-      <div
-        className="
-          relative
-          aspect-[13/11]
-          w-full
-          overflow-hidden
-          bg-slate-100
-        "
-      >
-
-        <motion.div
-          animate={{
-            x: [
-              "-120%",
-              "180%",
-            ],
-          }}
-
-          transition={{
-            duration: 1.45,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-
-          className="
-            absolute
-            inset-y-0
-            -left-1/2
-            z-10
-            w-1/2
-            rotate-12
-            bg-gradient-to-r
-            from-transparent
-            via-white/70
-            to-transparent
-            blur-lg
-          "
-        />
-
-
-        <div
-          className="
-            absolute
-            inset-0
-            bg-gradient-to-br
-            from-slate-100
-            via-slate-200/70
-            to-slate-100
-          "
-        />
-
-
-        {/* Fake image light */}
-
-        <div
-          className="
-            absolute
-            left-1/2
-            top-1/2
-            h-16
-            w-20
-            -translate-x-1/2
-            -translate-y-1/2
-            rounded-2xl
-            bg-white/35
-            blur-xl
-          "
-        />
-
-
-        {/* Year skeleton */}
-
-        <SkeletonLine
-          className="
-            absolute
-            left-2.5
-            top-2.5
-            z-20
-            h-5
-            w-12
-            rounded-full
-          "
-        />
-
-
-        {/* Share skeleton */}
-
-        <SkeletonCircle
-          className="
-            absolute
-            right-2.5
-            top-2.5
-            z-20
-            h-8
-            w-8
-          "
-        />
-
-      </div>
-
-
-      {/* =================================================
-          CONTENT SKELETON
-      ================================================= */}
-
-      <div
-        className="
-          space-y-2.5
-          px-3
-          pb-3
-          pt-3
-        "
-      >
-
-        {/* Price */}
-
-        <SkeletonLine
-          className="
-            h-4
-            w-24
-          "
-        />
-
-
-        {/* Model */}
-
-        <SkeletonLine
-          className="
-            h-3
-            w-32
-          "
-        />
-
-
-        {/* Details */}
-
-        <div
-          className="
-            flex
-            gap-2
-          "
-        >
-
-          <SkeletonLine
-            className="
-              h-2.5
-              w-12
-            "
-          />
-
-          <SkeletonLine
-            className="
-              h-2.5
-              w-14
-            "
-          />
-
-          <SkeletonLine
-            className="
-              h-2.5
-              w-12
-            "
-          />
-
-        </div>
-
-
-        {/* Location */}
-
-        <SkeletonLine
-          className="
-            h-2.5
-            w-28
-          "
-        />
-
-      </div>
-
     </div>
   );
 }
-
-
-/* =========================================================
-   SKELETON LINE
-========================================================= */
-
-function SkeletonLine({
-  className = "",
-}) {
-
-  return (
-    <div
-      className={`
-        relative
-        overflow-hidden
-        rounded-full
-        bg-slate-200
-        ${className}
-      `}
-    >
-
-      <motion.div
-        animate={{
-          x: [
-            "-120%",
-            "180%",
-          ],
-        }}
-
-        transition={{
-          duration: 1.25,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-
-        className="
-          absolute
-          inset-y-0
-          -left-1/2
-          w-1/2
-          rotate-12
-          bg-gradient-to-r
-          from-transparent
-          via-white/80
-          to-transparent
-          blur-[2px]
-        "
-      />
-
-    </div>
-  );
-}
-
-
-/* =========================================================
-   SKELETON CIRCLE
-========================================================= */
-
-function SkeletonCircle({
-  className = "",
-}) {
-
-  return (
-    <div
-      className={`
-        relative
-        overflow-hidden
-        rounded-full
-        bg-slate-200
-        ${className}
-      `}
-    >
-
-      <motion.div
-        animate={{
-          x: [
-            "-120%",
-            "180%",
-          ],
-        }}
-
-        transition={{
-          duration: 1.25,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-
-        className="
-          absolute
-          inset-y-0
-          -left-1/2
-          w-1/2
-          rotate-12
-          bg-gradient-to-r
-          from-transparent
-          via-white/80
-          to-transparent
-        "
-      />
-
-    </div>
-  );
-}
-
-
-/* =========================================================
-   PREMIUM IMAGE SKELETON
-========================================================= */
-
-function PremiumImageSkeleton() {
-
-  return (
-    <div
-      className="
-        absolute
-        inset-0
-        z-10
-        overflow-hidden
-        bg-gradient-to-br
-        from-slate-100
-        via-slate-200/70
-        to-slate-100
-      "
-    >
-
-      <motion.div
-        animate={{
-          x: [
-            "-120%",
-            "180%",
-          ],
-        }}
-
-        transition={{
-          duration: 1.35,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-
-        className="
-          absolute
-          inset-y-0
-          -left-1/2
-          w-1/2
-          rotate-12
-          bg-gradient-to-r
-          from-transparent
-          via-white/75
-          to-transparent
-          blur-lg
-        "
-      />
-
-    </div>
-  );
-}
-
-
-/* =========================================================
-   PREMIUM IMAGE FALLBACK
-========================================================= */
-
-function PremiumImageFallback() {
-
-  return (
-    <div
-      className="
-        flex
-        h-full
-        w-full
-        items-center
-        justify-center
-        bg-gradient-to-br
-        from-slate-100
-        via-slate-200
-        to-slate-100
-      "
-    >
-
-      <div
-        className="
-          flex
-          h-14
-          w-14
-          items-center
-          justify-center
-          rounded-2xl
-          bg-white/60
-          text-xl
-          font-black
-          text-black/15
-          shadow-sm
-          backdrop-blur-xl
-        "
-      >
-        R
-      </div>
-
-    </div>
-  );
-}
-
-
-/* =========================================================
-   CHIP
-========================================================= */
-
-function Chip({
-  text,
-  className =
-    "bg-black/60",
-}) {
-
-  return (
-    <span
-      className={`
-        ${className}
-        inline-flex
-        items-center
-        rounded-full
-        px-2
-        py-1
-        text-[10px]
-        font-bold
-        leading-none
-        text-white
-      `}
-    >
-      {text}
-    </span>
-  );
-}
-
 
 /* =========================================================
    ICON TEXT
 ========================================================= */
 
-function IconText({
-  icon,
-  text,
-  textSize =
-    "text-[8px]",
-}) {
-
-  return (
-    <div
-      className="
-        flex
-        min-w-0
-        shrink
-        items-center
-        gap-1
-        text-gray-500
-      "
-    >
-
-      <span
+const IconText = memo(
+  function IconText({
+    icon,
+    text,
+  }) {
+    return (
+      <div
         className="
-          shrink-0
+          flex
+          min-w-0
+          shrink
+          items-center
+          gap-1
+          text-gray-500
         "
       >
-        {icon}
-      </span>
+        <span
+          className="
+            shrink-0
+          "
+        >
+          {icon}
+        </span>
 
+        <span
+          className="
+            min-w-0
+            truncate
+            text-[8px]
+          "
+        >
+          {text}
+        </span>
+      </div>
+    );
+  }
+);
 
-      <span
-        className={`
-          ${textSize}
-          min-w-0
-          truncate
-        `}
-      >
-        {text}
-      </span>
+/* =========================================================
+   FINAL EXPORT
+========================================================= */
 
-    </div>
-  );
-}
+export default memo(
+  CarCard
+);

@@ -1,90 +1,216 @@
 // src/pages/user/home/Pages/CarsPage.jsx
-import { useEffect, useState } from "react";
+
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+
 import { useNavigate } from "react-router-dom";
+
 import HomeBoardTwoButton from "@/components/HomeBoardTwoButton";
 import HomeOwncardscroll from "./car/HomeOwncardscroll";
 import CarGridSection from "./car/CarGridSection";
 
-const BASE_URL = "https://rebuy-api.onrender.com/api";
+/* =========================================================
+   API
+========================================================= */
 
-export default function CarsPage() {
-  const navigate = useNavigate();
+const BASE_URL =
+  "https://rebuy-api.onrender.com/api";
 
-  // ─── State ────────────────────────────────────────────────
-  const [cars, setCars] = useState([]);
-  const [filteredCars, setFilteredCars] = useState([]);
+/* =========================================================
+   MEMORY CACHE
+   ---------------------------------------------------------
+   - First browser load -> API
+   - Cars -> another page -> Cars -> instant cache
+   - Component remount -> no API
+   - Browser refresh -> fresh API
+========================================================= */
 
-  // Search state – kept for search functionality
-  const [search, setSearch] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
+let carsCache = null;
+let carsPromise = null;
 
-  // ─── Fetch all cars (no board filter) ────────────────────
-  useEffect(() => {
-    fetchCars();
-  }, []);
+/* =========================================================
+   ONE REQUEST ONLY
+========================================================= */
 
-  async function fetchCars() {
-    try {
-      const res = await fetch(`${BASE_URL}/cars`);
-      const data = await res.json();
-      const allCars = data.cars || [];
-      setCars(allCars);
-      setFilteredCars(allCars); // show all by default
-    } catch (err) {
-      console.error("Cars fetch error:", err);
-    }
+function getCars() {
+  if (Array.isArray(carsCache)) {
+    return Promise.resolve(carsCache);
   }
 
-  // ─── Search ──────────────────────────────────────────────
-  function handleSearchChange(value) {
-    setSearch(value);
-    if (!value) {
-      setSuggestions([]);
-      setFilteredCars(cars);
+  if (carsPromise) {
+    return carsPromise;
+  }
+
+  carsPromise = fetch(
+    `${BASE_URL}/cars`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      cache: "default",
+    }
+  )
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error(
+          `Cars API ${response.status}`
+        );
+      }
+
+      const data =
+        await response.json();
+
+      const result =
+        Array.isArray(data?.cars)
+          ? data.cars
+          : [];
+
+      carsCache = result;
+
+      return result;
+    })
+    .catch((error) => {
+      console.error(
+        "Cars fetch error:",
+        error
+      );
+
+      throw error;
+    })
+    .finally(() => {
+      carsPromise = null;
+    });
+
+  return carsPromise;
+}
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+function CarsPage() {
+  const navigate =
+    useNavigate();
+
+  const [
+    cars,
+    setCars,
+  ] = useState(() =>
+    Array.isArray(carsCache)
+      ? carsCache
+      : []
+  );
+
+  const [
+    filteredCars,
+    setFilteredCars,
+  ] = useState(() =>
+    Array.isArray(carsCache)
+      ? carsCache
+      : []
+  );
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(
+    !Array.isArray(carsCache)
+  );
+
+  /* =======================================================
+     LOAD
+  ======================================================= */
+
+  useEffect(() => {
+    if (Array.isArray(carsCache)) {
+      setCars(carsCache);
+      setFilteredCars(carsCache);
+      setLoading(false);
       return;
     }
-    const brands = cars.map((c) => c.brand?.name || "").filter(Boolean);
-    const matches = brands.filter((b) =>
-      b.toLowerCase().includes(value.toLowerCase())
-    );
-    setSuggestions([...new Set(matches)].slice(0, 8));
-  }
 
-  function handleSuggestionClick(brand) {
-    const brandCars = cars.filter((c) => c.brand?.name === brand);
-    setFilteredCars(brandCars);
-    setSuggestions([]);
-    setSearch(brand);
-  }
+    let mounted = true;
 
-  // ─── View All Handler ────────────────────────────────────
-  function handleViewAll() {
-    navigate("/filter-result", {
-      state: { filteredCars },
-    });
-  }
+    getCars()
+      .then((allCars) => {
+        if (!mounted) return;
 
-  // ─── Render ──────────────────────────────────────────────
+        setCars(allCars);
+        setFilteredCars(allCars);
+      })
+      .catch(() => {
+        if (!mounted) return;
+      })
+      .finally(() => {
+        if (!mounted) return;
+
+        setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  /* =======================================================
+     VIEW ALL
+  ======================================================= */
+
+  const handleViewAll =
+    useCallback(() => {
+      navigate(
+        "/filter-result",
+        {
+          state: {
+            filteredCars,
+          },
+        }
+      );
+    }, [
+      navigate,
+      filteredCars,
+    ]);
+
+  /* =======================================================
+     UI
+  ======================================================= */
+
   return (
-    <div className="space-y-4">
-      {/* Board Buttons – both navigate to dedicated screens */}
+    <div
+      className="
+        w-full
+        min-w-0
+        space-y-4
+      "
+    >
       <HomeBoardTwoButton
-        onOwnBoardTap={() => navigate("/own-cars")}
-        onTBoardTap={() => navigate("/t-board-cars")}
+        onOwnBoardTap={() =>
+          navigate("/own-cars")
+        }
+        onTBoardTap={() =>
+          navigate("/t-board-cars")
+        }
       />
 
-      {/* Variant Auto Scroll */}
       <div>
         <SectionHeader
           title="Car Sections"
-          onViewAll={() => navigate("/variants")}
+          onViewAll={() =>
+            navigate("/variants")
+          }
         />
+
         <HomeOwncardscroll />
       </div>
 
-      {/* Car Grid – shows all cars (or filtered by search) */}
       <CarGridSection
         cars={filteredCars}
+        loading={loading}
         showViewAllButton={true}
         onViewAll={handleViewAll}
       />
@@ -92,12 +218,50 @@ export default function CarsPage() {
   );
 }
 
-// ─── Helper Component ──────────────────────────────────────
-const SectionHeader = ({ title, onViewAll }) => (
-  <div className="flex justify-between items-center mb-2">
-    <h2 className="text-lg font-semibold">{title}</h2>
-    <button onClick={onViewAll} className="text-sm text-slate-500 hover:text-black transition">
-      View All
-    </button>
-  </div>
+/* =========================================================
+   HEADER
+========================================================= */
+
+const SectionHeader = memo(
+  function SectionHeader({
+    title,
+    onViewAll,
+  }) {
+    return (
+      <div
+        className="
+          mb-2
+          flex
+          items-center
+          justify-between
+        "
+      >
+        <h2
+          className="
+            text-lg
+            font-semibold
+          "
+        >
+          {title}
+        </h2>
+
+        <button
+          type="button"
+          onClick={onViewAll}
+          className="
+            text-sm
+            text-slate-500
+            transition-colors
+            hover:text-black
+          "
+        >
+          View All
+        </button>
+      </div>
+    );
+  }
+);
+
+export default memo(
+  CarsPage
 );

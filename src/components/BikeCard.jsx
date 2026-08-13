@@ -1,7 +1,10 @@
 // src/components/BikeCard.jsx
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, {
+  memo,
+  useState,
+} from "react";
+
 import {
   FaMapMarkerAlt,
   FaTachometerAlt,
@@ -9,345 +12,828 @@ import {
   FaShareAlt,
 } from "react-icons/fa";
 
-/* ================= SAFE HELPERS ================= */
+/* =========================================================
+   SAFE HELPERS
+========================================================= */
 
 const asString = (value) => {
-  if (value === null || value === undefined || value === "") return "";
-
-  if (typeof value === "object") {
-    if (value.name) return value.name.toString();
-    if (value.$oid) return value.$oid.toString();
-    if (Array.isArray(value)) return value[0]?.toString() || "";
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "";
   }
 
-  return value.toString();
+  if (
+    typeof value === "object"
+  ) {
+    if (value.name) {
+      return String(
+        value.name
+      );
+    }
+
+    if (value.$oid) {
+      return String(
+        value.$oid
+      );
+    }
+
+    if (value._id) {
+      return String(
+        value._id
+      );
+    }
+
+    if (Array.isArray(value)) {
+      return value[0]
+        ? String(value[0])
+        : "";
+    }
+
+    return "";
+  }
+
+  return String(value);
 };
 
-const formatPrice = (rawPrice) => {
+/* =========================================================
+   PRICE
+========================================================= */
+
+const formatPrice = (
+  rawPrice
+) => {
   const num =
-    parseInt(asString(rawPrice).replace(/[^0-9]/g, ""), 10) || 0;
+    parseInt(
+      asString(
+        rawPrice
+      ).replace(
+        /[^0-9]/g,
+        ""
+      ),
+      10
+    ) || 0;
 
-  return num.toLocaleString("en-IN");
+  return num.toLocaleString(
+    "en-IN"
+  );
 };
 
-/* ================= COMPONENT ================= */
+/* =========================================================
+   IMAGE URL
+========================================================= */
 
-export default function BikeCard({
+const getImageUrl = (
+  value
+) => {
+  if (!value) return "";
+
+  if (
+    typeof value ===
+    "string"
+  ) {
+    return value.trim();
+  }
+
+  if (
+    typeof value ===
+    "object"
+  ) {
+    return (
+      value.url ||
+      value.secure_url ||
+      value.src ||
+      value.path ||
+      value.imageUrl ||
+      ""
+    );
+  }
+
+  return "";
+};
+
+/* =========================================================
+   BIKE CARD
+   ---------------------------------------------------------
+   PERFORMANCE:
+   - No framer-motion
+   - No animation
+   - No shimmer
+   - No blur animation
+   - No skeleton animation
+   - React.memo
+   - Async image decode
+   - Lazy images
+========================================================= */
+
+function BikeCard({
   loading = false,
+
   bikeId,
   brandName,
   brandLogoUrl,
+
   name,
   imageUrl,
+
   location,
   price,
   year,
   status,
   km,
   owner,
+
   onTap,
 }) {
-  if (loading) {
-    return <BikeCardSkeleton />;
-  }
+  /* =======================================================
+     IMAGE
+  ======================================================= */
 
-  const normalizedStatus = asString(status).toLowerCase();
+  const image =
+    getImageUrl(
+      imageUrl
+    );
 
-  /* ================= SHARE ================= */
+  const [
+    imageLoaded,
+    setImageLoaded,
+  ] = useState(false);
 
-  const shareBike = async (e) => {
-    e.stopPropagation();
+  const [
+    imageError,
+    setImageError,
+  ] = useState(false);
+
+  /* =======================================================
+     SHARE
+  ======================================================= */
+
+  const shareBike = async (
+    event
+  ) => {
+    event.stopPropagation();
+
+    const id =
+      asString(
+        bikeId
+      );
+
+    if (!id) return;
 
     const shareUrl =
-      `${window.location.origin}/bike/${encodeURIComponent(asString(bikeId))}`;
+      `${window.location.origin}/bike/${encodeURIComponent(
+        id
+      )}`;
 
-    const shareText = `
-🏍️ ${asString(brandName)} ${asString(name)}
+    const shareText =
+      `🏍️ ${asString(
+        brandName
+      )} ${asString(name)}
 
-💰 Price: ₹${formatPrice(price)}
-📅 Year: ${asString(year)}
-📍 Location: ${asString(location)}
-🛣️ KM: ${asString(km)} km
-👤 Owner: ${asString(owner)}
+💰 Price: ₹${formatPrice(
+        price
+      )}
+📅 Year: ${asString(
+        year
+      )}
+📍 Location: ${asString(
+        location
+      )}
+🛣️ KM: ${asString(
+        km
+      )} km
+👤 Owner: ${asString(
+        owner
+      )}
 
-👉 ${shareUrl}
-`;
+👉 ${shareUrl}`;
 
-    if (navigator.share) {
+    /* Native share */
+    if (
+      typeof navigator !==
+        "undefined" &&
+      typeof navigator.share ===
+        "function"
+    ) {
       try {
         await navigator.share({
-          title: "Bike Details",
+          title:
+            `${asString(
+              brandName
+            )} ${asString(
+              name
+            )}`,
           text: shareText,
           url: shareUrl,
         });
-      } catch (err) {
-        console.log("Share cancelled", err);
+      } catch {
+        // User cancelled share
       }
-    } else {
-      try {
-        await navigator.clipboard.writeText(shareText);
-      } catch (_) {
-        console.log("Web Share not supported:", shareText);
+
+      return;
+    }
+
+    /* Clipboard fallback */
+    try {
+      if (
+        navigator.clipboard
+          ?.writeText
+      ) {
+        await navigator.clipboard.writeText(
+          shareText
+        );
       }
+    } catch {
+      // Ignore clipboard failure
     }
   };
 
-  /* ================= STATUS ================= */
+  /* =======================================================
+     STATUS
+  ======================================================= */
 
-  const statusColor = () => {
-    if (normalizedStatus === "sold") return "bg-red-500";
-    if (normalizedStatus === "booking") return "bg-blue-500";
-    return "bg-gray-500";
-  };
+  const normalizedStatus =
+    asString(
+      status
+    ).toLowerCase();
 
-  const statusText = () => {
-    if (normalizedStatus === "sold") return "SOLD";
-    if (normalizedStatus === "booking") return "BOOKING";
-    return normalizedStatus.toUpperCase();
-  };
+  const statusColor =
+    normalizedStatus ===
+    "sold"
+      ? "bg-red-500"
+      : normalizedStatus ===
+        "booking"
+      ? "bg-blue-500"
+      : "bg-gray-500";
 
-  /* ================= UI ================= */
+  const statusText =
+    normalizedStatus ===
+    "sold"
+      ? "SOLD"
+      : normalizedStatus ===
+        "booking"
+      ? "BOOKING"
+      : normalizedStatus
+      ? normalizedStatus.toUpperCase()
+      : "";
+
+  /* =======================================================
+     STATIC LOADING
+     -------------------------------------------------------
+     NO animation.
+     NO shimmer.
+  ======================================================= */
+
+  if (loading) {
+    return (
+      <BikeCardSkeleton />
+    );
+  }
+
+  /* =======================================================
+     CARD
+  ======================================================= */
 
   return (
-    <motion.div
+    <div
       onClick={onTap}
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.985 }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (
+          event.key ===
+            "Enter" ||
+          event.key === " "
+        ) {
+          event.preventDefault();
+          onTap?.();
+        }
+      }}
       className="
-        group relative flex w-full flex-col overflow-hidden
-        rounded-[22px] border border-white/70 bg-white
+        group
+        relative
+        my-1.5
+        flex
+        w-full
+        cursor-pointer
+        flex-col
+        overflow-hidden
+        rounded-[22px]
+        border
+        border-white/70
+        bg-white
         shadow-[0_5px_18px_rgba(15,23,42,0.07)]
-        transition-all duration-300
-        hover:shadow-[0_12px_30px_rgba(15,23,42,0.12)]
-        my-1.5 cursor-pointer
+        active:scale-[0.99]
       "
     >
-      {/* IMAGE */}
-      <BikeImage
-        imageUrl={asString(imageUrl)}
-        year={year}
-        status={normalizedStatus}
-        statusText={statusText()}
-        statusColor={statusColor()}
-        onShare={shareBike}
-      />
+      {/* =================================================
+          IMAGE
+      ================================================= */}
 
-      {/* CONTENT */}
-      <div className="px-3 pt-2 pb-2.5">
-        <div className="flex items-center min-w-0">
-          <div className="flex-1 truncate text-sm font-extrabold tracking-tight">
-            ₹{formatPrice(price)}
+      <div
+        className="
+          relative
+          aspect-[13/11]
+          w-full
+          shrink-0
+          overflow-hidden
+          bg-slate-100
+        "
+      >
+        {/* IMAGE */}
+
+        {!imageError &&
+        image ? (
+          <img
+            src={image}
+            alt={`${asString(
+              brandName
+            )} ${asString(
+              name
+            )}`}
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
+            draggable="false"
+            onLoad={() =>
+              setImageLoaded(
+                true
+              )
+            }
+            onError={() => {
+              setImageError(
+                true
+              );
+              setImageLoaded(
+                false
+              );
+            }}
+            className="
+              block
+              h-full
+              w-full
+              object-cover
+            "
+          />
+        ) : (
+          <BikeImageFallback />
+        )}
+
+        {/* STATIC IMAGE PLACEHOLDER */}
+
+        {!imageLoaded &&
+          !imageError &&
+          image && (
+            <div
+              className="
+                pointer-events-none
+                absolute
+                inset-0
+                bg-slate-100
+              "
+            />
+          )}
+
+        {/* TOP GRADIENT */}
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            inset-x-0
+            top-0
+            z-10
+            h-14
+            bg-gradient-to-b
+            from-black/10
+            to-transparent
+          "
+        />
+
+        {/* YEAR */}
+
+        {year && (
+          <div
+            className="
+              absolute
+              left-2.5
+              top-2.5
+              z-20
+            "
+          >
+            <Chip
+              text={year}
+            />
+          </div>
+        )}
+
+        {/* STATUS */}
+
+        {normalizedStatus &&
+          normalizedStatus !==
+            "available" && (
+            <div
+              className="
+                absolute
+                inset-0
+                z-20
+                flex
+                items-center
+                justify-center
+                bg-black/[0.03]
+              "
+            >
+              <Chip
+                text={
+                  statusText
+                }
+                className={`${statusColor} shadow-lg`}
+              />
+            </div>
+          )}
+
+        {/* SHARE */}
+
+        <button
+          type="button"
+          onClick={
+            shareBike
+          }
+          aria-label="Share bike"
+          className="
+            absolute
+            right-2.5
+            top-2.5
+            z-30
+            flex
+            h-8
+            w-8
+            items-center
+            justify-center
+            rounded-full
+            border
+            border-white/30
+            bg-black/55
+            text-white
+            shadow-lg
+            backdrop-blur-md
+            active:scale-90
+          "
+        >
+          <FaShareAlt
+            size={11}
+          />
+        </button>
+
+        {/* BOTTOM GRADIENT */}
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            inset-x-0
+            bottom-0
+            z-10
+            h-16
+            bg-gradient-to-t
+            from-black/30
+            to-transparent
+          "
+        />
+      </div>
+
+      {/* =================================================
+          CONTENT
+      ================================================= */}
+
+      <div
+        className="
+          min-w-0
+          px-3
+          pb-2.5
+          pt-2
+        "
+      >
+        {/* PRICE + LOCATION */}
+
+        <div
+          className="
+            flex
+            min-w-0
+            items-center
+          "
+        >
+          <div
+            className="
+              min-w-0
+              flex-1
+              truncate
+              text-sm
+              font-extrabold
+              tracking-tight
+              text-black
+            "
+          >
+            ₹
+            {formatPrice(
+              price
+            )}
           </div>
 
-          <IconText
-            icon={<FaMapMarkerAlt size={9} />}
-            text={location}
-            textSize="text-[8px]"
-          />
+          {location && (
+            <IconText
+              icon={
+                <FaMapMarkerAlt
+                  size={9}
+                />
+              }
+              text={location}
+              textSize="text-[8px]"
+            />
+          )}
         </div>
 
-        <div className="mt-0.5 flex items-center min-w-0">
-          <div className="flex-1 truncate text-xs font-semibold">
+        {/* NAME + KM */}
+
+        <div
+          className="
+            mt-0.5
+            flex
+            min-w-0
+            items-center
+          "
+        >
+          <div
+            className="
+              min-w-0
+              flex-1
+              truncate
+              text-xs
+              font-semibold
+              text-black
+            "
+          >
             {asString(name)}
           </div>
 
-          <IconText
-            icon={<FaTachometerAlt size={9} />}
-            text={`${asString(km)} km`}
-            textSize="text-[8px]"
-          />
+          {km !== "" &&
+            km !==
+              null &&
+            km !==
+              undefined && (
+              <IconText
+                icon={
+                  <FaTachometerAlt
+                    size={9}
+                  />
+                }
+                text={`${asString(
+                  km
+                )} km`}
+                textSize="text-[8px]"
+              />
+            )}
         </div>
 
-        <div className="mt-1">
-          <IconText
-            icon={<FaUser size={9} />}
-            text={owner}
-            textSize="text-[9px]"
-          />
-        </div>
+        {/* OWNER */}
+
+        {owner && (
+          <div
+            className="
+              mt-1
+            "
+          >
+            <IconText
+              icon={
+                <FaUser
+                  size={9}
+                />
+              }
+              text={owner}
+              textSize="text-[9px]"
+            />
+          </div>
+        )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
-/* ================= IMAGE ================= */
+/* =========================================================
+   STATIC SKELETON
+   ---------------------------------------------------------
+   NO motion
+   NO shimmer
+   NO keyframes
+========================================================= */
 
-function BikeImage({
-  imageUrl,
-  year,
-  status,
-  statusText,
-  statusColor,
-  onShare,
-}) {
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
-
-  return (
-    <div className="relative w-full">
+const BikeCardSkeleton = memo(
+  function BikeCardSkeleton() {
+    return (
       <div
         className="
-          relative w-full aspect-[13/11]
-          overflow-hidden bg-slate-100
+          my-1.5
+          w-full
+          overflow-hidden
+          rounded-[22px]
+          border
+          border-white/70
+          bg-white
+          shadow-[0_5px_18px_rgba(15,23,42,0.06)]
         "
       >
-        {!loaded && !error && imageUrl && <ImageSkeleton />}
-
-        {!error && imageUrl ? (
-          <img
-            src={imageUrl}
-            alt=""
-            loading="lazy"
-            className={`
-              h-full w-full object-cover transition-all duration-700
-              ${loaded ? "scale-100 opacity-100" : "scale-[1.04] opacity-0"}
-              group-hover:scale-[1.04]
-            `}
-            onLoad={() => setLoaded(true)}
-            onError={() => setError(true)}
-          />
-        ) : (
-          <ImageFallback />
-        )}
-
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent" />
-      </div>
-
-      {year && (
-        <div className="absolute left-2.5 top-2.5 z-20">
-          <Chip text={year} />
-        </div>
-      )}
-
-      {status && status !== "available" && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center">
-          <Chip text={statusText} className={`${statusColor} shadow-lg`} />
-        </div>
-      )}
-
-      <button
-        type="button"
-        onClick={onShare}
-        aria-label="Share"
-        className="
-          absolute right-2.5 top-2.5 z-30 flex h-8 w-8
-          items-center justify-center rounded-full
-          border border-white/30 bg-black/55 text-white
-          shadow-lg backdrop-blur-md transition
-          hover:bg-black/70 active:scale-90
-        "
-      >
-        <FaShareAlt size={11} />
-      </button>
-    </div>
-  );
-}
-
-/* ================= PREMIUM SKELETON ================= */
-
-function BikeCardSkeleton() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 18, scale: 0.97, filter: "blur(3px)" }}
-      animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className="
-        relative w-full overflow-hidden rounded-[22px]
-        border border-white/70 bg-white
-        shadow-[0_5px_18px_rgba(15,23,42,0.06)]
-        my-1.5
-      "
-    >
-      <div className="relative aspect-[13/11] overflow-hidden bg-gradient-to-br from-slate-100 via-slate-200/70 to-slate-100">
-        <PageShimmer />
-
-        <motion.div
-          animate={{ opacity: [0.2, 0.42, 0.2], scale: [0.96, 1.04, 0.96] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute left-1/2 top-1/2 h-16 w-20 -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white/45 blur-xl"
+        <div
+          className="
+            aspect-[13/11]
+            w-full
+            bg-slate-100
+          "
         />
 
-        <SkeletonLine className="absolute left-2.5 top-2.5 h-5 w-12 rounded-full" />
-        <SkeletonLine className="absolute right-2.5 top-2.5 h-8 w-8 rounded-full" />
-      </div>
+        <div
+          className="
+            space-y-2.5
+            px-3
+            pb-3
+            pt-3
+          "
+        >
+          <div
+            className="
+              h-4
+              w-24
+              rounded-full
+              bg-slate-100
+            "
+          />
 
-      <div className="space-y-2.5 px-3 pb-3 pt-3">
-        <SkeletonLine className="h-4 w-24 rounded-full" />
-        <SkeletonLine className="h-3 w-[72%] rounded-full" />
+          <div
+            className="
+              h-3
+              w-[72%]
+              rounded-full
+              bg-slate-100
+            "
+          />
 
-        <div className="flex gap-2">
-          <SkeletonLine className="h-2.5 w-12 rounded-full" />
-          <SkeletonLine className="h-2.5 w-14 rounded-full" />
+          <div
+            className="
+              flex
+              gap-2
+            "
+          >
+            <div
+              className="
+                h-2.5
+                w-12
+                rounded-full
+                bg-slate-100
+              "
+            />
+
+            <div
+              className="
+                h-2.5
+                w-14
+                rounded-full
+                bg-slate-100
+              "
+            />
+          </div>
+
+          <div
+            className="
+              h-2.5
+              w-[58%]
+              rounded-full
+              bg-slate-100
+            "
+          />
         </div>
-
-        <SkeletonLine className="h-2.5 w-[58%] rounded-full" />
       </div>
-    </motion.div>
-  );
-}
+    );
+  }
+);
 
-function PageShimmer() {
-  return (
-    <motion.div
-      initial={{ x: "-140%", opacity: 0 }}
-      animate={{ x: "180%", opacity: [0, 1, 1, 0] }}
-      transition={{ duration: 1.45, repeat: Infinity, ease: "easeInOut" }}
-      className="
-        pointer-events-none absolute inset-y-0 left-0 z-20
-        w-1/2 -skew-x-12
-        bg-gradient-to-r from-transparent via-white/80 to-transparent
-        blur-lg
-      "
-    />
-  );
-}
+/* =========================================================
+   IMAGE FALLBACK
+   ---------------------------------------------------------
+   Replaces any PremiumImageFallback dependency.
+========================================================= */
 
-function ImageSkeleton() {
-  return (
-    <div className="absolute inset-0 z-10 overflow-hidden bg-gradient-to-br from-slate-100 via-slate-200/70 to-slate-100">
-      <PageShimmer />
-    </div>
-  );
-}
-
-function ImageFallback() {
-  return (
-    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/60 text-xl font-black text-black/15 shadow-sm backdrop-blur-xl">
-        R
+const BikeImageFallback = memo(
+  function BikeImageFallback() {
+    return (
+      <div
+        className="
+          flex
+          h-full
+          w-full
+          items-center
+          justify-center
+          bg-gradient-to-br
+          from-slate-100
+          via-slate-200
+          to-slate-100
+        "
+      >
+        <div
+          className="
+            flex
+            h-14
+            w-14
+            items-center
+            justify-center
+            rounded-2xl
+            bg-white/70
+            text-xl
+            font-black
+            text-black/15
+          "
+        >
+          R
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
+);
 
-function SkeletonLine({ className = "" }) {
-  return (
-    <div className={`relative overflow-hidden bg-slate-200 ${className}`}>
-      <PageShimmer />
-    </div>
-  );
-}
+/* =========================================================
+   CHIP
+========================================================= */
 
-function Chip({ text, className = "bg-black/60" }) {
-  return (
-    <span
-      className={`
-        ${className} inline-flex items-center rounded-full
-        px-2 py-1 text-[10px] font-bold leading-none text-white
-      `}
-    >
-      {asString(text)}
-    </span>
-  );
-}
-
-function IconText({ icon, text, textSize = "text-[8px]" }) {
-  return (
-    <div className="flex min-w-0 shrink items-center gap-1 truncate text-gray-500">
-      <span className="shrink-0">{icon}</span>
-      <span className={`${textSize} min-w-0 truncate`}>
+const Chip = memo(
+  function Chip({
+    text,
+    className = "bg-black/60",
+  }) {
+    return (
+      <span
+        className={`
+          ${className}
+          inline-flex
+          items-center
+          rounded-full
+          px-2
+          py-1
+          text-[10px]
+          font-bold
+          leading-none
+          text-white
+        `}
+      >
         {asString(text)}
       </span>
-    </div>
-  );
-}
+    );
+  }
+);
+
+/* =========================================================
+   ICON TEXT
+========================================================= */
+
+const IconText = memo(
+  function IconText({
+    icon,
+    text,
+    textSize = "text-[8px]",
+  }) {
+    return (
+      <div
+        className="
+          flex
+          min-w-0
+          shrink
+          items-center
+          gap-1
+          truncate
+          text-gray-500
+        "
+      >
+        <span className="shrink-0">
+          {icon}
+        </span>
+
+        <span
+          className={`
+            ${textSize}
+            min-w-0
+            truncate
+          `}
+        >
+          {asString(text)}
+        </span>
+      </div>
+    );
+  }
+);
+
+/* =========================================================
+   FINAL EXPORT
+========================================================= */
+
+export default memo(
+  BikeCard
+);

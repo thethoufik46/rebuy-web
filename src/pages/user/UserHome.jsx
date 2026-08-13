@@ -1,8 +1,13 @@
-// src/pages/user/UserHome.jsx
+/* =========================================================
+   src/pages/user/UserHome.jsx
+   RE2BUY — FAST MARKETPLACE HOME
+   ========================================================= */
 
-import {
+import React, {
+  Suspense,
+  lazy,
+  useCallback,
   useEffect,
-  useMemo,
   useState,
 } from "react";
 
@@ -11,40 +16,11 @@ import {
   useSearchParams,
 } from "react-router-dom";
 
-import {
-  motion,
-  AnimatePresence,
-} from "framer-motion";
-
-/* =========================================================
-   HOME COMPONENTS
-========================================================= */
-
 import Navbar from "./home/Navbar";
-
 import SearchBar from "./Search/SearchBar";
-
-/* =========================================================
-   HOME SECTIONS
-========================================================= */
-
 import HomeBanner from "@/pages/user/home/HomeBanner";
-import Location from "@/pages/user/home/Location";
 import Testimonials from "@/pages/user/Testimonials/Testimonials";
 import Footer from "@/pages/user/home/Footer";
-
-/* =========================================================
-   CATEGORY PAGES
-========================================================= */
-
-import CarsPage from "@/pages/user/home/Pages/CarsPage";
-import BikesPage from "@/pages/user/home/Pages/BikesPage";
-import RealEstatePage from "@/pages/user/home/Pages/RealEstatePage";
-import ElectronicsPage from "@/pages/user/home/Pages/ElectronicsPage";
-
-/* =========================================================
-   CATEGORY ICONS
-========================================================= */
 
 import carIcon from "@/assets/home/car.webp";
 import bikeIcon from "@/assets/home/bike.webp";
@@ -53,17 +29,48 @@ import electronicsIcon from "@/assets/home/electronic.webp";
 
 /* =========================================================
    API
-========================================================= */
+   ========================================================= */
 
 const BASE_URL =
   "https://rebuy-api.onrender.com/api";
 
-/* =========================================================
-   CATEGORY PAGES
+const HOME_LIMIT = 6;
 
-   IMPORTANT:
-   pages MUST be declared before rawTab / selectedIndex.
-========================================================= */
+/* =========================================================
+   LAZY CATEGORY BUNDLES
+   ========================================================= */
+
+const CarsPage = lazy(
+  () =>
+    import(
+      "@/pages/user/home/Pages/CarsPage"
+    )
+);
+
+const BikesPage = lazy(
+  () =>
+    import(
+      "@/pages/user/home/Pages/BikesPage"
+    )
+);
+
+const RealEstatePage = lazy(
+  () =>
+    import(
+      "@/pages/user/home/Pages/RealEstatePage"
+    )
+);
+
+const ElectronicsPage = lazy(
+  () =>
+    import(
+      "@/pages/user/home/Pages/ElectronicsPage"
+    )
+);
+
+/* =========================================================
+   CATEGORY DATA
+   ========================================================= */
 
 const pages = [
   {
@@ -71,25 +78,100 @@ const pages = [
     icon: carIcon,
     component: CarsPage,
   },
-
   {
     id: 1,
     icon: bikeIcon,
     component: BikesPage,
   },
-
   {
     id: 2,
     icon: propertyIcon,
     component: RealEstatePage,
   },
-
   {
     id: 3,
     icon: electronicsIcon,
     component: ElectronicsPage,
   },
 ];
+
+/* =========================================================
+   MEMORY CACHE
+   ---------------------------------------------------------
+   ONE cars request per SPA session.
+========================================================= */
+
+let carsMemoryCache = null;
+let carsRequest = null;
+
+/* =========================================================
+   FETCH HOME CARS
+========================================================= */
+
+async function fetchHomeCars(signal) {
+  if (Array.isArray(carsMemoryCache)) {
+    return carsMemoryCache;
+  }
+
+  if (carsRequest) {
+    return carsRequest;
+  }
+
+  carsRequest = fetch(
+    `${BASE_URL}/cars?limit=${HOME_LIMIT}&page=1`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      cache: "default",
+      signal,
+    }
+  )
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error(
+          `Cars API ${response.status}`
+        );
+      }
+
+      const data =
+        await response.json();
+
+      const result = Array.isArray(
+        data?.cars
+      )
+        ? data.cars.slice(
+            0,
+            HOME_LIMIT
+          )
+        : [];
+
+      carsMemoryCache = result;
+
+      return result;
+    })
+    .catch((error) => {
+      carsRequest = null;
+
+      if (
+        error?.name !==
+        "AbortError"
+      ) {
+        console.error(
+          "Cars API error:",
+          error
+        );
+      }
+
+      throw error;
+    })
+    .finally(() => {
+      carsRequest = null;
+    });
+
+  return carsRequest;
+}
 
 /* =========================================================
    USER HOME
@@ -103,207 +185,202 @@ export default function UserHome() {
     setSearchParams,
   ] = useSearchParams();
 
-  /* =======================================================
-     URL TAB
-  ======================================================= */
-
-  const tabParam =
+  const tabValue =
     searchParams.get("tab");
 
-  const rawTab =
-    tabParam === null ||
-    tabParam.trim() === ""
+  const parsedTab =
+    tabValue === null
       ? 0
-      : Number(tabParam);
+      : Number(tabValue);
 
   const selectedIndex =
-    Number.isInteger(rawTab) &&
-    rawTab >= 0 &&
-    rawTab < pages.length
-      ? rawTab
+    Number.isInteger(parsedTab) &&
+    parsedTab >= 0 &&
+    parsedTab < pages.length
+      ? parsedTab
       : 0;
 
   /* =======================================================
-     STATES
+     CARS
   ======================================================= */
 
-  const [
-    cars,
-    setCars,
-  ] = useState([]);
+  const [cars, setCars] = useState(
+    () =>
+      Array.isArray(
+        carsMemoryCache
+      )
+        ? carsMemoryCache
+        : []
+  );
 
   const [
-    search,
-    setSearch,
-  ] = useState("");
+    carsLoading,
+    setCarsLoading,
+  ] = useState(
+    !Array.isArray(
+      carsMemoryCache
+    )
+  );
 
   /* =======================================================
-     FETCH CARS
+     SEARCH
+  ======================================================= */
+
+  const [search, setSearch] =
+    useState("");
+
+  /* =======================================================
+     LOAD ONCE
   ======================================================= */
 
   useEffect(() => {
-    fetchCars();
-  }, []);
-
-  async function fetchCars() {
-    try {
-      const response =
-        await fetch(
-          `${BASE_URL}/cars`
-        );
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch cars: ${response.status}`
-        );
-      }
-
-      const data =
-        await response.json();
-
-      setCars(
-        Array.isArray(
-          data?.cars
-        )
-          ? data.cars
-          : []
-      );
-    } catch (error) {
-      console.error(
-        "Fetch cars error:",
-        error
-      );
-
-      setCars([]);
-    }
-  }
-
-  /* =======================================================
-     SEARCH CHANGE
-  ======================================================= */
-
-  function handleSearchChange(
-    value
-  ) {
-    setSearch(value);
-  }
-
-  /* =======================================================
-     SEARCH RESULT
-  ======================================================= */
-
-  function handleSearchSubmit(
-    query,
-    matchedCars
-  ) {
-    setSearch(query);
-
-    navigate(
-      "/search-results",
-      {
-        state: {
-          query,
-
-          filteredCars:
-            Array.isArray(
-              matchedCars
-            )
-              ? matchedCars
-              : [],
-        },
-      }
-    );
-  }
-
-  /* =======================================================
-     TAB CHANGE
-  ======================================================= */
-
-  function handleTabChange(
-    index
-  ) {
     if (
-      !Number.isInteger(index) ||
-      index < 0 ||
-      index >= pages.length
+      Array.isArray(
+        carsMemoryCache
+      )
     ) {
+      setCars(
+        carsMemoryCache
+      );
+      setCarsLoading(false);
       return;
     }
 
-    setSearchParams({
-      tab: String(index),
-    });
-  }
+    const controller =
+      new AbortController();
+
+    let mounted = true;
+
+    fetchHomeCars(
+      controller.signal
+    )
+      .then((result) => {
+        if (!mounted) return;
+
+        setCars(result);
+      })
+      .catch((error) => {
+        if (
+          error?.name ===
+          "AbortError"
+        ) {
+          return;
+        }
+
+        if (mounted) {
+          setCars([]);
+        }
+      })
+      .finally(() => {
+        if (mounted) {
+          setCarsLoading(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+      controller.abort();
+    };
+  }, []);
 
   /* =======================================================
-     ACTIVE PAGE
+     SEARCH
   ======================================================= */
 
-  const ActivePage =
-    useMemo(
-      () =>
-        pages[
-          selectedIndex
-        ]?.component ||
-        CarsPage,
-      [selectedIndex]
+  const handleSearchChange =
+    useCallback((value) => {
+      setSearch(
+        String(value ?? "")
+      );
+    }, []);
+
+  /* =======================================================
+     SEARCH SUBMIT
+  ======================================================= */
+
+  const handleSearchSubmit =
+    useCallback(
+      (query, matchedCars) => {
+        navigate(
+          "/search-results",
+          {
+            state: {
+              query,
+              filteredCars:
+                Array.isArray(
+                  matchedCars
+                )
+                  ? matchedCars
+                  : [],
+            },
+          }
+        );
+      },
+      [navigate]
     );
+
+  /* =======================================================
+     TAB
+  ======================================================= */
+
+  const handleTabChange =
+    useCallback(
+      (index) => {
+        if (
+          index < 0 ||
+          index >= pages.length
+        ) {
+          return;
+        }
+
+        setSearchParams(
+          {
+            tab: String(index),
+          },
+          {
+            replace: true,
+          }
+        );
+      },
+      [setSearchParams]
+    );
+
+  const ActivePage =
+    pages[selectedIndex]
+      ?.component || CarsPage;
 
   /* =======================================================
      RENDER
   ======================================================= */
 
   return (
-    <div
+    <main
       className="
         min-h-screen
         overflow-x-hidden
+        bg-[#F3EFFF]
         text-black
       "
-      style={{
-        background:
-          "linear-gradient(to bottom, rgb(214,206,243), #F3EFFF)",
-      }}
     >
-
-      {/* =================================================
-          NAVBAR
-      ================================================= */}
-
       <Navbar />
 
       {/* =================================================
-          HOME BANNER
-
-          Desktop:
-          visible
-
-          Mobile:
-          completely hidden
+          DESKTOP BANNER
       ================================================= */}
 
-      <div
-        className="
-          hidden
-          md:block
-        "
-      >
+      <div className="hidden md:block">
         <HomeBanner />
       </div>
 
-      {/* =================================================
-          SEARCH + CATEGORY
-      ================================================= */}
-
       <div
         className="
-          p-4
+          p-3
+          sm:p-4
           md:p-6
         "
       >
-
         {/* =================================================
-            SEARCH ROW
+            SEARCH
         ================================================= */}
 
         <div
@@ -315,15 +392,7 @@ export default function UserHome() {
             gap-2
           "
         >
-
-          {/* SEARCH */}
-
-          <div
-            className="
-              min-w-0
-              flex-1
-            "
-          >
+          <div className="min-w-0 flex-1">
             <SearchBar
               value={search}
               onChange={
@@ -336,14 +405,12 @@ export default function UserHome() {
             />
           </div>
 
-          {/* FILTER */}
-
           <button
             type="button"
+            aria-label="Filter"
             onClick={() =>
               navigate("/filter")
             }
-            aria-label="Filter"
             className="
               flex
               h-12
@@ -353,17 +420,17 @@ export default function UserHome() {
               justify-center
               rounded-xl
               border
-              border-white/50
-              bg-white/55
+              border-white/60
+              bg-white/60
               shadow-sm
-              backdrop-blur-xl
-              transition-all
-              hover:bg-white/70
+              backdrop-blur-lg
+              transition
+              duration-150
+              hover:bg-white/80
               active:scale-95
             "
           >
             <svg
-              xmlns="http://www.w3.org/2000/svg"
               width="20"
               height="20"
               viewBox="0 0 24 24"
@@ -371,7 +438,6 @@ export default function UserHome() {
               stroke="currentColor"
               strokeWidth="1.8"
               strokeLinecap="round"
-              strokeLinejoin="round"
             >
               <line
                 x1="4"
@@ -379,14 +445,12 @@ export default function UserHome() {
                 x2="20"
                 y2="6"
               />
-
               <line
                 x1="7"
                 y1="12"
                 x2="17"
                 y2="12"
               />
-
               <line
                 x1="10"
                 y1="18"
@@ -398,42 +462,39 @@ export default function UserHome() {
         </div>
 
         {/* =================================================
-            MODERN GLASS CATEGORY BAR
-
-            ICON ONLY
-            NO LABEL
+            CATEGORY BAR
         ================================================= */}
 
         <div
           className="
-            mx-1
+            mx-0
             my-3
-            rounded-[32px]
+            rounded-[30px]
             border
-            border-white/30
-            bg-white/10
+            border-white/40
+            bg-white/15
             p-2
-            shadow-[0_20px_60px_rgba(80,60,120,0.10)]
-            backdrop-blur-2xl
-            sm:mx-3
+            shadow-[0_14px_40px_rgba(80,60,120,0.07)]
+            backdrop-blur-xl
+            sm:mx-2
           "
         >
           <div
             className="
               flex
-              h-[92px]
+              h-[88px]
               items-center
               justify-around
               gap-2
-              sm:h-[100px]
+              sm:h-[96px]
             "
           >
             {pages.map(
               (page) => (
-                <TabButton
+                <CategoryButton
                   key={page.id}
                   icon={page.icon}
-                  isActive={
+                  active={
                     selectedIndex ===
                     page.id
                   }
@@ -452,55 +513,22 @@ export default function UserHome() {
             ACTIVE CATEGORY
         ================================================= */}
 
-        <div
-          className="
-            mt-2
-          "
-        >
-          <AnimatePresence
-            mode="wait"
+        <div className="mt-2 min-h-[180px]">
+          <Suspense
+            fallback={
+              <PageLoader />
+            }
           >
-            <motion.div
-              key={
-                selectedIndex
+            <ActivePage
+              cars={cars}
+              carsLoading={
+                carsLoading
               }
-              initial={{
-                opacity: 0,
-                y: 12,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              exit={{
-                opacity: 0,
-                y: -12,
-              }}
-              transition={{
-                duration: 0.25,
-                ease: "easeInOut",
-              }}
-            >
-              <ActivePage
-                search={search}
-              />
-            </motion.div>
-          </AnimatePresence>
+              search={search}
+            />
+          </Suspense>
         </div>
       </div>
-
-      {/* =================================================
-          LOCATION
-      ================================================= */}
-
-      {/*
-        <Location />
-      */}
-
-      {/* =================================================
-          TESTIMONIALS
-          FOOTER-KKU MELAE
-      ================================================= */}
 
       <section
         className="
@@ -516,179 +544,140 @@ export default function UserHome() {
         <Testimonials />
       </section>
 
-      {/* =================================================
-          FOOTER
-      ================================================= */}
-
       <Footer />
-    </div>
+    </main>
   );
 }
 
 /* =========================================================
-   MODERN GLASS CATEGORY BUTTON
-
-   ICON ONLY
-   NO NAME
+   CATEGORY BUTTON
 ========================================================= */
 
-function TabButton({
-  icon,
-  isActive,
-  onClick,
-}) {
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      whileTap={{
-        scale: 0.92,
-      }}
-      animate={{
-        scale: isActive
-          ? 1.08
-          : 1,
-      }}
-      transition={{
-        type: "spring",
-        stiffness: 320,
-        damping: 22,
-      }}
-      aria-label="Category"
-      className={`
-        relative
-        flex
-        h-[76px]
-        w-[76px]
-        shrink-0
-        items-center
-        justify-center
-        rounded-[26px]
-        border
-        transition-all
-        duration-300
+const CategoryButton = React.memo(
+  function CategoryButton({
+    icon,
+    active,
+    onClick,
+  }) {
+    return (
+      <button
+        type="button"
+        aria-label="Category"
+        aria-pressed={active}
+        onClick={onClick}
+        className={`
+          relative
+          flex
+          h-[72px]
+          w-[72px]
+          shrink-0
+          items-center
+          justify-center
+          rounded-[24px]
+          border
+          transition
+          duration-150
+          active:scale-95
+          max-[380px]:h-[62px]
+          max-[380px]:w-[62px]
 
-        ${
-          isActive
-            ? `
-              border-white/70
-              bg-white/45
-              shadow-[0_12px_35px_rgba(80,60,120,0.18)]
-              backdrop-blur-2xl
-            `
-            : `
-              border-white/30
-              bg-white/15
-              backdrop-blur-xl
-              hover:bg-white/30
-              hover:border-white/50
-            `
-        }
-
-        max-[380px]:h-[64px]
-        max-[380px]:w-[64px]
-        max-[380px]:rounded-[22px]
-      `}
-    >
-
-      {/* =================================================
-          GLASS HIGHLIGHT
-      ================================================= */}
-
-      <span
-        className="
-          pointer-events-none
-          absolute
-          inset-[1px]
-          rounded-[25px]
-          bg-gradient-to-br
-          from-white/50
-          via-white/10
-          to-transparent
-          opacity-80
-          max-[380px]:rounded-[21px]
-        "
-      />
-
-      {/* =================================================
-          ACTIVE GLOW
-      ================================================= */}
-
-      {isActive && (
-        <motion.span
-          layoutId="activeCategoryGlow"
+          ${
+            active
+              ? `
+                border-white/80
+                bg-white/55
+                shadow-[0_10px_28px_rgba(80,60,120,0.14)]
+              `
+              : `
+                border-white/30
+                bg-white/15
+                hover:bg-white/30
+              `
+          }
+        `}
+      >
+        <span
           className="
             pointer-events-none
             absolute
-            -inset-1
-            rounded-[28px]
-            bg-white/20
-            blur-xl
-            max-[380px]:rounded-[24px]
+            inset-[1px]
+            rounded-[23px]
+            bg-gradient-to-br
+            from-white/45
+            via-white/10
+            to-transparent
           "
-          transition={{
-            type: "spring",
-            stiffness: 300,
-            damping: 25,
-          }}
         />
-      )}
 
-      {/* =================================================
-          ICON
-      ================================================= */}
+        <img
+          src={icon}
+          alt=""
+          draggable="false"
+          width="54"
+          height="54"
+          loading="eager"
+          decoding="async"
+          className={`
+            relative
+            z-10
+            h-[54px]
+            w-[54px]
+            object-contain
+            transition
+            duration-150
+            ${
+              active
+                ? "scale-[1.05]"
+                : ""
+            }
+          `}
+        />
 
-      <motion.img
-        src={icon}
-        alt=""
-        draggable="false"
-        animate={{
-          scale: isActive
-            ? 1.08
-            : 1,
+        {active && (
+          <span
+            className="
+              absolute
+              -bottom-[4px]
+              left-1/2
+              z-20
+              h-[6px]
+              w-[6px]
+              -translate-x-1/2
+              rounded-full
+              bg-black/80
+            "
+          />
+        )}
+      </button>
+    );
+  }
+);
 
-          y: isActive
-            ? -1
-            : 0,
-        }}
-        transition={{
-          type: "spring",
-          stiffness: 350,
-          damping: 20,
-        }}
+/* =========================================================
+   PAGE LOADER
+========================================================= */
+
+function PageLoader() {
+  return (
+    <div
+      className="
+        flex
+        min-h-[180px]
+        items-center
+        justify-center
+      "
+    >
+      <span
         className="
-          relative
-          z-10
-          h-[58px]
-          w-[58px]
-          select-none
-          object-contain
-          max-[380px]:h-[50px]
-          max-[380px]:w-[50px]
+          h-7
+          w-7
+          animate-spin
+          rounded-full
+          border-2
+          border-black/10
+          border-t-black/70
         "
       />
-
-      {/* =================================================
-          ACTIVE DOT
-      ================================================= */}
-
-      {isActive && (
-        <motion.span
-          layoutId="activeCategoryDot"
-          className="
-            absolute
-            -bottom-[5px]
-            left-1/2
-            z-20
-            h-[7px]
-            w-[7px]
-            -translate-x-1/2
-            rounded-full
-            bg-black/80
-            shadow-[0_0_12px_rgba(0,0,0,0.25)]
-          "
-        />
-      )}
-    </motion.button>
+    </div>
   );
 }

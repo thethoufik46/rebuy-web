@@ -1,148 +1,435 @@
 // src/pages/user/home/property/PropertyGridSection.jsx
+
+import React, {
+  memo,
+  useCallback,
+  useMemo,
+} from "react";
+
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+
 import PropertyCard from "@/components/PropertyCard";
 
-// ─── Helper: filter out draft/drift ──────────────────────
-const isVisible = (property) => {
-  const status = (property?.status || "").toString().toLowerCase();
-  if (status === "draft") return false;
-  if (status === "drift") return false;
-  return true;
-};
+/* =========================================================
+   VISIBILITY
+========================================================= */
 
-// ─── Skeleton Card ────────────────────────────────────────
-const SkeletonCard = () => {
+const isVisible = (property) => {
+  const status = String(
+    property?.status || ""
+  ).toLowerCase();
+
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-sm h-full flex flex-col">
-      <div className="flex-1 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer" />
-      <div className="p-3 space-y-2">
-        <div className="h-4 bg-gray-200 rounded w-3/4" />
-        <div className="h-4 bg-gray-200 rounded w-1/2" />
-        <div className="h-3 bg-gray-200 rounded w-2/3" />
-      </div>
-    </div>
+    status !== "draft" &&
+    status !== "drift"
   );
 };
 
-// ─── Main Component ──────────────────────────────────────
-export default function PropertyGridSection({
+/* =========================================================
+   PROPERTY ITEM
+   ---------------------------------------------------------
+   Memoized so unchanged cards don't re-render.
+========================================================= */
+
+const PropertyGridItem = memo(
+  function PropertyGridItem({
+    property,
+    onOpen,
+  }) {
+    const id =
+      property?._id;
+
+    if (!id) {
+      return null;
+    }
+
+    return (
+      <div
+        className="
+          min-w-0
+          cursor-pointer
+          aspect-[0.72]
+          xl:aspect-[0.78]
+        "
+        onClick={() =>
+          onOpen(
+            id,
+            property
+          )
+        }
+      >
+        <PropertyCard
+          propertyId={id}
+          mainType={
+            property?.mainType
+          }
+          category={
+            property?.category
+          }
+          price={
+            property?.price
+          }
+          imageUrl={
+            property?.bannerImage
+          }
+          status={
+            property?.status
+          }
+          district={
+            property?.district
+          }
+          city={
+            property?.city
+          }
+          bedrooms={
+            property?.bedrooms
+          }
+          landArea={
+            property?.landArea
+          }
+          direction={
+            property?.direction
+          }
+        />
+      </div>
+    );
+  }
+);
+
+/* =========================================================
+   STATIC LOADING
+   ---------------------------------------------------------
+   No shimmer.
+   No animation.
+   No Framer Motion.
+========================================================= */
+
+const PropertyLoading = memo(
+  function PropertyLoading({
+    showViewAllButton,
+    onViewAll,
+  }) {
+    return (
+      <div className="space-y-3">
+        <div
+          className="
+            grid
+            grid-cols-2
+            gap-x-3
+            gap-y-3.5
+            md:grid-cols-4
+            lg:grid-cols-6
+          "
+        >
+          {Array.from({
+            length: 6,
+          }).map((_, index) => (
+            <div
+              key={index}
+              className="
+                aspect-[0.72]
+                overflow-hidden
+                rounded-[22px]
+                bg-white
+                shadow-[0_5px_18px_rgba(15,23,42,0.05)]
+                xl:aspect-[0.78]
+              "
+            >
+              <div
+                className="
+                  h-[62%]
+                  w-full
+                  bg-slate-100
+                "
+              />
+
+              <div
+                className="
+                  space-y-2
+                  px-3
+                  py-3
+                "
+              >
+                <div
+                  className="
+                    h-4
+                    w-24
+                    rounded-full
+                    bg-slate-100
+                  "
+                />
+
+                <div
+                  className="
+                    h-3
+                    w-[72%]
+                    rounded-full
+                    bg-slate-100
+                  "
+                />
+
+                <div
+                  className="
+                    h-2.5
+                    w-[58%]
+                    rounded-full
+                    bg-slate-100
+                  "
+                />
+
+                <div
+                  className="
+                    h-2.5
+                    w-[68%]
+                    rounded-full
+                    bg-slate-100
+                  "
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {showViewAllButton && (
+          <ViewAllButton
+            onClick={onViewAll}
+          />
+        )}
+      </div>
+    );
+  }
+);
+
+/* =========================================================
+   VIEW ALL
+========================================================= */
+
+const ViewAllButton = memo(
+  function ViewAllButton({
+    onClick,
+  }) {
+    return (
+      <div className="py-[14px]">
+        <button
+          type="button"
+          onClick={onClick}
+          className="
+            flex
+            h-[42px]
+            w-full
+            items-center
+            justify-between
+            rounded-[18px]
+            bg-white/45
+            px-[25px]
+            active:scale-[0.99]
+          "
+        >
+          <span
+            className="
+              text-xs
+              font-semibold
+              text-black
+            "
+          >
+            View All Properties
+            {" "}
+            (வீடு & நிலம்)
+          </span>
+
+          <span
+            className="
+              flex
+              h-7
+              w-7
+              shrink-0
+              items-center
+              justify-center
+              rounded-full
+              bg-white/60
+              text-sm
+              text-black
+            "
+          >
+            →
+          </span>
+        </button>
+      </div>
+    );
+  }
+);
+
+/* =========================================================
+   MAIN COMPONENT
+========================================================= */
+
+function PropertyGridSection({
   properties = [],
   showViewAllButton = false,
   onViewAll,
   loading = false,
 }) {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const visibleProperties = properties.filter(isVisible).slice(0, 6);
+  /* =======================================================
+     FIRST 6 VISIBLE PROPERTIES
+     -------------------------------------------------------
+     Avoids filtering the entire array + slice separately.
+  ======================================================= */
 
-  // ─── Animation variants ────────────────────────────────
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.08 },
-    },
-  };
+  const visibleProperties =
+    useMemo(() => {
+      if (
+        !Array.isArray(
+          properties
+        )
+      ) {
+        return [];
+      }
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 40 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
-  };
+      const result = [];
 
-  // ─── Loading state ──────────────────────────────────────
+      for (
+        let index = 0;
+        index <
+          properties.length &&
+        result.length < 6;
+        index++
+      ) {
+        const property =
+          properties[index];
+
+        if (
+          isVisible(
+            property
+          )
+        ) {
+          result.push(
+            property
+          );
+        }
+      }
+
+      return result;
+    }, [properties]);
+
+  /* =======================================================
+     NAVIGATION
+     -------------------------------------------------------
+     Stable callback.
+  ======================================================= */
+
+  const handleOpen =
+    useCallback(
+      (
+        propertyId,
+        property
+      ) => {
+        navigate(
+          `/property/${propertyId}`,
+          {
+            state: {
+              property,
+            },
+          }
+        );
+      },
+      [navigate]
+    );
+
+  /* =======================================================
+     LOADING
+     ======================================================= */
+
   if (loading) {
     return (
-      <div className="space-y-3">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-3 gap-y-3.5">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="aspect-[0.72] xl:aspect-[0.78]">
-              <SkeletonCard />
-            </div>
-          ))}
-        </div>
-        {showViewAllButton && (
-          <button
-            onClick={onViewAll}
-            className="w-full py-2 text-sm text-purple-600 font-medium border border-purple-200 rounded-xl hover:bg-purple-50"
-          >
-            View All Properties (வீடு & நிலம்)
-          </button>
-        )}
-      </div>
+      <PropertyLoading
+        showViewAllButton={
+          showViewAllButton
+        }
+        onViewAll={
+          onViewAll
+        }
+      />
     );
   }
 
-  // ─── Empty state ────────────────────────────────────────
-  if (visibleProperties.length === 0) {
+  /* =======================================================
+     EMPTY
+  ======================================================= */
+
+  if (
+    visibleProperties.length ===
+    0
+  ) {
     return null;
   }
 
-  // ─── Render cards ──────────────────────────────────────
+  /* =======================================================
+     GRID
+     -------------------------------------------------------
+     NO:
+     - Framer Motion
+     - stagger
+     - opacity animation
+     - translate animation
+     - shimmer
+  ======================================================= */
+
   return (
     <div className="space-y-3">
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-3 gap-y-3.5"
+      <div
+        className="
+          grid
+          grid-cols-2
+          gap-x-3
+          gap-y-3.5
+          md:grid-cols-4
+          lg:grid-cols-6
+        "
       >
-        {visibleProperties.map((property) => {
-          const id = property._id;
-          return (
-            <motion.div
-              key={id}
-              variants={itemVariants}
-              className="cursor-pointer aspect-[0.72] xl:aspect-[0.78]"
-              onClick={() => navigate(`/property/${id}`, { state: { property } })}
-            >
-              <PropertyCard
-                propertyId={id}
-                mainType={property.mainType}
-                category={property.category}
-                price={property.price}
-                imageUrl={property.bannerImage}
-                status={property.status}
-                district={property.district}
-                city={property.city}
-                bedrooms={property.bedrooms}
-                landArea={property.landArea}
-                direction={property.direction}
-                onTap={() => navigate(`/property/${id}`, { state: { property } })}
+        {visibleProperties.map(
+          (property) => {
+            const id =
+              property?._id;
+
+            if (!id) {
+              return null;
+            }
+
+            return (
+              <PropertyGridItem
+                key={id}
+                property={
+                  property
+                }
+                onOpen={
+                  handleOpen
+                }
               />
-            </motion.div>
-          );
-        })}
-      </motion.div>
+            );
+          }
+        )}
+      </div>
+
+      {/* =================================================
+          VIEW ALL
+      ================================================= */}
 
       {showViewAllButton && (
-        <div style={{ padding: "14px 0" }}>
-          <button
-            onClick={onViewAll}
-            style={{
-              height: "42px",
-              background: "rgba(255,255,255,0.45)",
-              borderRadius: "18px",
-              padding: "0 25px",
-              width: "100%",
-            }}
-            className="flex items-center justify-between"
-          >
-            <span className="text-xs font-semibold text-black">   View All Properties (வீடு & நிலம்)</span>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                background: "rgba(255,255,255,0.6)",
-                borderRadius: "50%",
-              }}
-              className="flex items-center justify-center"
-            >
-              <span className="text-sm">→</span>
-            </div>
-          </button>
-        </div>
+        <ViewAllButton
+          onClick={onViewAll}
+        />
       )}
     </div>
   );
 }
+
+/* =========================================================
+   FINAL EXPORT
+========================================================= */
+
+export default memo(
+  PropertyGridSection
+);

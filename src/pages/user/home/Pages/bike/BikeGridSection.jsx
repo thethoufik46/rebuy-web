@@ -1,132 +1,471 @@
 // src/components/BikeGridSection.jsx
-import React from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
+
+import React, {
+  memo,
+  useCallback,
+  useMemo,
+} from "react";
+
+import {
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
+
 import BikeCard from "@/components/BikeCard";
+
+/* =========================================================
+   HELPERS
+========================================================= */
 
 const extractId = (value) => {
   if (!value) return "";
-  if (typeof value === "object") {
-    if (value.$oid) return value.$oid.toString();
-    if (value._id) return value._id.toString();
+
+  if (
+    typeof value === "object"
+  ) {
+    if (value.$oid) {
+      return String(
+        value.$oid
+      );
+    }
+
+    if (value._id) {
+      return String(
+        value._id
+      );
+    }
   }
-  return value.toString();
+
+  return String(value);
 };
 
-const brandName = (bike) => {
-  const brand = bike?.brand;
-  if (typeof brand === "object" && brand?.name) return brand.name.toString();
+const getBrandName = (
+  bike
+) => {
+  const brand =
+    bike?.brand;
+
+  if (
+    typeof brand ===
+      "object" &&
+    brand?.name
+  ) {
+    return String(
+      brand.name
+    );
+  }
+
+  if (
+    typeof brand ===
+    "string"
+  ) {
+    return brand;
+  }
+
   return "";
 };
 
-const brandLogo = (bike) => {
-  const brand = bike?.brand;
-  if (typeof brand === "object" && brand?.logo) return brand.logo.toString();
+const getBrandLogo = (
+  bike
+) => {
+  const brand =
+    bike?.brand;
+
+  if (
+    typeof brand ===
+      "object" &&
+    brand?.logo
+  ) {
+    return String(
+      brand.logo
+    );
+  }
+
   return "";
 };
 
-const isVisible = (bike) => {
-  const status = (bike?.status || "").toString().toLowerCase();
-  if (status === "draft" || status === "drift") return false;
-  return true;
-};
-
-const getModelName = (bike) => {
-  const model = bike?.model;
-  if (!model) return "";
-  if (typeof model === "string") return model;
-  if (typeof model === "object") {
-    if (model.modelName) return model.modelName.toString();
-    if (model.name) return model.name.toString();
-  }
-  return extractId(model);
-};
-
-export default function BikeGridSection({ bikes = [], onViewAll, showViewAllButton }) {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const currentTab = searchParams.get("tab") || 1; // Bikes tab = 1
-
-  const bikesToShow = bikes.filter(isVisible).slice(0, 6);
-  if (!bikesToShow.length) return null;
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.08 } },
-  };
-  const itemVariants = {
-    hidden: { opacity: 0, y: 40 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
-  };
+const isVisible = (
+  bike
+) => {
+  const status =
+    String(
+      bike?.status || ""
+    ).toLowerCase();
 
   return (
-    <div>
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6"
-        style={{ columnGap: "12px", rowGap: "14px" }}
+    status !== "draft" &&
+    status !== "drift"
+  );
+};
+
+const getModelName = (
+  bike
+) => {
+  const model =
+    bike?.model;
+
+  if (!model) {
+    return "";
+  }
+
+  if (
+    typeof model ===
+    "string"
+  ) {
+    return model;
+  }
+
+  if (
+    typeof model ===
+    "object"
+  ) {
+    if (
+      model.modelName
+    ) {
+      return String(
+        model.modelName
+      );
+    }
+
+    if (model.name) {
+      return String(
+        model.name
+      );
+    }
+  }
+
+  return extractId(
+    model
+  );
+};
+
+/* =========================================================
+   BIKE ITEM
+   ---------------------------------------------------------
+   Memo prevents unrelated grid renders.
+========================================================= */
+
+const BikeGridItem = memo(
+  function BikeGridItem({
+    bike,
+    currentTab,
+    onOpen,
+  }) {
+    const bikeId =
+      extractId(
+        bike?._id
+      );
+
+    if (!bikeId) {
+      return null;
+    }
+
+    return (
+      <div
+        onClick={() =>
+          onOpen(
+            bikeId,
+            bike
+          )
+        }
+        className="
+          min-w-0
+          cursor-pointer
+          aspect-[0.72]
+          xl:aspect-[0.78]
+        "
       >
-        {bikesToShow.map((bike) => {
-          const bikeId = extractId(bike._id);
-          return (
-            <motion.div
-              key={bikeId}
-              variants={itemVariants}
-              onClick={() =>
-                navigate(`/bike/${bikeId}?tab=${currentTab}`, { state: { bike } }) // ✅ pass current tab
-              }
-              className="cursor-pointer aspect-[0.72] xl:aspect-[0.78]"
-            >
-              <BikeCard
-                bikeId={bikeId}
-                brandName={brandName(bike)}
-                brandLogoUrl={brandLogo(bike)}
-                model={getModelName(bike)}
-                variant={bike.variant || ""}
-                imageUrl={bike.bannerImage || ""}
-                price={bike.price?.toString() || "0"}
-                year={bike.year?.toString() || "-"}
-                status={bike.status || "available"}
-                km={bike.km?.toString() || "0"}
-                owner={bike.owner?.toString() || "1"}
-                district={bike.district || ""}
-                city={bike.city || ""}
-              />
-            </motion.div>
+        <BikeCard
+          bikeId={bikeId}
+          brandName={getBrandName(
+            bike
+          )}
+          brandLogoUrl={getBrandLogo(
+            bike
+          )}
+          model={getModelName(
+            bike
+          )}
+          variant={
+            bike?.variant ||
+            ""
+          }
+          imageUrl={
+            bike?.bannerImage ||
+            ""
+          }
+          price={
+            bike?.price != null
+              ? String(
+                  bike.price
+                )
+              : "0"
+          }
+          year={
+            bike?.year != null
+              ? String(
+                  bike.year
+                )
+              : "-"
+          }
+          status={
+            bike?.status ||
+            "available"
+          }
+          km={
+            bike?.km != null
+              ? String(
+                  bike.km
+                )
+              : "0"
+          }
+          owner={
+            bike?.owner != null
+              ? String(
+                  bike.owner
+                )
+              : "1"
+          }
+          district={
+            bike?.district ||
+            ""
+          }
+          city={
+            bike?.city ||
+            ""
+          }
+        />
+      </div>
+    );
+  }
+);
+
+/* =========================================================
+   VIEW ALL BUTTON
+   ---------------------------------------------------------
+   Memoized to avoid unnecessary renders.
+========================================================= */
+
+const ViewAllButton = memo(
+  function ViewAllButton({
+    onClick,
+  }) {
+    return (
+      <div className="py-[14px]">
+        <button
+          type="button"
+          onClick={onClick}
+          className="
+            flex
+            h-[42px]
+            w-full
+            items-center
+            justify-between
+            rounded-[18px]
+            bg-white/45
+            px-[25px]
+            active:scale-[0.99]
+          "
+        >
+          <span
+            className="
+              text-xs
+              font-semibold
+              text-black
+            "
+          >
+            View All Bikes
+          </span>
+
+          <span
+            className="
+              flex
+              h-7
+              w-7
+              items-center
+              justify-center
+              rounded-full
+              bg-white/60
+              text-sm
+              text-black
+            "
+          >
+            →
+          </span>
+        </button>
+      </div>
+    );
+  }
+);
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+function BikeGridSection({
+  bikes = [],
+  onViewAll,
+  showViewAllButton = false,
+}) {
+  const navigate =
+    useNavigate();
+
+  const [
+    searchParams,
+  ] = useSearchParams();
+
+  const currentTab =
+    searchParams.get(
+      "tab"
+    ) || "1";
+
+  /* =======================================================
+     ONLY FIRST 6
+     -------------------------------------------------------
+     No unnecessary cards in DOM.
+  ======================================================= */
+
+  const bikesToShow =
+    useMemo(() => {
+      if (
+        !Array.isArray(
+          bikes
+        )
+      ) {
+        return [];
+      }
+
+      const visible =
+        [];
+
+      for (
+        let i = 0;
+        i < bikes.length &&
+        visible.length < 6;
+        i++
+      ) {
+        const bike =
+          bikes[i];
+
+        if (
+          isVisible(bike)
+        ) {
+          visible.push(
+            bike
           );
-        })}
-      </motion.div>
+        }
+      }
+
+      return visible;
+    }, [bikes]);
+
+  /* =======================================================
+     NAVIGATION
+     -------------------------------------------------------
+     useCallback keeps the function stable.
+  ======================================================= */
+
+  const handleOpen =
+    useCallback(
+      (
+        bikeId,
+        bike
+      ) => {
+        navigate(
+          `/bike/${bikeId}?tab=${encodeURIComponent(
+            currentTab
+          )}`,
+          {
+            state: {
+              bike,
+            },
+          }
+        );
+      },
+      [
+        navigate,
+        currentTab,
+      ]
+    );
+
+  /* =======================================================
+     EMPTY
+  ======================================================= */
+
+  if (
+    bikesToShow.length ===
+    0
+  ) {
+    return null;
+  }
+
+  /* =======================================================
+     GRID
+     -------------------------------------------------------
+     No Framer Motion.
+     No stagger.
+     No opacity animation.
+     No transform animation.
+  ======================================================= */
+
+  return (
+    <section className="w-full">
+      <div
+        className="
+          grid
+          grid-cols-2
+          gap-x-3
+          gap-y-[14px]
+          md:grid-cols-4
+          lg:grid-cols-6
+        "
+      >
+        {bikesToShow.map(
+          (bike) => {
+            const id =
+              extractId(
+                bike?._id
+              );
+
+            if (!id) {
+              return null;
+            }
+
+            return (
+              <BikeGridItem
+                key={id}
+                bike={bike}
+                currentTab={
+                  currentTab
+                }
+                onOpen={
+                  handleOpen
+                }
+              />
+            );
+          }
+        )}
+      </div>
+
+      {/* =================================================
+          VIEW ALL
+      ================================================= */}
 
       {showViewAllButton && (
-        <div style={{ padding: "14px 0" }}>
-          <button
-            onClick={onViewAll}
-            style={{
-              height: "42px",
-              background: "rgba(255,255,255,0.45)",
-              borderRadius: "18px",
-              padding: "0 25px",
-              width: "100%",
-            }}
-            className="flex items-center justify-between"
-          >
-            <span className="text-xs font-semibold text-black">View All Bikes</span>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                background: "rgba(255,255,255,0.6)",
-                borderRadius: "50%",
-              }}
-              className="flex items-center justify-center"
-            >
-              <span className="text-sm">→</span>
-            </div>
-          </button>
-        </div>
+        <ViewAllButton
+          onClick={
+            onViewAll
+          }
+        />
       )}
-    </div>
+    </section>
   );
 }
+
+/* =========================================================
+   FINAL EXPORT
+========================================================= */
+
+export default memo(
+  BikeGridSection
+);

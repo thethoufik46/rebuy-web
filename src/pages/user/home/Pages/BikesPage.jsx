@@ -1,86 +1,264 @@
-// src/pages/user/home/Pages/BikesPage.jsx
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import BikeGridSection from "./bike/BikeGridSection";
 
-const BASE_URL = "https://rebuy-api.onrender.com/api";
+const BASE_URL =
+  "https://rebuy-api.onrender.com/api";
+
+/* =========================================================
+   MEMORY CACHE
+   ---------------------------------------------------------
+   Navigation back to this page = instant.
+   Browser refresh = API request again.
+========================================================= */
+
+let bikesCache = null;
+let bikesPromise = null;
+
+async function getBikesFast() {
+  if (Array.isArray(bikesCache)) {
+    return bikesCache;
+  }
+
+  if (bikesPromise) {
+    return bikesPromise;
+  }
+
+  bikesPromise = fetch(
+    `${BASE_URL}/bikes`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      cache: "default",
+    }
+  )
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error(
+          `Bikes API ${response.status}`
+        );
+      }
+
+      const data =
+        await response.json();
+
+      const result = Array.isArray(
+        data?.bikes
+      )
+        ? data.bikes
+        : [];
+
+      bikesCache = result;
+
+      return result;
+    })
+    .catch((error) => {
+      console.error(
+        "Bikes fetch error:",
+        error
+      );
+
+      return [];
+    })
+    .finally(() => {
+      bikesPromise = null;
+    });
+
+  return bikesPromise;
+}
+
+/* =========================================================
+   PAGE
+========================================================= */
 
 export default function BikesPage() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  // ─── State ────────────────────────────────────────────────
-  const [bikes, setBikes] = useState([]);
-  const [filteredBikes, setFilteredBikes] = useState([]);
+  const [
+    bikes,
+    setBikes,
+  ] = useState(
+    Array.isArray(bikesCache)
+      ? bikesCache
+      : []
+  );
 
-  const [search, setSearch] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
+  const [
+    filteredBikes,
+    setFilteredBikes,
+  ] = useState(
+    Array.isArray(bikesCache)
+      ? bikesCache
+      : []
+  );
 
-  // ─── Fetch Bikes ──────────────────────────────────────────
+  const [
+    search,
+    setSearch,
+  ] = useState("");
+
+  const [
+    suggestions,
+    setSuggestions,
+  ] = useState([]);
+
+  /* =======================================================
+     FETCH
+     -------------------------------------------------------
+     No spinner.
+     No delay.
+     No animation.
+  ======================================================= */
+
   useEffect(() => {
-    fetchBikes();
+    let mounted = true;
+
+    getBikesFast().then(
+      (result) => {
+        if (!mounted) return;
+
+        setBikes(result);
+        setFilteredBikes(result);
+      }
+    );
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  async function fetchBikes() {
-    try {
-      const res = await fetch(`${BASE_URL}/bikes`);
-      const data = await res.json();
-      const allBikes = data.bikes || [];
-      setBikes(allBikes);
-      setFilteredBikes(allBikes); // initially show all
-    } catch (err) {
-      console.error("Bikes fetch error:", err);
-    }
-  }
+  /* =======================================================
+     SEARCH
+  ======================================================= */
 
-  // ─── Search ──────────────────────────────────────────────
-  function handleSearchChange(value) {
-    setSearch(value);
+  const handleSearchChange =
+    useCallback(
+      (value) => {
+        const nextValue =
+          value || "";
 
-    if (!value) {
-      setSuggestions([]);
-      setFilteredBikes(bikes); // reset to all bikes
-      return;
-    }
+        setSearch(
+          nextValue
+        );
 
-    // Get unique brand names from bikes
-    const brands = bikes
-      .map((b) => b.brand?.name || "")
-      .filter(Boolean);
+        if (!nextValue) {
+          setSuggestions([]);
+          setFilteredBikes(
+            bikes
+          );
+          return;
+        }
 
-    const matches = brands.filter((b) =>
-      b.toLowerCase().includes(value.toLowerCase())
+        const query =
+          nextValue.toLowerCase();
+
+        const uniqueBrands =
+          new Set();
+
+        for (
+          const bike of bikes
+        ) {
+          const brand =
+            bike?.brand?.name;
+
+          if (
+            brand &&
+            String(
+              brand
+            )
+              .toLowerCase()
+              .includes(query)
+          ) {
+            uniqueBrands.add(
+              String(brand)
+            );
+          }
+
+          if (
+            uniqueBrands.size >=
+            8
+          ) {
+            break;
+          }
+        }
+
+        setSuggestions(
+          Array.from(
+            uniqueBrands
+          )
+        );
+      },
+      [bikes]
     );
 
-    setSuggestions([...new Set(matches)].slice(0, 8));
-  }
+  /* =======================================================
+     BRAND SELECT
+  ======================================================= */
 
-  function handleSuggestionClick(brand) {
-    const brandBikes = bikes.filter(
-      (b) => b.brand?.name === brand
+  const handleSuggestionClick =
+    useCallback(
+      (brand) => {
+        const result =
+          bikes.filter(
+            (bike) =>
+              bike?.brand
+                ?.name === brand
+          );
+
+        setFilteredBikes(
+          result
+        );
+
+        setSuggestions([]);
+        setSearch(brand);
+      },
+      [bikes]
     );
-    setFilteredBikes(brandBikes);
-    setSuggestions([]);
-    setSearch(brand);
-  }
 
-  // ─── View All Handler ────────────────────────────────────
-  function handleViewAll() {
-    navigate("/bike-list", {
-      state: { bikes: filteredBikes },
-    });
-  }
+  /* =======================================================
+     VIEW ALL
+  ======================================================= */
 
-  // ─── Render ──────────────────────────────────────────────
+  const handleViewAll =
+    useCallback(() => {
+      navigate(
+        "/bike-list",
+        {
+          state: {
+            bikes:
+              filteredBikes,
+          },
+        }
+      );
+    }, [
+      navigate,
+      filteredBikes,
+    ]);
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
   return (
-    <div className="space-y-4">
-    
-
-      {/* Bike Grid */}
+    <div
+      className="
+        space-y-4
+      "
+    >
       <BikeGridSection
-        bikes={filteredBikes}
-        showViewAllButton={true}
-        onViewAll={handleViewAll}
+        bikes={
+          filteredBikes
+        }
+        showViewAllButton={
+          true
+        }
+        onViewAll={
+          handleViewAll
+        }
       />
     </div>
   );
