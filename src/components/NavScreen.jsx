@@ -529,8 +529,8 @@ export default function NavScreen() {
               <SubTitle text="Car Services" />
 
               <NavItem
-                label="Car Need (கார் வாங்க)"
-                onClick={() => go("/buy-car")}
+                label="Need (கார் வாங்க)"
+                onClick={() => go("/needs")}
               />
 
               <NavItem
@@ -2007,4 +2007,3 @@ if (!document.head.querySelector("[data-nav-screen-style]")) {
 
   
 }
-
