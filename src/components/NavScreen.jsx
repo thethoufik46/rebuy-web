@@ -277,13 +277,13 @@ export default function NavScreen() {
             </DesktopHeading>
 
 
-            <DesktopMenuItem
-              number="04"
-              label="Car Need"
-              tamil="கார் வாங்க"
-              onClick={() => go("/buy-car")}
-              delay={0.2}
-            />
+         <DesktopMenuItem
+  number="04"
+  label="Need"
+  tamil="கார் வாங்க"
+  onClick={() => go("/needs")}
+  delay={0.2}
+/>
 
             <DesktopMenuItem
               number="05"
@@ -389,26 +389,26 @@ export default function NavScreen() {
               delay={0.7}
             />
 
-            <DesktopMenuItem
-              number="15"
-              label="Privacy Policy"
-              onClick={() => go("/privacy")}
-              delay={0.75}
-            />
+          <DesktopMenuItem
+  number="15"
+  label="Privacy Policy"
+  onClick={() => go("/privacy-policy")}
+  delay={0.75}
+/>
 
-            <DesktopMenuItem
-              number="16"
-              label="Terms & Conditions"
-              onClick={() => go("/terms")}
-              delay={0.8}
-            />
+<DesktopMenuItem
+  number="16"
+  label="Terms & Conditions"
+  onClick={() => go("/terms-conditions")}
+  delay={0.8}
+/>
 
-            <DesktopMenuItem
-              number="17"
-              label="Refund & Cancellation"
-              onClick={() => go("/refund")}
-              delay={0.85}
-            />
+<DesktopMenuItem
+  number="17"
+  label="Refund & Cancellation"
+  onClick={() => go("/refund-policy")}
+  delay={0.85}
+/>
 
           </div>
 
