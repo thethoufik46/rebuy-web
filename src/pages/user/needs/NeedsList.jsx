@@ -1,737 +1,903 @@
+// ============================================================
 // src/pages/user/needs/NeedsList.jsx
+// FINAL - MY NEEDS LIST
+// ============================================================
 
-import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  FaArrowLeft,
-  FaUser,
-  FaPhone,
-  FaMapMarkerAlt,
-  FaTag,
-  FaMoneyBillWave,
-  FaClock,
-  FaCreditCard,
-  FaTrash,
-  FaCar,
-  FaMotorcycle,
-  FaHome,
-  FaMobileAlt,
-  FaClipboardList,
-  FaChevronRight,
-} from "react-icons/fa";
+import React, {
+  useEffect,
+  useState,
+} from "react";
 
 import {
+  ArrowLeft,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  MapPin,
+  Phone,
+  Trash2,
+  User,
+  XCircle,
+} from "lucide-react";
+
+import {
+  deleteMyNeed,
+  getAudioUrl,
   getMyNeeds,
-  deleteNeed,
   getNeedId,
-  isVisibleNeed,
 } from "@/services/need";
 
-/* =========================================================
-   HELPERS
-========================================================= */
+import carImage from "@/assets/needs/own board.jpeg";
+import bikeImage from "@/assets/needs/bike.webp";
+import propertyImage from "@/assets/needs/home.webp";
+import electronicsImage from "@/assets/needs/electronics.jpeg";
 
-function text(value, fallback = "-") {
+const TYPE_CONFIG = {
+  car: {
+    title: "Car",
+    tamil: "கார்",
+    image: carImage,
+  },
+
+  bike: {
+    title: "Bike",
+    tamil: "பைக்",
+    image: bikeImage,
+  },
+
+  property: {
+    title: "Property",
+    tamil: "சொத்து",
+    image: propertyImage,
+  },
+
+  electronics: {
+    title: "Electronics",
+    tamil: "எலக்ட்ரானிக்ஸ்",
+    image: electronicsImage,
+  },
+};
+
+function text(value) {
   if (
     value === null ||
     value === undefined ||
     value === ""
   ) {
-    return fallback;
-  }
-
-  if (typeof value === "object") {
-    if (value.name) {
-      return String(value.name);
-    }
-
-    if (value.$oid) {
-      return String(value.$oid);
-    }
+    return "-";
   }
 
   return String(value);
 }
 
-function typeIcon(type) {
-  switch (String(type).toLowerCase()) {
-    case "car":
-      return FaCar;
-
-    case "bike":
-      return FaMotorcycle;
-
-    case "property":
-      return FaHome;
-
-    case "electronics":
-      return FaMobileAlt;
-
-    default:
-      return FaClipboardList;
+function money(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "-";
   }
+
+  const number =
+    Number(value);
+
+  if (Number.isNaN(number)) {
+    return String(value);
+  }
+
+  return `₹${number.toLocaleString(
+    "en-IN"
+  )}`;
 }
 
-function getTypeTitle(type) {
-  switch (String(type).toLowerCase()) {
-    case "car":
-      return "Car";
+function getTypeDetails(item) {
+  const type =
+    String(
+      item?.type || ""
+    ).toLowerCase();
 
-    case "bike":
-      return "Bike";
+  if (type === "car") {
+    const data =
+      item?.car || {};
 
-    case "property":
-      return "Property";
-
-    case "electronics":
-      return "Electronics";
-
-    default:
-      return "Request";
+    return {
+      title: text(
+        data.model
+      ),
+      budget: money(
+        data.budget
+      ),
+      timeline:
+        data.timeline,
+      extra1:
+        data.paymentType,
+      extra2:
+        data.boardType,
+    };
   }
+
+  if (type === "bike") {
+    const data =
+      item?.bike || {};
+
+    return {
+      title: text(
+        data.model
+      ),
+      budget: money(
+        data.budget
+      ),
+      timeline:
+        data.timeline,
+      extra1:
+        data.paymentType,
+      extra2: null,
+    };
+  }
+
+  if (type === "property") {
+    const data =
+      item?.property || {};
+
+    return {
+      title: text(
+        data.category
+      ),
+      budget: money(
+        data.budget
+      ),
+      timeline:
+        data.timeline,
+      extra1:
+        data.preferredLocation,
+      extra2: null,
+    };
+  }
+
+  if (type === "electronics") {
+    const data =
+      item?.electronics || {};
+
+    return {
+      title: text(
+        data.category
+      ),
+      budget: money(
+        data.budget
+      ),
+      timeline:
+        data.timeline,
+      extra1: null,
+      extra2: null,
+    };
+  }
+
+  return {
+    title: "-",
+    budget: "-",
+    timeline: null,
+    extra1: null,
+    extra2: null,
+  };
 }
 
-/* =========================================================
-   PAGE
-========================================================= */
+function Status({ value }) {
+  const status =
+    String(
+      value || "pending"
+    ).toLowerCase();
+
+  if (status === "approved") {
+    return (
+      <span
+        className="
+          inline-flex items-center
+          gap-1.5
+          rounded-full
+          bg-emerald-50
+          px-3 py-1.5
+          text-[10px]
+          font-bold
+          uppercase
+          text-emerald-700
+        "
+      >
+        <CheckCircle2
+          size={13}
+        />
+        Approved
+      </span>
+    );
+  }
+
+  if (status === "rejected") {
+    return (
+      <span
+        className="
+          inline-flex items-center
+          gap-1.5
+          rounded-full
+          bg-red-50
+          px-3 py-1.5
+          text-[10px]
+          font-bold
+          uppercase
+          text-red-700
+        "
+      >
+        <XCircle
+          size={13}
+        />
+        Rejected
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className="
+        inline-flex items-center
+        gap-1.5
+        rounded-full
+        bg-amber-50
+        px-3 py-1.5
+        text-[10px]
+        font-bold
+        uppercase
+        text-amber-700
+      "
+    >
+      <Clock3 size={13} />
+      Pending
+    </span>
+  );
+}
+
+function AudioPlayer({
+  item,
+}) {
+  const url =
+    getAudioUrl(item);
+
+  /*
+   * OLD DATA:
+   * /data/user/...
+   *
+   * Browser cannot access that.
+   */
+
+  if (!url) {
+    return null;
+  }
+
+  return (
+    <div
+      className="
+        mt-5
+        rounded-2xl
+        bg-[#e7ffdb]
+        p-3
+      "
+    >
+      <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-black/50">
+        Voice Note
+      </div>
+
+      <audio
+        controls
+        preload="metadata"
+        src={url}
+        className="block w-full"
+        onClick={(e) => {
+          /*
+           * IMPORTANT:
+           * Stop click bubbling.
+           * Prevent parent card/navigation
+           * from receiving audio click.
+           */
+          e.stopPropagation();
+        }}
+        onPlay={(e) =>
+          e.stopPropagation()
+        }
+        onPause={(e) =>
+          e.stopPropagation()
+        }
+      />
+    </div>
+  );
+}
+
+function NeedCard({
+  item,
+  onDelete,
+}) {
+  const type =
+    String(
+      item?.type || ""
+    ).toLowerCase();
+
+  const config =
+    TYPE_CONFIG[type] ||
+    TYPE_CONFIG.car;
+
+  const details =
+    getTypeDetails(item);
+
+  const id =
+    getNeedId(item);
+
+  return (
+    <article
+      className="
+        overflow-hidden
+        rounded-[26px]
+        border border-black/[0.07]
+        bg-white
+        shadow-[0_12px_45px_rgba(15,23,42,0.06)]
+        transition
+        hover:-translate-y-0.5
+        hover:shadow-[0_18px_55px_rgba(15,23,42,0.09)]
+      "
+    >
+      {/* ======================================================
+          ONLY ONE IMAGE TOP
+      ====================================================== */}
+
+      <div className="relative h-36 w-full overflow-hidden sm:h-40">
+        <img
+          src={config.image}
+          alt={config.title}
+          className="
+            h-full w-full
+            object-cover
+          "
+        />
+
+        <div
+          className="
+            absolute inset-0
+            bg-gradient-to-t
+            from-black/50
+            via-black/5
+            to-transparent
+          "
+        />
+
+        <div className="absolute bottom-3 left-4">
+          <div className="text-lg font-black text-white">
+            {config.title}
+          </div>
+
+          <div className="text-[10px] font-medium text-white/75">
+            {config.tamil}
+          </div>
+        </div>
+
+        <div className="absolute right-3 top-3">
+          <Status
+            value={item?.status}
+          />
+        </div>
+      </div>
+
+      {/* ======================================================
+          CONTENT
+      ====================================================== */}
+
+      <div className="p-4 sm:p-5">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-black">
+              {details.title}
+            </h2>
+
+            <div className="mt-1 text-sm font-bold text-black/55">
+              {details.budget}
+            </div>
+          </div>
+
+          {id && (
+            <button
+              type="button"
+              onClick={() =>
+                onDelete(id)
+              }
+              className="
+                flex h-9 w-9
+                shrink-0
+                items-center
+                justify-center
+                rounded-full
+                bg-red-50
+                text-red-600
+                transition
+                hover:bg-red-100
+              "
+              aria-label="Delete"
+            >
+              <Trash2
+                size={15}
+              />
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2 text-sm text-black/65">
+            <User
+              size={15}
+              className="shrink-0"
+            />
+            <span className="truncate">
+              {text(
+                item?.name
+              )}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm text-black/65">
+            <Phone
+              size={15}
+              className="shrink-0"
+            />
+            <span>
+              {text(
+                item?.phone
+              )}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm text-black/65">
+            <MapPin
+              size={15}
+              className="shrink-0"
+            />
+            <span className="truncate">
+              {text(
+                item?.location
+              )}
+            </span>
+          </div>
+
+          {details.extra1 && (
+            <div className="rounded-xl bg-black/[0.03] px-3 py-2 text-xs font-medium text-black/60">
+              {text(
+                details.extra1
+              )}
+            </div>
+          )}
+
+          {details.extra2 && (
+            <div className="rounded-xl bg-black/[0.03] px-3 py-2 text-xs font-medium text-black/60">
+              {text(
+                details.extra2
+              )}
+            </div>
+          )}
+
+          {details.timeline && (
+            <div className="flex items-center gap-2 text-xs font-semibold text-black/55">
+              <CalendarDays
+                size={14}
+              />
+              {details.timeline}
+            </div>
+          )}
+        </div>
+
+        {item?.description && (
+          <div
+            className="
+              mt-4
+              rounded-2xl
+              bg-[#f7f7fa]
+              p-3
+              text-sm
+              leading-6
+              text-black/60
+            "
+          >
+            {item.description}
+          </div>
+        )}
+
+        {/* ====================================================
+            AUDIO
+        ==================================================== */}
+
+        <AudioPlayer item={item} />
+      </div>
+    </article>
+  );
+}
 
 export default function NeedsList() {
-  const navigate = useNavigate();
+  const [needs, setNeeds] =
+    useState([]);
 
-  const [needs, setNeeds] = useState([]);
-
-  const [loading, setLoading] = useState(true);
-
-  const [deletingId, setDeletingId] =
-    useState("");
+  const [loading, setLoading] =
+    useState(true);
 
   const [error, setError] =
     useState("");
 
-  /* =======================================================
-     FETCH
-  ======================================================= */
+  const [deletingId, setDeletingId] =
+    useState("");
 
-  const fetchNeeds = useCallback(
-    async () => {
-      try {
-        setError("");
+  // ==========================================================
+  // LOAD
+  // ==========================================================
 
-        const data =
-          await getMyNeeds();
+  const loadNeeds = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        setNeeds(
-          Array.isArray(data)
-            ? data.filter(isVisibleNeed)
-            : []
-        );
-      } catch (err) {
-        console.error(
-          "Needs fetch error:",
-          err
-        );
+      const data =
+        await getMyNeeds();
 
-        setError(
-          err?.message ||
-            "Unable to load your requests."
-        );
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+      setNeeds(
+        Array.isArray(data)
+          ? data
+          : []
+      );
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err?.message ||
+          "Unable to load needs."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchNeeds();
-  }, [fetchNeeds]);
+    loadNeeds();
+  }, []);
 
-  /* =======================================================
-     DELETE
-  ======================================================= */
+  // ==========================================================
+  // BACK
+  // ==========================================================
 
-  async function handleDelete(id) {
-    if (!id || deletingId) return;
+  const goBack = () => {
+    window.history.back();
+  };
 
-    const confirmed =
+  // ==========================================================
+  // DELETE
+  // ==========================================================
+
+  const handleDelete = async (
+    id
+  ) => {
+    if (!id) return;
+
+    const confirmDelete =
       window.confirm(
         "Are you sure you want to delete this request?"
       );
 
-    if (!confirmed) return;
+    if (!confirmDelete) {
+      return;
+    }
 
     setDeletingId(id);
 
-    try {
-      const success =
-        await deleteNeed(id);
+    const success =
+      await deleteMyNeed(id);
 
-      if (success) {
-        setNeeds((prev) =>
-          prev.filter(
-            (item) =>
-              getNeedId(item) !== id
-          )
-        );
-      } else {
-        window.alert(
-          "Delete failed. Please try again."
-        );
-      }
-    } catch (err) {
-      console.error(
-        "Delete need error:",
-        err
-      );
+    setDeletingId("");
 
+    if (!success) {
       window.alert(
-        err?.message ||
-          "Something went wrong."
+        "Delete failed. Please try again."
       );
-    } finally {
-      setDeletingId("");
+      return;
     }
-  }
 
-  /* =======================================================
-     LOADING
-  ======================================================= */
-
-  if (loading) {
-    return (
-      <main
-        className="
-          min-h-screen
-          bg-[#F2F2FF]
-          px-4 py-6
-        "
-      >
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-5 flex items-center justify-between">
-            <div className="h-10 w-10 animate-pulse rounded-full bg-white/70" />
-
-            <div className="space-y-2 text-center">
-              <div className="mx-auto h-4 w-28 animate-pulse rounded-full bg-black/10" />
-              <div className="mx-auto h-2.5 w-20 animate-pulse rounded-full bg-black/5" />
-            </div>
-
-            <div className="h-10 w-10 animate-pulse rounded-2xl bg-white/70" />
-          </div>
-
-          <div className="space-y-3">
-            {[1, 2, 3].map((item) => (
-              <div
-                key={item}
-                className="
-                  h-48 animate-pulse
-                  rounded-[22px]
-                  bg-white/60
-                "
-              />
-            ))}
-          </div>
-        </div>
-      </main>
+    setNeeds((current) =>
+      current.filter(
+        (item) =>
+          getNeedId(item) !== id
+      )
     );
-  }
+  };
 
-  /* =======================================================
-     PAGE
-  ======================================================= */
+  // ==========================================================
+  // UI
+  // ==========================================================
 
   return (
     <main
       className="
         min-h-screen
-        bg-[#F2F2FF]
-        px-3 py-4
-        sm:px-5
-        lg:px-8
+        w-full
+        bg-[#eeeefe]
+        text-black
       "
     >
-      <div className="mx-auto max-w-4xl">
-        {/* HEADER */}
+      {/* ======================================================
+          HEADER
+      ====================================================== */}
 
-        <header
+      <header
+        className="
+          sticky top-0 z-50
+          border-b border-black/[0.06]
+          bg-[#eeeefe]/90
+          backdrop-blur-2xl
+        "
+      >
+        <div
           className="
-            mb-5 flex
-            items-center
+            flex min-h-[70px]
+            w-full items-center
             justify-between
+            px-4
+            sm:px-8
+            lg:px-12
+            xl:px-16
           "
         >
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            onClick={
+              goBack
+            }
             className="
               flex h-10 w-10
-              items-center justify-center
+              items-center
+              justify-center
               rounded-full
-              bg-white/70
-              shadow-sm
-              backdrop-blur-xl
+              border border-black/10
+              bg-white
               transition
-              hover:bg-white
-              active:scale-95
+              hover:bg-black
+              hover:text-white
             "
           >
-            <FaArrowLeft size={14} />
+            <ArrowLeft
+              size={19}
+            />
           </button>
 
           <div className="text-center">
-            <h1 className="text-base font-bold">
-              My Requests
-            </h1>
+            <div className="text-base font-black sm:text-lg">
+              My Needs
+            </div>
 
-            <p className="mt-0.5 text-[10px] font-medium text-black/50">
+            <div className="mt-0.5 text-[11px] text-black/45">
               என் தேவைகள்
-            </p>
+            </div>
           </div>
 
           <button
             type="button"
-            onClick={() => navigate("/needs")}
-            className="
-              flex h-10
-              items-center gap-2
-              rounded-2xl
-              bg-white/70
-              px-3
-              shadow-sm
-              backdrop-blur-xl
-              transition
-              hover:bg-white
-              active:scale-95
-            "
-          >
-            <FaClipboardList size={13} />
-
-            <span className="text-[10px] font-bold">
-              New
-            </span>
-          </button>
-        </header>
-
-        {/* ERROR */}
-
-        {error && (
-          <div
-            className="
-              mb-4 rounded-2xl
-              bg-red-500/10
-              px-4 py-3
-              text-xs font-semibold
-              text-red-600
-            "
-          >
-            {error}
-          </div>
-        )}
-
-        {/* EMPTY */}
-
-        {!error && needs.length === 0 && (
-          <div
-            className="
-              flex min-h-[55vh]
-              flex-col
-              items-center
-              justify-center
-              rounded-[28px]
-              border border-white/70
-              bg-white/35
-              px-6
-              text-center
-              backdrop-blur-xl
-            "
-          >
-            <div
-              className="
-                flex h-16 w-16
-                items-center justify-center
-                rounded-2xl
-                bg-white
-                shadow-sm
-              "
-            >
-              <FaClipboardList
-                size={23}
-                className="text-black/35"
-              />
-            </div>
-
-            <h2 className="mt-4 text-sm font-bold">
-              No Requests
-            </h2>
-
-            <p className="mt-1 text-xs text-black/45">
-              தேவைகள் இல்லை
-            </p>
-
-            <button
-              type="button"
-              onClick={() => navigate("/needs")}
-              className="
-                mt-5 rounded-2xl
-                bg-black
-                px-6 py-3
-                text-xs font-bold
-                text-white
-                transition
-                hover:bg-black/90
-                active:scale-95
-              "
-            >
-              Add Request
-            </button>
-          </div>
-        )}
-
-        {/* LIST */}
-
-        <div className="space-y-3">
-          {needs.map((item) => (
-            <NeedCard
-              key={getNeedId(item)}
-              item={item}
-              deleting={
-                deletingId ===
-                getNeedId(item)
-              }
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      </div>
-    </main>
-  );
-}
-
-/* =========================================================
-   NEED CARD
-========================================================= */
-
-function NeedCard({
-  item,
-  deleting,
-  onDelete,
-}) {
-  const type = text(
-    item?.type,
-    "request"
-  ).toLowerCase();
-
-  const TypeIcon = typeIcon(type);
-
-  const titleType =
-    getTypeTitle(type);
-
-  const status =
-    text(item?.status, "pending")
-      .toLowerCase();
-
-  const car =
-    item?.car || {};
-
-  const bike =
-    item?.bike || {};
-
-  const property =
-    item?.property || {};
-
-  const electronics =
-    item?.electronics || {};
-
-  let title = "-";
-  let budget = "-";
-  let sub1 = "-";
-  let sub2 = "-";
-  let timeline = "-";
-
-  /* CAR */
-
-  if (type === "car") {
-    title = text(car.model);
-    budget = text(car.budget);
-    sub1 = text(car.paymentType);
-    sub2 = text(car.boardType);
-    timeline = text(car.timeline);
-  }
-
-  /* BIKE */
-
-  if (type === "bike") {
-    title = text(bike.model);
-    budget = text(bike.budget);
-    sub1 = text(bike.paymentType);
-    timeline = text(bike.timeline);
-  }
-
-  /* PROPERTY */
-
-  if (type === "property") {
-    title = text(property.category);
-    budget = text(property.budget);
-    sub1 = text(
-      property.preferredLocation
-    );
-    timeline = text(property.timeline);
-  }
-
-  /* ELECTRONICS */
-
-  if (type === "electronics") {
-    title = text(
-      electronics.category
-    );
-    budget = text(electronics.budget);
-    timeline = text(
-      electronics.timeline
-    );
-  }
-
-  const formattedBudget =
-    budget === "-"
-      ? "-"
-      : `₹ ${Number(
-          String(budget).replace(
-            /[^0-9]/g,
-            ""
-          )
-        ).toLocaleString("en-IN")}`;
-
-  return (
-    <article
-      className="
-        relative overflow-hidden
-        rounded-[24px]
-        border border-white/70
-        bg-white/40
-        p-4
-        shadow-[0_8px_30px_rgba(15,23,42,0.06)]
-        backdrop-blur-2xl
-        sm:p-5
-      "
-    >
-      {/* TOP */}
-
-      <div className="flex items-start gap-3 pr-10">
-        <div
-          className="
-            flex h-10 w-10
-            shrink-0
-            items-center justify-center
-            rounded-xl
-            bg-black
-            text-white
-          "
-        >
-          <TypeIcon size={15} />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-bold">
-            {titleType} • {title}
-          </div>
-
-          <div className="mt-0.5 text-[10px] text-black/40">
-            Request
-          </div>
-        </div>
-
-        <StatusBadge status={status} />
-      </div>
-
-      {/* USER */}
-
-      <div className="mt-4 space-y-2">
-        <InfoRow
-          icon={FaUser}
-          text={text(item?.name)}
-        />
-
-        <InfoRow
-          icon={FaPhone}
-          text={text(item?.phone)}
-        />
-
-        <InfoRow
-          icon={FaMapMarkerAlt}
-          text={text(item?.location)}
-        />
-      </div>
-
-      <div className="my-4 h-px bg-black/[0.06]" />
-
-      {/* REQUEST DETAILS */}
-
-      <div className="space-y-2">
-        <InfoRow
-          icon={FaTag}
-          text={title}
-        />
-
-        <InfoRow
-          icon={FaMoneyBillWave}
-          text={formattedBudget}
-        />
-
-        {sub1 !== "-" && (
-          <InfoRow
-            icon={
-              type === "property"
-                ? FaMapMarkerAlt
-                : FaCreditCard
+            onClick={() =>
+              (window.location.href =
+                "/needs")
             }
-            text={sub1}
-          />
-        )}
-
-        {sub2 !== "-" && (
-          <InfoRow
-            icon={FaCreditCard}
-            text={sub2}
-          />
-        )}
-
-        {timeline !== "-" && (
-          <InfoRow
-            icon={FaClock}
-            text={timeline}
-          />
-        )}
-      </div>
-
-      {/* DESCRIPTION */}
-
-      {item?.description && (
-        <div
-          className="
-            mt-4 rounded-2xl
-            bg-black/[0.035]
-            px-3 py-3
-          "
-        >
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-black/35">
-            Additional Details
-          </p>
-
-          <p className="mt-1 text-xs leading-5 text-black/65">
-            {text(item.description)}
-          </p>
+            className="
+              rounded-2xl
+              bg-black
+              px-4 py-2
+              text-xs
+              font-bold
+              text-white
+              transition
+              hover:opacity-90
+            "
+          >
+            + Need
+          </button>
         </div>
-      )}
+      </header>
 
-      {/* AUDIO */}
+      {/* ======================================================
+          BODY
+      ====================================================== */}
 
-      {item?.audioNote && (
-        <div className="mt-4">
-          <audio
-            controls
-            preload="none"
-            src={item.audioNote}
-            className="h-9 w-full"
-          />
-        </div>
-      )}
-
-      {/* DELETE */}
-
-      <button
-        type="button"
-        disabled={deleting}
-        onClick={() =>
-          onDelete(
-            getNeedId(item)
-          )
-        }
-        aria-label="Delete request"
+      <section
         className="
-          absolute right-3 top-3
-          flex h-8 w-8
-          items-center justify-center
-          rounded-full
-          bg-red-500
-          text-white
-          shadow-lg
-          transition
-          hover:bg-red-600
-          active:scale-90
-          disabled:cursor-not-allowed
-          disabled:opacity-50
+          w-full
+          px-4 py-6
+          sm:px-8 sm:py-8
+          lg:px-12
+          xl:px-16
         "
       >
-        {deleting ? (
-          <span
-            className="
-              h-3.5 w-3.5
-              animate-spin
-              rounded-full
-              border-2
-              border-white/40
-              border-t-white
-            "
-          />
-        ) : (
-          <FaTrash size={11} />
-        )}
-      </button>
-    </article>
-  );
-}
+        <div
+          className="
+            mx-auto
+            w-full
+            max-w-[1500px]
+          "
+        >
+          {loading && (
+            <div
+              className="
+                flex min-h-[55vh]
+                items-center
+                justify-center
+              "
+            >
+              <div className="text-center">
+                <div
+                  className="
+                    mx-auto mb-4
+                    h-9 w-9
+                    animate-spin
+                    rounded-full
+                    border-2
+                    border-black/10
+                    border-t-black
+                  "
+                />
 
-/* =========================================================
-   INFO ROW
-========================================================= */
+                <div className="text-sm font-semibold text-black/55">
+                  Loading your needs...
+                </div>
+              </div>
+            </div>
+          )}
 
-function InfoRow({
-  icon: Icon,
-  text: value,
-}) {
-  return (
-    <div className="flex min-w-0 items-center gap-2.5">
-      <Icon
-        size={12}
-        className="shrink-0 text-black/40"
-      />
+          {!loading &&
+            error && (
+              <div
+                className="
+                  rounded-3xl
+                  border border-red-200
+                  bg-red-50
+                  p-6
+                  text-center
+                  text-sm
+                  font-medium
+                  text-red-700
+                "
+              >
+                {error}
 
-      <span className="truncate text-xs font-medium text-black/70">
-        {value}
-      </span>
-    </div>
-  );
-}
+                <button
+                  type="button"
+                  onClick={
+                    loadNeeds
+                  }
+                  className="
+                    ml-3
+                    font-bold
+                    underline
+                  "
+                >
+                  Retry
+                </button>
+              </div>
+            )}
 
-/* =========================================================
-   STATUS
-========================================================= */
+          {!loading &&
+            !error &&
+            needs.length === 0 && (
+              <div
+                className="
+                  flex min-h-[55vh]
+                  items-center
+                  justify-center
+                "
+              >
+                <div
+                  className="
+                    max-w-sm
+                    rounded-[30px]
+                    border border-black/[0.07]
+                    bg-white
+                    p-8
+                    text-center
+                    shadow-xl
+                  "
+                >
+                  <div className="text-2xl font-black">
+                    No Needs Yet
+                  </div>
 
-function StatusBadge({
-  status,
-}) {
-  let color =
-    "bg-orange-500/10 text-orange-600";
+                  <div className="mt-2 text-sm text-black/45">
+                    இன்னும் எந்த தேவையும் பதிவு செய்யவில்லை.
+                  </div>
 
-  if (status === "approved") {
-    color =
-      "bg-green-500/10 text-green-600";
-  }
+                  <button
+                    type="button"
+                    onClick={() =>
+                      (window.location.href =
+                        "/needs")
+                    }
+                    className="
+                      mt-6
+                      rounded-2xl
+                      bg-black
+                      px-6 py-3
+                      text-sm
+                      font-bold
+                      text-white
+                    "
+                  >
+                    Create Need
+                  </button>
+                </div>
+              </div>
+            )}
 
-  if (status === "rejected") {
-    color =
-      "bg-red-500/10 text-red-600";
-  }
+          {!loading &&
+            !error &&
+            needs.length > 0 && (
+              <>
+                <div className="mb-6">
+                  <div className="text-xl font-black">
+                    Your Requests
+                  </div>
 
-  return (
-    <span
-      className={`
-        shrink-0 rounded-full
-        px-3 py-1.5
-        text-[9px] font-extrabold
-        uppercase
-        ${color}
-      `}
-    >
-      {status}
-    </span>
+                  <div className="mt-1 text-sm text-black/45">
+                    {needs.length} request
+                    {needs.length !== 1
+                      ? "s"
+                      : ""}{" "}
+                    found
+                  </div>
+                </div>
+
+                {/* =================================================
+                    DESKTOP: 4 CARDS
+                    TABLET: 2
+                    MOBILE: 1
+                ================================================= */}
+
+                <div
+                  className="
+                    grid
+                    grid-cols-1
+                    gap-5
+                    sm:grid-cols-2
+                    xl:grid-cols-4
+                  "
+                >
+                  {needs.map(
+                    (item) => {
+                      const id =
+                        getNeedId(
+                          item
+                        );
+
+                      return (
+                        <div
+                          key={
+                            id ||
+                            `${item.type}-${item.createdAt}`
+                          }
+                          className={
+                            deletingId ===
+                            id
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
+                        >
+                          <NeedCard
+                            item={
+                              item
+                            }
+                            onDelete={
+                              handleDelete
+                            }
+                          />
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+              </>
+            )}
+        </div>
+      </section>
+    </main>
   );
 }

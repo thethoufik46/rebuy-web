@@ -1,4 +1,7 @@
+// ============================================================
 // src/services/need.js
+// FINAL - BUYCAR / NEED API
+// ============================================================
 
 const BASE_URL =
   import.meta.env.VITE_API_URL ||
@@ -6,9 +9,9 @@ const BASE_URL =
 
 const NEED_URL = `${BASE_URL}/buycar`;
 
-/* =========================================================
-   AUTH
-========================================================= */
+// ============================================================
+// AUTH
+// ============================================================
 
 function getAuthHeaders() {
   const token = localStorage.getItem("auth_token");
@@ -19,14 +22,13 @@ function getAuthHeaders() {
 
   return {
     Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
     Accept: "application/json",
   };
 }
 
-/* =========================================================
-   SAFE JSON
-========================================================= */
+// ============================================================
+// JSON REQUEST
+// ============================================================
 
 async function fetchJSON(url, options = {}) {
   const response = await fetch(url, {
@@ -58,9 +60,10 @@ async function fetchJSON(url, options = {}) {
   return data;
 }
 
-/* =========================================================
-   ADD NEED
-========================================================= */
+// ============================================================
+// ADD NEED
+// IMPORTANT: AUDIO MUST BE FILE + FORMDATA
+// ============================================================
 
 export async function addNeed({
   type,
@@ -68,255 +71,73 @@ export async function addNeed({
   phone,
   location,
   description = "",
-  audioNote = null,
+  audioFile = null,
   car = null,
   bike = null,
   property = null,
   electronics = null,
 }) {
   try {
-    const body = {
-      type,
-      name: String(name || "").trim(),
-      phone: String(phone || "").trim(),
-      location: String(location || "").trim(),
-      description: String(description || "").trim(),
-      audioNote: audioNote || null,
+    const headers = getAuthHeaders();
 
-      ...(car ? { car } : {}),
-      ...(bike ? { bike } : {}),
-      ...(property ? { property } : {}),
-      ...(electronics ? { electronics } : {}),
-    };
+    const formData = new FormData();
 
-    const data = await fetchJSON(`${NEED_URL}/add`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(body),
-    });
+    formData.append("type", String(type || "").trim());
+    formData.append("name", String(name || "").trim());
+    formData.append("phone", String(phone || "").trim());
+    formData.append(
+      "location",
+      String(location || "").trim()
+    );
+    formData.append(
+      "description",
+      String(description || "").trim()
+    );
 
-    return {
-      success: true,
-      data,
-    };
-  } catch (error) {
-    console.error("addNeed error:", error);
+    // ========================================================
+    // NESTED OBJECTS
+    // ========================================================
 
-    return {
-      success: false,
-      message: error.message || "Failed to submit request",
-    };
-  }
-}
-
-/* =========================================================
-   GET MY NEEDS
-========================================================= */
-
-export async function getMyNeeds() {
-  try {
-    const data = await fetchJSON(`${NEED_URL}/my`, {
-      method: "GET",
-      headers: getAuthHeaders(),
-    });
-
-    const list =
-      data?.cars ||
-      data?.needs ||
-      data?.requests ||
-      [];
-
-    return Array.isArray(list) ? list : [];
-  } catch (error) {
-    console.error("getMyNeeds error:", error);
-    throw error;
-  }
-}
-
-/* =========================================================
-   GET NEEDS BY TYPE
-========================================================= */
-
-export async function getNeedsByType(type) {
-  try {
-    const params = new URLSearchParams();
-
-    if (type) {
-      params.set("type", type);
+    if (car) {
+      formData.append("car", JSON.stringify(car));
     }
 
-    const query = params.toString();
-
-    const data = await fetchJSON(
-      `${NEED_URL}${query ? `?${query}` : ""}`,
-      {
-        method: "GET",
-        headers: getAuthHeaders(),
-      }
-    );
-
-    const list =
-      data?.cars ||
-      data?.needs ||
-      data?.requests ||
-      [];
-
-    return Array.isArray(list) ? list : [];
-  } catch (error) {
-    console.error("getNeedsByType error:", error);
-    throw error;
-  }
-}
-
-/* =========================================================
-   GET NEEDS WITH FILTER
-========================================================= */
-
-export async function getNeeds({
-  type = "",
-  status = "",
-} = {}) {
-  try {
-    const params = new URLSearchParams();
-
-    if (type) {
-      params.set("type", type);
+    if (bike) {
+      formData.append("bike", JSON.stringify(bike));
     }
 
-    if (status) {
-      params.set("status", status);
+    if (property) {
+      formData.append(
+        "property",
+        JSON.stringify(property)
+      );
     }
 
-    const query = params.toString();
+    if (electronics) {
+      formData.append(
+        "electronics",
+        JSON.stringify(electronics)
+      );
+    }
 
-    const data = await fetchJSON(
-      `${NEED_URL}${query ? `?${query}` : ""}`,
-      {
-        method: "GET",
-        headers: getAuthHeaders(),
-      }
-    );
+    // ========================================================
+    // AUDIO FILE
+    // ========================================================
 
-    const list =
-      data?.cars ||
-      data?.needs ||
-      data?.requests ||
-      [];
+    if (audioFile instanceof File) {
+      formData.append("audio", audioFile);
+    }
 
-    return Array.isArray(list) ? list : [];
-  } catch (error) {
-    console.error("getNeeds error:", error);
-    throw error;
-  }
-}
+    // IMPORTANT:
+    // Do NOT manually set Content-Type.
+    // Browser automatically adds multipart boundary.
 
-/* =========================================================
-   GET ALL NEEDS
-========================================================= */
-
-export async function getAllNeeds() {
-  try {
-    const data = await fetchJSON(NEED_URL, {
-      method: "GET",
-      headers: getAuthHeaders(),
-    });
-
-    const list =
-      data?.cars ||
-      data?.needs ||
-      data?.requests ||
-      [];
-
-    return Array.isArray(list) ? list : [];
-  } catch (error) {
-    console.error("getAllNeeds error:", error);
-    throw error;
-  }
-}
-
-/* =========================================================
-   GET SINGLE NEED
-========================================================= */
-
-export async function getNeedById(id) {
-  if (!id) {
-    throw new Error("Need ID is required");
-  }
-
-  try {
-    const data = await fetchJSON(
-      `${NEED_URL}/${encodeURIComponent(id)}`,
-      {
-        method: "GET",
-        headers: getAuthHeaders(),
-      }
-    );
-
-    return (
-      data?.car ||
-      data?.need ||
-      data?.request ||
-      data ||
-      null
-    );
-  } catch (error) {
-    console.error("getNeedById error:", error);
-    throw error;
-  }
-}
-
-/* =========================================================
-   UPDATE STATUS
-========================================================= */
-
-export async function updateNeedStatus({
-  id,
-  status,
-  adminNote = "",
-}) {
-  if (!id) {
-    throw new Error("Need ID is required");
-  }
-
-  try {
-    const body = {
-      status,
-      ...(adminNote
-        ? { adminNote: String(adminNote).trim() }
-        : {}),
-    };
-
-    const data = await fetchJSON(
-      `${NEED_URL}/${encodeURIComponent(id)}/status`,
-      {
-        method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(body),
-      }
-    );
-
-    return data?.success === true;
-  } catch (error) {
-    console.error("updateNeedStatus error:", error);
-    return false;
-  }
-}
-
-/* =========================================================
-   DELETE NEED
-========================================================= */
-
-export async function deleteNeed(id) {
-  if (!id) {
-    throw new Error("Need ID is required");
-  }
-
-  try {
     const response = await fetch(
-      `${NEED_URL}/${encodeURIComponent(id)}`,
+      `${NEED_URL}/add`,
       {
-        method: "DELETE",
-        headers: getAuthHeaders(),
+        method: "POST",
+        headers,
+        body: formData,
       }
     );
 
@@ -334,25 +155,218 @@ export async function deleteNeed(id) {
       throw new Error(
         data?.message ||
           data?.error ||
-          `Delete failed (${response.status})`
+          `Submit failed (${response.status})`
       );
     }
 
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    console.error("addNeed error:", error);
+
+    return {
+      success: false,
+      message:
+        error?.message ||
+        "Failed to submit request",
+    };
+  }
+}
+
+// ============================================================
+// GET MY NEEDS
+// ============================================================
+
+export async function getMyNeeds() {
+  const data = await fetchJSON(
+    `${NEED_URL}/my`,
+    {
+      method: "GET",
+      headers: getAuthHeaders(),
+    }
+  );
+
+  const list =
+    data?.cars ||
+    data?.needs ||
+    data?.requests ||
+    [];
+
+  return Array.isArray(list) ? list : [];
+}
+
+// ============================================================
+// GET NEEDS
+// ADMIN
+// ============================================================
+
+export async function getNeeds({
+  type = "",
+  status = "",
+} = {}) {
+  const params = new URLSearchParams();
+
+  if (type) params.set("type", type);
+  if (status) params.set("status", status);
+
+  const query = params.toString();
+
+  const data = await fetchJSON(
+    `${NEED_URL}${query ? `?${query}` : ""}`,
+    {
+      method: "GET",
+      headers: getAuthHeaders(),
+    }
+  );
+
+  const list =
+    data?.cars ||
+    data?.needs ||
+    data?.requests ||
+    [];
+
+  return Array.isArray(list) ? list : [];
+}
+
+// ============================================================
+// GET BY TYPE
+// ============================================================
+
+export async function getNeedsByType(type) {
+  return getNeeds({ type });
+}
+
+// ============================================================
+// GET SINGLE
+// ============================================================
+
+export async function getNeedById(id) {
+  if (!id) {
+    throw new Error("Need ID is required");
+  }
+
+  const data = await fetchJSON(
+    `${NEED_URL}/${encodeURIComponent(id)}`,
+    {
+      method: "GET",
+      headers: getAuthHeaders(),
+    }
+  );
+
+  return (
+    data?.car ||
+    data?.need ||
+    data?.request ||
+    data ||
+    null
+  );
+}
+
+// ============================================================
+// DELETE MY NEED
+// ============================================================
+
+export async function deleteMyNeed(id) {
+  if (!id) return false;
+
+  try {
+    const data = await fetchJSON(
+      `${NEED_URL}/my/${encodeURIComponent(id)}`,
+      {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      }
+    );
+
     return data?.success !== false;
   } catch (error) {
-    console.error("deleteNeed error:", error);
+    console.error(
+      "deleteMyNeed error:",
+      error
+    );
+
     return false;
   }
 }
 
-/* =========================================================
-   HELPERS
-========================================================= */
+// ============================================================
+// ADMIN STATUS
+// ============================================================
+
+export async function updateNeedStatus({
+  id,
+  status,
+  adminNote = "",
+}) {
+  try {
+    const data = await fetchJSON(
+      `${NEED_URL}/${encodeURIComponent(id)}/status`,
+      {
+        method: "PUT",
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status,
+          ...(adminNote
+            ? { adminNote: adminNote.trim() }
+            : {}),
+        }),
+      }
+    );
+
+    return data?.success === true;
+  } catch (error) {
+    console.error(
+      "updateNeedStatus error:",
+      error
+    );
+
+    return false;
+  }
+}
+
+// ============================================================
+// ADMIN DELETE
+// ============================================================
+
+export async function deleteNeedAdmin(id) {
+  if (!id) return false;
+
+  try {
+    const data = await fetchJSON(
+      `${NEED_URL}/${encodeURIComponent(id)}`,
+      {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      }
+    );
+
+    return data?.success !== false;
+  } catch (error) {
+    console.error(
+      "deleteNeedAdmin error:",
+      error
+    );
+
+    return false;
+  }
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
 
 export function getNeedId(item) {
   if (!item) return "";
 
-  if (typeof item._id === "object" && item._id?.$oid) {
+  if (
+    typeof item._id === "object" &&
+    item._id?.$oid
+  ) {
     return String(item._id.$oid);
   }
 
@@ -368,14 +382,42 @@ export function getNeedId(item) {
 }
 
 export function getNeedType(item) {
-  return String(item?.type || "").toLowerCase();
+  return String(
+    item?.type || ""
+  ).toLowerCase();
 }
 
-export function isVisibleNeed(item) {
-  const status = String(item?.status || "").toLowerCase();
+// ============================================================
+// AUDIO URL VALIDATION
+// ============================================================
 
-  return (
-    status !== "draft" &&
-    status !== "drift"
-  );
+export function getAudioUrl(item) {
+  const value = String(
+    item?.audioNote || ""
+  ).trim();
+
+  if (!value) return "";
+
+  // Old Flutter local path:
+  // /data/user/0/...
+  // Cannot be played by browser.
+  if (
+    value.startsWith("/data/") ||
+    value.startsWith("file://") ||
+    value.startsWith("content://") ||
+    value.includes("/code_cache/")
+  ) {
+    return "";
+  }
+
+  // Only proper web URL
+  if (
+    value.startsWith("https://") ||
+    value.startsWith("http://") ||
+    value.startsWith("blob:")
+  ) {
+    return value;
+  }
+
+  return "";
 }

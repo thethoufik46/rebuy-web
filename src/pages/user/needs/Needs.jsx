@@ -1,56 +1,64 @@
+// ============================================================
 // src/pages/user/needs/Needs.jsx
+// FINAL NEED FORM
+// ============================================================
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import {
-  FaArrowLeft,
-  FaCar,
-  FaMotorcycle,
-  FaHome,
-  FaMobileAlt,
-  FaUser,
-  FaPhone,
-  FaMapMarkerAlt,
-  FaMoneyBillWave,
-  FaClock,
-  FaCreditCard,
-  FaCheck,
-  FaChevronDown,
-  FaClipboardList,
-} from "react-icons/fa";
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ChevronDown,
+  CircleStop,
+  Loader2,
+  Mic,
+  Pause,
+  Play,
+  Send,
+  Square,
+  X,
+} from "lucide-react";
 
-import { addNeed } from "@/services/need";
+import {
+  addNeed,
+} from "@/services/need";
 
-/* =========================================================
-   TYPE CONFIG
-========================================================= */
+import carImage from "@/assets/needs/own board.jpeg";
+import bikeImage from "@/assets/needs/bike.webp";
+import propertyImage from "@/assets/needs/home.webp";
+import electronicsImage from "@/assets/needs/electronics.jpeg";
 
-const TYPE_CONFIG = {
-  car: {
-    label: "Car",
+const TYPES = [
+  {
+    id: "car",
+    title: "Car",
     tamil: "கார்",
-    icon: FaCar,
+    image: carImage,
   },
-
-  bike: {
-    label: "Bike",
+  {
+    id: "bike",
+    title: "Bike",
     tamil: "பைக்",
-    icon: FaMotorcycle,
+    image: bikeImage,
   },
-
-  property: {
-    label: "Property",
+  {
+    id: "property",
+    title: "Property",
     tamil: "சொத்து",
-    icon: FaHome,
+    image: propertyImage,
   },
-
-  electronics: {
-    label: "Electronics",
+  {
+    id: "electronics",
+    title: "Electronics",
     tamil: "எலக்ட்ரானிக்ஸ்",
-    icon: FaMobileAlt,
+    image: electronicsImage,
   },
-};
+];
 
 const TIMELINES = [
   "Immediate",
@@ -64,16 +72,8 @@ const PAYMENT_TYPES = [
 ];
 
 const BOARD_TYPES = [
-  {
-    value: "Own Board",
-    title: "Own",
-    subtitle: "Private",
-  },
-  {
-    value: "T Board",
-    title: "Taxi",
-    subtitle: "Commercial",
-  },
+  "Own Board",
+  "T Board",
 ];
 
 const PROPERTY_CATEGORIES = [
@@ -87,1129 +87,1603 @@ const ELECTRONICS_CATEGORIES = [
   "PC",
 ];
 
-/* =========================================================
-   HELPERS
-========================================================= */
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  inputMode,
+  maxLength,
+}) {
+  return (
+    <div className="w-full">
+      <label className="mb-2 block text-sm font-semibold text-black/75">
+        {label}
+      </label>
 
-function clean(value) {
-  return String(value ?? "").trim();
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        inputMode={inputMode}
+        maxLength={maxLength}
+        autoComplete="off"
+        className="
+          h-12 w-full
+          rounded-2xl
+          border border-black/10
+          bg-white
+          px-4
+          text-[15px]
+          text-black
+          outline-none
+          transition
+          placeholder:text-black/30
+          focus:border-black/30
+          focus:ring-4
+          focus:ring-black/[0.04]
+        "
+      />
+    </div>
+  );
 }
 
-function createEmptyForm() {
-  return {
-    type: "car",
+function SelectField({
+  label,
+  value,
+  onChange,
+  options,
+}) {
+  return (
+    <div className="w-full">
+      <label className="mb-2 block text-sm font-semibold text-black/75">
+        {label}
+      </label>
 
-    name: "",
-    phone: "",
-    location: "",
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) =>
+            onChange(e.target.value)
+          }
+          className="
+            h-12 w-full
+            appearance-none
+            rounded-2xl
+            border border-black/10
+            bg-white
+            px-4 pr-11
+            text-[15px]
+            outline-none
+            focus:border-black/30
+            focus:ring-4
+            focus:ring-black/[0.04]
+          "
+        >
+          {options.map((option) => (
+            <option
+              key={option}
+              value={option}
+            >
+              {option}
+            </option>
+          ))}
+        </select>
 
-    model: "",
-    budget: "",
-
-    paymentType: "Cash",
-    boardType: "Own Board",
-    timeline: "Immediate",
-
-    propertyCategory: "Home",
-    propertyLocation: "",
-
-    electronicsCategory: "Mobile",
-
-    description: "",
-  };
+        <ChevronDown
+          size={18}
+          className="
+            pointer-events-none
+            absolute right-4 top-1/2
+            -translate-y-1/2
+            text-black/45
+          "
+        />
+      </div>
+    </div>
+  );
 }
 
-/* =========================================================
-   PAGE
-========================================================= */
+function TypeCard({
+  item,
+  selected,
+  onClick,
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`
+        group relative
+        overflow-hidden
+        rounded-3xl
+        border
+        text-left
+        transition-all
+        duration-200
+        ${
+          selected
+            ? "border-black bg-black shadow-xl"
+            : "border-black/10 bg-white hover:-translate-y-0.5 hover:shadow-lg"
+        }
+      `}
+    >
+      <div className="h-32 w-full overflow-hidden">
+        <img
+          src={item.image}
+          alt={item.title}
+          className="
+            h-full w-full
+            object-cover
+            transition
+            duration-500
+            group-hover:scale-105
+          "
+        />
+      </div>
+
+      <div className="p-4">
+        <div
+          className={`text-base font-bold ${
+            selected
+              ? "text-white"
+              : "text-black"
+          }`}
+        >
+          {item.title}
+        </div>
+
+        <div
+          className={`mt-1 text-xs ${
+            selected
+              ? "text-white/55"
+              : "text-black/45"
+          }`}
+        >
+          {item.tamil}
+        </div>
+      </div>
+
+      {selected && (
+        <div
+          className="
+            absolute right-3 top-3
+            flex h-7 w-7
+            items-center justify-center
+            rounded-full
+            bg-white
+            text-black
+          "
+        >
+          <Check size={16} />
+        </div>
+      )}
+    </button>
+  );
+}
 
 export default function Needs() {
-  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
+  const [type, setType] = useState("car");
 
-  const [form, setForm] = useState(createEmptyForm);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [location, setLocation] =
+    useState("");
 
-  const [loading, setLoading] = useState(false);
+  const [model, setModel] =
+    useState("");
 
-  const [showTypeMenu, setShowTypeMenu] = useState(false);
+  const [budget, setBudget] =
+    useState("");
 
-  const [message, setMessage] = useState({
-    type: "",
-    text: "",
-  });
+  const [paymentType, setPaymentType] =
+    useState("Cash");
 
-  const selectedType =
-    TYPE_CONFIG[form.type] || TYPE_CONFIG.car;
+  const [boardType, setBoardType] =
+    useState("Own Board");
 
-  const SelectedIcon = selectedType.icon;
+  const [timeline, setTimeline] =
+    useState("Immediate");
 
-  /* =======================================================
-     UPDATE FIELD
-  ======================================================= */
+  const [propertyCategory, setPropertyCategory] =
+    useState("Home");
 
-  function updateField(key, value) {
-    setForm((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  }
+  const [propertyLocation, setPropertyLocation] =
+    useState("");
 
-  /* =======================================================
-     CHANGE TYPE
-  ======================================================= */
+  const [electronicsCategory, setElectronicsCategory] =
+    useState("Mobile");
 
-  function changeType(type) {
-    setForm((prev) => ({
-      ...prev,
-      type,
-      model: "",
-      budget: "",
-      propertyLocation: "",
-    }));
+  const [description, setDescription] =
+    useState("");
 
-    setShowTypeMenu(false);
-    clearMessage();
-  }
+  const [audioFile, setAudioFile] =
+    useState(null);
 
-  /* =======================================================
-     MESSAGE
-  ======================================================= */
+  const [audioUrl, setAudioUrl] =
+    useState("");
 
-  function clearMessage() {
-    setMessage({
-      type: "",
-      text: "",
-    });
-  }
+  const [recording, setRecording] =
+    useState(false);
 
-  function showError(text) {
-    setMessage({
-      type: "error",
-      text,
-    });
-  }
+  const [audioPaused, setAudioPaused] =
+    useState(false);
 
-  function showSuccess(text) {
-    setMessage({
-      type: "success",
-      text,
-    });
-  }
+  const [recordSeconds, setRecordSeconds] =
+    useState(0);
 
-  /* =======================================================
-     VALIDATION
-  ======================================================= */
+  const [loading, setLoading] =
+    useState(false);
 
-  function validate() {
-    if (!clean(form.name)) {
-      showError("Please enter your name.");
+  const [error, setError] =
+    useState("");
+
+  const mediaRecorderRef =
+    useRef(null);
+
+  const audioChunksRef =
+    useRef([]);
+
+  const audioPreviewRef =
+    useRef(null);
+
+  const timerRef =
+    useRef(null);
+
+  // ==========================================================
+  // CLEANUP
+  // ==========================================================
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, [audioUrl]);
+
+  // ==========================================================
+  // RESET TYPE-SPECIFIC FIELDS
+  // ==========================================================
+
+  useEffect(() => {
+    setModel("");
+    setBudget("");
+    setPropertyLocation("");
+    setDescription("");
+  }, [type]);
+
+  // ==========================================================
+  // PHONE
+  // ==========================================================
+
+  const handlePhone = (value) => {
+    const digits =
+      value.replace(/\D/g, "");
+
+    setPhone(digits.slice(0, 10));
+  };
+
+  // ==========================================================
+  // BUDGET
+  // ==========================================================
+
+  const handleBudget = (value) => {
+    const digits =
+      value.replace(/\D/g, "");
+
+    setBudget(digits);
+  };
+
+  // ==========================================================
+  // BACK
+  // ==========================================================
+
+  const goBack = () => {
+    if (loading) return;
+
+    if (step === 2) {
+      setStep(1);
+      setError("");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+      return;
+    }
+
+    window.history.back();
+  };
+
+  // ==========================================================
+  // STEP 1 VALIDATION
+  // ==========================================================
+
+  const validateStep1 = () => {
+    setError("");
+
+    if (!name.trim()) {
+      setError("Please enter your name.");
       return false;
     }
 
-    if (!clean(form.phone)) {
-      showError("Please enter your phone number.");
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      setError(
+        "Please enter a valid 10 digit phone number."
+      );
       return false;
     }
 
-    if (!clean(form.location)) {
-      showError("Please enter your location.");
-      return false;
-    }
-
-    if (
-      form.type === "property" &&
-      !clean(form.propertyLocation)
-    ) {
-      showError("Please enter your preferred property location.");
-      return false;
-    }
-
-    if (
-      form.type === "car" &&
-      !clean(form.model)
-    ) {
-      showError("Please enter the car model.");
-      return false;
-    }
-
-    if (
-      form.type === "bike" &&
-      !clean(form.model)
-    ) {
-      showError("Please enter the bike model.");
-      return false;
-    }
-
-    if (!clean(form.budget)) {
-      showError("Please enter your budget.");
+    if (!location.trim()) {
+      setError(
+        "Please enter your location."
+      );
       return false;
     }
 
     return true;
-  }
+  };
 
-  /* =======================================================
-     BUILD PAYLOAD
-  ======================================================= */
+  // ==========================================================
+  // STEP 2 VALIDATION
+  // ==========================================================
 
-  function buildPayload() {
+  const validateStep2 = () => {
+    setError("");
+
+    if (type === "car") {
+      if (!model.trim()) {
+        setError(
+          "Please enter car model."
+        );
+        return false;
+      }
+    }
+
+    if (type === "bike") {
+      if (!model.trim()) {
+        setError(
+          "Please enter bike model."
+        );
+        return false;
+      }
+    }
+
+    if (type === "property") {
+      if (!propertyLocation.trim()) {
+        setError(
+          "Please enter preferred property location."
+        );
+        return false;
+      }
+    }
+
+    if (!budget) {
+      setError(
+        "Please enter your budget."
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  // ==========================================================
+  // RECORD AUDIO
+  // ==========================================================
+
+  const startRecording = async () => {
+    try {
+      setError("");
+
+      if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+      ) {
+        setError(
+          "Audio recording is not supported in this browser."
+        );
+        return;
+      }
+
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+        setAudioUrl("");
+      }
+
+      setAudioFile(null);
+
+      const stream =
+        await navigator.mediaDevices.getUserMedia(
+          { audio: true }
+        );
+
+      const preferredMime =
+        MediaRecorder.isTypeSupported(
+          "audio/webm;codecs=opus"
+        )
+          ? "audio/webm;codecs=opus"
+          : "audio/webm";
+
+      const recorder =
+        new MediaRecorder(
+          stream,
+          {
+            mimeType: preferredMime,
+          }
+        );
+
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (
+        event
+      ) => {
+        if (
+          event.data &&
+          event.data.size > 0
+        ) {
+          audioChunksRef.current.push(
+            event.data
+          );
+        }
+      };
+
+      recorder.onstop = () => {
+        const blob =
+          new Blob(
+            audioChunksRef.current,
+            {
+              type:
+                recorder.mimeType ||
+                "audio/webm",
+            }
+          );
+
+        const extension =
+          blob.type.includes("mp4")
+            ? "m4a"
+            : "webm";
+
+        const file =
+          new File(
+            [blob],
+            `need-audio-${Date.now()}.${extension}`,
+            {
+              type:
+                blob.type ||
+                "audio/webm",
+            }
+          );
+
+        const url =
+          URL.createObjectURL(blob);
+
+        setAudioFile(file);
+        setAudioUrl(url);
+        setRecording(false);
+        setAudioPaused(false);
+
+        stream
+          .getTracks()
+          .forEach((track) =>
+            track.stop()
+          );
+      };
+
+      mediaRecorderRef.current =
+        recorder;
+
+      recorder.start();
+
+      setRecording(true);
+      setAudioPaused(false);
+      setRecordSeconds(0);
+
+      timerRef.current =
+        setInterval(() => {
+          setRecordSeconds(
+            (seconds) =>
+              seconds + 1
+          );
+        }, 1000);
+    } catch (err) {
+      console.error(
+        "Recording error:",
+        err
+      );
+
+      setError(
+        "Microphone permission denied or unavailable."
+      );
+    }
+  };
+
+  // ==========================================================
+  // STOP RECORDING
+  // ==========================================================
+
+  const stopRecording = () => {
+    const recorder =
+      mediaRecorderRef.current;
+
+    if (
+      recorder &&
+      recorder.state !== "inactive"
+    ) {
+      recorder.stop();
+    }
+
+    if (timerRef.current) {
+      clearInterval(
+        timerRef.current
+      );
+      timerRef.current = null;
+    }
+  };
+
+  // ==========================================================
+  // PAUSE RECORDING
+  // ==========================================================
+
+  const toggleRecordingPause = () => {
+    const recorder =
+      mediaRecorderRef.current;
+
+    if (!recorder) return;
+
+    if (recorder.state === "recording") {
+      recorder.pause();
+      setAudioPaused(true);
+
+      if (timerRef.current) {
+        clearInterval(
+          timerRef.current
+        );
+        timerRef.current = null;
+      }
+    } else if (
+      recorder.state === "paused"
+    ) {
+      recorder.resume();
+      setAudioPaused(false);
+
+      timerRef.current =
+        setInterval(() => {
+          setRecordSeconds(
+            (seconds) =>
+              seconds + 1
+          );
+        }, 1000);
+    }
+  };
+
+  // ==========================================================
+  // REMOVE AUDIO
+  // ==========================================================
+
+  const removeAudio = () => {
+    if (recording) {
+      stopRecording();
+    }
+
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+
+    setAudioUrl("");
+    setAudioFile(null);
+    setRecordSeconds(0);
+    setAudioPaused(false);
+  };
+
+  // ==========================================================
+  // AUDIO TIME
+  // ==========================================================
+
+  const formatSeconds = (seconds) => {
+    const min =
+      Math.floor(seconds / 60)
+        .toString()
+        .padStart(2, "0");
+
+    const sec =
+      (seconds % 60)
+        .toString()
+        .padStart(2, "0");
+
+    return `${min}:${sec}`;
+  };
+
+  // ==========================================================
+  // NEXT
+  // ==========================================================
+
+  const nextStep = () => {
+    if (!validateStep1()) return;
+
+    setStep(2);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  // ==========================================================
+  // SUBMIT
+  // ==========================================================
+
+  const submit = async () => {
+    if (loading) return;
+
+    if (!validateStep2()) return;
+
+    setLoading(true);
+    setError("");
+
     let car = null;
     let bike = null;
     let property = null;
     let electronics = null;
 
-    const budget =
-      Number(
-        String(form.budget).replace(/[^0-9]/g, "")
-      ) || 0;
-
-    if (form.type === "car") {
+    if (type === "car") {
       car = {
-        model: clean(form.model),
-        budget,
-        paymentType: form.paymentType,
-        boardType: form.boardType,
-        timeline: form.timeline,
+        model: model.trim(),
+        budget: Number(budget) || 0,
+        paymentType,
+        boardType,
+        timeline,
       };
     }
 
-    if (form.type === "bike") {
+    if (type === "bike") {
       bike = {
-        model: clean(form.model),
-        budget,
-        paymentType: form.paymentType,
-        timeline: form.timeline,
+        model: model.trim(),
+        budget: Number(budget) || 0,
+        paymentType,
+        timeline,
       };
     }
 
-    if (form.type === "property") {
+    if (type === "property") {
       property = {
-        category: form.propertyCategory,
-        preferredLocation: clean(
-          form.propertyLocation
-        ),
-        budget,
-        timeline: form.timeline,
+        category: propertyCategory,
+        preferredLocation:
+          propertyLocation.trim(),
+        budget: Number(budget) || 0,
+        timeline,
       };
     }
 
-    if (form.type === "electronics") {
+    if (type === "electronics") {
       electronics = {
-        category: form.electronicsCategory,
-        budget,
-        timeline: form.timeline,
+        category:
+          electronicsCategory,
+        budget: Number(budget) || 0,
+        timeline,
       };
     }
 
-    return {
-      type: form.type,
+    const result =
+      await addNeed({
+        type,
+        name,
+        phone,
+        location,
+        description,
+        audioFile,
+        car,
+        bike,
+        property,
+        electronics,
+      });
 
-      name: clean(form.name),
-      phone: clean(form.phone),
-      location: clean(form.location),
+    setLoading(false);
 
-      description: clean(form.description),
-
-      audioNote: null,
-
-      car,
-      bike,
-      property,
-      electronics,
-    };
-  }
-
-  /* =======================================================
-     SUBMIT
-  ======================================================= */
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-
-    if (loading) return;
-
-    clearMessage();
-
-    if (!validate()) return;
-
-    setLoading(true);
-
-    try {
-      const payload = buildPayload();
-
-      const result = await addNeed(payload);
-
-      if (result.success) {
-        showSuccess(
-          "Your request has been submitted successfully."
-        );
-
-        setForm(createEmptyForm());
-
-        setTimeout(() => {
-          navigate("/needs");
-        }, 700);
-      } else {
-        showError(
-          result.message ||
-            "Post failed. Please try again."
-        );
-      }
-    } catch (error) {
-      console.error(error);
-
-      showError(
-        error?.message ||
-          "Something went wrong."
+    if (!result.success) {
+      setError(
+        result.message ||
+          "Request submission failed."
       );
-    } finally {
-      setLoading(false);
+      return;
     }
-  }
 
-  /* =======================================================
-     INPUT
-  ======================================================= */
+    // ========================================================
+    // SUCCESS → NEEDS LIST
+    // ========================================================
 
-  function Input({
-    label,
-    value,
-    onChange,
-    type = "text",
-    placeholder = "",
-    icon: Icon,
-  }) {
-    return (
-      <div className="space-y-1.5">
-        <label className="px-1 text-xs font-semibold text-black/65">
-          {label}
-        </label>
+    window.location.href =
+      "/needs-list";
+  };
 
-        <div
-          className="
-            flex min-h-[50px]
-            items-center gap-3
-            rounded-2xl
-            border border-white/80
-            bg-white/65
-            px-4
-            shadow-[0_4px_20px_rgba(15,23,42,0.04)]
-            backdrop-blur-xl
-            transition
-            focus-within:border-black/20
-            focus-within:bg-white/85
-          "
-        >
-          {Icon && (
-            <Icon
-              className="shrink-0 text-black/45"
-              size={15}
-            />
-          )}
+  // ==========================================================
+  // TYPE FIELDS
+  // ==========================================================
 
-          <input
-            type={type}
-            value={value}
+  const renderTypeFields = () => {
+    if (type === "car") {
+      return (
+        <div className="space-y-5">
+          <Field
+            label="Car Model"
+            value={model}
             onChange={(e) =>
-              onChange(e.target.value)
+              setModel(e.target.value)
             }
-            placeholder={placeholder}
-            className="
-              min-w-0 flex-1
-              bg-transparent
-              text-sm font-medium
-              text-black
-              outline-none
-              placeholder:text-black/35
-            "
+            placeholder="Enter car model"
           />
-        </div>
-      </div>
-    );
-  }
 
-  /* =======================================================
-     SELECT
-  ======================================================= */
-
-  function SelectBox({
-    label,
-    value,
-    options,
-    onChange,
-    icon: Icon,
-  }) {
-    return (
-      <div className="space-y-1.5">
-        <label className="px-1 text-xs font-semibold text-black/65">
-          {label}
-        </label>
-
-        <div className="relative">
-          <select
-            value={value}
+          <Field
+            label="Budget"
+            value={budget}
             onChange={(e) =>
-              onChange(e.target.value)
+              handleBudget(
+                e.target.value
+              )
             }
-            className="
-              min-h-[50px]
-              w-full
-              appearance-none
-              rounded-2xl
-              border border-white/80
-              bg-white/65
-              px-11 pr-10
-              text-sm font-semibold
-              text-black
-              outline-none
-              shadow-[0_4px_20px_rgba(15,23,42,0.04)]
-              backdrop-blur-xl
-              transition
-              focus:border-black/20
-              focus:bg-white
-            "
-          >
-            {options.map((option) => (
-              <option
-                key={option}
-                value={option}
-              >
-                {option}
-              </option>
-            ))}
-          </select>
-
-          {Icon && (
-            <Icon
-              size={15}
-              className="
-                pointer-events-none
-                absolute left-4 top-1/2
-                -translate-y-1/2
-                text-black/45
-              "
-            />
-          )}
-
-          <FaChevronDown
-            size={11}
-            className="
-              pointer-events-none
-              absolute right-4 top-1/2
-              -translate-y-1/2
-              text-black/45
-            "
+            placeholder="Enter budget"
+            inputMode="numeric"
           />
-        </div>
-      </div>
-    );
-  }
 
-  /* =======================================================
-     TYPE SELECTOR
-  ======================================================= */
-
-  function TypeSelector() {
-    return (
-      <div className="relative">
-        <label className="mb-1.5 block px-1 text-xs font-semibold text-black/65">
-          Type
-        </label>
-
-        <button
-          type="button"
-          onClick={() =>
-            setShowTypeMenu((prev) => !prev)
-          }
-          className="
-            flex min-h-[58px]
-            w-full items-center
-            gap-3 rounded-2xl
-            border border-white/80
-            bg-white/70
-            px-4
-            text-left
-            shadow-[0_4px_20px_rgba(15,23,42,0.04)]
-            backdrop-blur-xl
-            transition
-            hover:bg-white/85
-            active:scale-[0.995]
-          "
-        >
-          <div
-            className="
-              flex h-9 w-9 shrink-0
-              items-center justify-center
-              rounded-xl bg-black
-              text-white
-            "
-          >
-            <SelectedIcon size={15} />
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-bold">
-              {selectedType.label}
-            </div>
-
-            <div className="text-[10px] text-black/45">
-              {selectedType.tamil}
-            </div>
-          </div>
-
-          <FaChevronDown
-            size={11}
-            className="text-black/45"
+          <SelectField
+            label="Payment"
+            value={paymentType}
+            onChange={setPaymentType}
+            options={
+              PAYMENT_TYPES
+            }
           />
-        </button>
 
-        {showTypeMenu && (
-          <div
-            className="
-              absolute left-0 right-0
-              top-[82px] z-50
-              overflow-hidden
-              rounded-2xl
-              border border-black/[0.06]
-              bg-white/95
-              p-1.5
-              shadow-[0_18px_50px_rgba(15,23,42,0.16)]
-              backdrop-blur-2xl
-            "
-          >
-            {Object.entries(TYPE_CONFIG).map(
-              ([key, config]) => {
-                const Icon = config.icon;
-                const selected =
-                  form.type === key;
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-black/75">
+              Board Type
+            </label>
 
-                return (
+            <div className="grid grid-cols-2 gap-3">
+              {BOARD_TYPES.map(
+                (item) => (
                   <button
-                    key={key}
+                    key={item}
                     type="button"
                     onClick={() =>
-                      changeType(key)
+                      setBoardType(
+                        item
+                      )
                     }
                     className={`
-                      flex w-full items-center
-                      gap-3 rounded-xl
-                      px-3 py-3
-                      text-left
+                      rounded-2xl
+                      border
+                      px-4 py-3
+                      text-sm font-semibold
                       transition
                       ${
-                        selected
-                          ? "bg-black text-white"
-                          : "hover:bg-black/[0.05]"
+                        boardType ===
+                        item
+                          ? "border-black bg-black text-white"
+                          : "border-black/10 bg-white text-black hover:bg-black/[0.03]"
                       }
                     `}
                   >
-                    <div
-                      className={`
-                        flex h-8 w-8
-                        items-center justify-center
-                        rounded-lg
-                        ${
-                          selected
-                            ? "bg-white/15"
-                            : "bg-black/[0.05]"
-                        }
-                      `}
-                    >
-                      <Icon size={14} />
-                    </div>
-
-                    <div className="flex-1">
-                      <div className="text-xs font-bold">
-                        {config.label}
-                      </div>
-
-                      <div
-                        className={`
-                          text-[9px]
-                          ${
-                            selected
-                              ? "text-white/60"
-                              : "text-black/40"
-                          }
-                        `}
-                      >
-                        {config.tamil}
-                      </div>
-                    </div>
-
-                    {selected && (
-                      <FaCheck size={11} />
-                    )}
+                    {item}
                   </button>
-                );
-              }
-            )}
+                )
+              )}
+            </div>
           </div>
-        )}
-      </div>
-    );
-  }
 
-  /* =======================================================
-     BOARD SELECTOR
-  ======================================================= */
-
-  function BoardSelector() {
-    return (
-      <div className="space-y-1.5">
-        <label className="px-1 text-xs font-semibold text-black/65">
-          Board Type
-        </label>
-
-        <div className="grid grid-cols-2 gap-2.5">
-          {BOARD_TYPES.map((board) => {
-            const selected =
-              form.boardType === board.value;
-
-            return (
-              <button
-                key={board.value}
-                type="button"
-                onClick={() =>
-                  updateField(
-                    "boardType",
-                    board.value
-                  )
-                }
-                className={`
-                  rounded-2xl border
-                  px-3 py-3
-                  text-left
-                  transition
-                  ${
-                    selected
-                      ? "border-black bg-black text-white shadow-lg"
-                      : "border-white/80 bg-white/65 text-black hover:bg-white"
-                  }
-                `}
-              >
-                <div className="flex items-center gap-2">
-                  {board.value === "Own Board" ? (
-                    <FaUser size={13} />
-                  ) : (
-                    <FaCar size={13} />
-                  )}
-
-                  <span className="text-xs font-bold">
-                    {board.title}
-                  </span>
-                </div>
-
-                <div
-                  className={`
-                    mt-1 text-[9px]
-                    ${
-                      selected
-                        ? "text-white/55"
-                        : "text-black/40"
-                    }
-                  `}
-                >
-                  {board.subtitle}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  /* =======================================================
-     TYPE FIELDS
-  ======================================================= */
-
-  function TypeFields() {
-    if (form.type === "car") {
-      return (
-        <div className="space-y-3">
-          <Input
-            label="Car Model"
-            value={form.model}
-            onChange={(value) =>
-              updateField("model", value)
-            }
-            placeholder="e.g. Toyota Innova"
-            icon={FaCar}
-          />
-
-          <Input
-            label="Budget"
-            value={form.budget}
-            onChange={(value) =>
-              updateField("budget", value)
-            }
-            placeholder="e.g. 800000"
-            type="number"
-            icon={FaMoneyBillWave}
-          />
-
-          <SelectBox
-            label="Payment"
-            value={form.paymentType}
-            options={PAYMENT_TYPES}
-            onChange={(value) =>
-              updateField(
-                "paymentType",
-                value
-              )
-            }
-            icon={FaCreditCard}
-          />
-
-          <BoardSelector />
-
-          <SelectBox
+          <SelectField
             label="Timeline"
-            value={form.timeline}
-            options={TIMELINES}
-            onChange={(value) =>
-              updateField(
-                "timeline",
-                value
-              )
+            value={timeline}
+            onChange={setTimeline}
+            options={
+              TIMELINES
             }
-            icon={FaClock}
           />
         </div>
       );
     }
 
-    if (form.type === "bike") {
+    if (type === "bike") {
       return (
-        <div className="space-y-3">
-          <Input
+        <div className="space-y-5">
+          <Field
             label="Bike Model"
-            value={form.model}
-            onChange={(value) =>
-              updateField("model", value)
+            value={model}
+            onChange={(e) =>
+              setModel(e.target.value)
             }
-            placeholder="e.g. Yamaha R15"
-            icon={FaMotorcycle}
+            placeholder="Enter bike model"
           />
 
-          <Input
+          <Field
             label="Budget"
-            value={form.budget}
-            onChange={(value) =>
-              updateField("budget", value)
+            value={budget}
+            onChange={(e) =>
+              handleBudget(
+                e.target.value
+              )
             }
-            placeholder="e.g. 150000"
-            type="number"
-            icon={FaMoneyBillWave}
+            placeholder="Enter budget"
+            inputMode="numeric"
           />
 
-          <SelectBox
+          <SelectField
             label="Payment"
-            value={form.paymentType}
-            options={PAYMENT_TYPES}
-            onChange={(value) =>
-              updateField(
-                "paymentType",
-                value
-              )
+            value={paymentType}
+            onChange={setPaymentType}
+            options={
+              PAYMENT_TYPES
             }
-            icon={FaCreditCard}
           />
 
-          <SelectBox
+          <SelectField
             label="Timeline"
-            value={form.timeline}
-            options={TIMELINES}
-            onChange={(value) =>
-              updateField(
-                "timeline",
-                value
-              )
+            value={timeline}
+            onChange={setTimeline}
+            options={
+              TIMELINES
             }
-            icon={FaClock}
           />
         </div>
       );
     }
 
-    if (form.type === "property") {
+    if (type === "property") {
       return (
-        <div className="space-y-3">
-          <SelectBox
-            label="Category"
-            value={form.propertyCategory}
-            options={PROPERTY_CATEGORIES}
-            onChange={(value) =>
-              updateField(
-                "propertyCategory",
-                value
-              )
+        <div className="space-y-5">
+          <SelectField
+            label="Property Type"
+            value={
+              propertyCategory
             }
-            icon={FaHome}
+            onChange={
+              setPropertyCategory
+            }
+            options={
+              PROPERTY_CATEGORIES
+            }
           />
 
-          <Input
+          <Field
             label="Preferred Location"
-            value={form.propertyLocation}
-            onChange={(value) =>
-              updateField(
-                "propertyLocation",
-                value
+            value={
+              propertyLocation
+            }
+            onChange={(e) =>
+              setPropertyLocation(
+                e.target.value
               )
             }
-            placeholder="e.g. Thanjavur"
-            icon={FaMapMarkerAlt}
+            placeholder="Enter preferred location"
           />
 
-          <Input
+          <Field
             label="Budget"
-            value={form.budget}
-            onChange={(value) =>
-              updateField("budget", value)
-            }
-            placeholder="e.g. 5000000"
-            type="number"
-            icon={FaMoneyBillWave}
-          />
-
-          <SelectBox
-            label="Timeline"
-            value={form.timeline}
-            options={TIMELINES}
-            onChange={(value) =>
-              updateField(
-                "timeline",
-                value
+            value={budget}
+            onChange={(e) =>
+              handleBudget(
+                e.target.value
               )
             }
-            icon={FaClock}
+            placeholder="Enter budget"
+            inputMode="numeric"
+          />
+
+          <SelectField
+            label="Timeline"
+            value={timeline}
+            onChange={setTimeline}
+            options={
+              TIMELINES
+            }
           />
         </div>
       );
     }
 
-    if (form.type === "electronics") {
-      return (
-        <div className="space-y-3">
-          <SelectBox
-            label="Category"
-            value={form.electronicsCategory}
-            options={ELECTRONICS_CATEGORIES}
-            onChange={(value) =>
-              updateField(
-                "electronicsCategory",
-                value
-              )
-            }
-            icon={FaMobileAlt}
-          />
+    return (
+      <div className="space-y-5">
+        <SelectField
+          label="Category"
+          value={
+            electronicsCategory
+          }
+          onChange={
+            setElectronicsCategory
+          }
+          options={
+            ELECTRONICS_CATEGORIES
+          }
+        />
 
-          <Input
-            label="Budget"
-            value={form.budget}
-            onChange={(value) =>
-              updateField("budget", value)
-            }
-            placeholder="e.g. 50000"
-            type="number"
-            icon={FaMoneyBillWave}
-          />
+        <Field
+          label="Budget"
+          value={budget}
+          onChange={(e) =>
+            handleBudget(
+              e.target.value
+            )
+          }
+          placeholder="Enter budget"
+          inputMode="numeric"
+        />
 
-          <SelectBox
-            label="Timeline"
-            value={form.timeline}
-            options={TIMELINES}
-            onChange={(value) =>
-              updateField(
-                "timeline",
-                value
-              )
-            }
-            icon={FaClock}
-          />
-        </div>
-      );
-    }
+        <SelectField
+          label="Timeline"
+          value={timeline}
+          onChange={setTimeline}
+          options={
+            TIMELINES
+          }
+        />
+      </div>
+    );
+  };
 
-    return null;
-  }
-
-  /* =======================================================
-     RENDER
-  ======================================================= */
+  // ==========================================================
+  // UI
+  // ==========================================================
 
   return (
     <main
       className="
         min-h-screen
-        bg-[#E9E9FF]
-        px-3 py-4
-        sm:px-5
-        lg:px-8
+        w-full
+        bg-[#eeeefe]
+        text-black
       "
     >
-      <div className="mx-auto w-full max-w-4xl">
+      {/* ======================================================
+          TOP BAR
+      ====================================================== */}
 
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
-        <header className="mb-4 flex items-center justify-between">
-
-          {/* BACK */}
+      <header
+        className="
+          sticky top-0 z-50
+          border-b border-black/[0.06]
+          bg-[#eeeefe]/90
+          backdrop-blur-2xl
+        "
+      >
+        <div
+          className="
+            flex min-h-[70px]
+            w-full items-center
+            justify-between
+            px-4 sm:px-8
+            lg:px-12
+            xl:px-16
+          "
+        >
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            onClick={goBack}
+            disabled={loading}
             className="
               flex h-10 w-10
               items-center justify-center
               rounded-full
-              bg-white/70
-              text-black
-              shadow-sm
-              backdrop-blur-xl
+              border border-black/10
+              bg-white
               transition
-              hover:bg-white
-              active:scale-95
+              hover:bg-black
+              hover:text-white
+              disabled:opacity-40
             "
             aria-label="Back"
           >
-            <FaArrowLeft size={14} />
+            <ArrowLeft size={19} />
           </button>
 
-          {/* TITLE */}
           <div className="text-center">
-            <h1 className="text-base font-bold tracking-tight">
+            <div className="text-base font-black sm:text-lg">
               Any Need Please Fill
-            </h1>
+            </div>
 
-            <p className="mt-0.5 text-[10px] font-medium text-black/50">
+            <div className="mt-0.5 text-[11px] font-medium text-black/45">
               தேவைகளை குறிப்பிடவும்
-            </p>
+            </div>
           </div>
-
-          {/* =================================================
-              NEEDS LIST BUTTON
-          ================================================= */}
 
           <button
             type="button"
-            onClick={() => navigate("/needs")}
-            aria-label="Open Needs List"
+            onClick={() =>
+              (window.location.href =
+                "/needs-list")
+            }
             className="
-              group
-              flex items-center gap-2
               rounded-2xl
-              border border-white
-              bg-white/70
-              px-3 py-2
-              text-left
+              border border-black/10
+              bg-white
+              px-4 py-2
+              text-center
               shadow-sm
-              backdrop-blur-xl
-              transition-all duration-200
-              hover:bg-white
-              hover:shadow-md
-              active:scale-95
+              transition
+              hover:bg-black
+              hover:text-white
             "
           >
-            <div
-              className="
-                flex h-8 w-8 shrink-0
-                items-center justify-center
-                rounded-xl
-                bg-black
-                text-white
-                transition-transform duration-200
-                group-hover:scale-105
-              "
-            >
-              <FaClipboardList size={13} />
+            <div className="text-xs font-bold">
+              Needs
             </div>
 
-            <div className="min-w-0">
-              <div className="text-[11px] font-bold leading-none">
-                Needs
-              </div>
-
-              <div className="mt-1 text-[8px] font-medium text-black/45">
-                தேவைகள்
-              </div>
+            <div className="text-[9px] text-black/45 group-hover:text-white/70">
+              தேவைகள்
             </div>
           </button>
-        </header>
+        </div>
+      </header>
 
-        {/* =================================================
-            FORM
-        ================================================= */}
+      {/* ======================================================
+          CONTENT
+      ====================================================== */}
 
-        <form
-          onSubmit={handleSubmit}
+      <section
+        className="
+          w-full
+          px-4 py-6
+          sm:px-8 sm:py-8
+          lg:px-12
+          xl:px-16
+        "
+      >
+        <div
           className="
-            rounded-[28px]
-            border border-white/70
-            bg-white/30
-            p-4
-            shadow-[0_12px_45px_rgba(15,23,42,0.06)]
-            backdrop-blur-2xl
-            sm:p-6
+            mx-auto
+            w-full
+            max-w-[1500px]
           "
         >
-          <div className="space-y-4">
+          {/* ==================================================
+              PROGRESS
+          ================================================== */}
 
-            {/* BASIC INFO */}
-
-            <div className="grid gap-3 sm:grid-cols-2">
-
-              <Input
-                label="Name"
-                value={form.name}
-                onChange={(value) =>
-                  updateField("name", value)
+          <div className="mb-6 flex items-center gap-3">
+            <div
+              className={`
+                h-2 flex-1 rounded-full
+                ${
+                  step >= 1
+                    ? "bg-black"
+                    : "bg-black/10"
                 }
-                placeholder="Your name"
-                icon={FaUser}
-              />
-
-              <Input
-                label="Phone"
-                value={form.phone}
-                onChange={(value) =>
-                  updateField("phone", value)
-                }
-                placeholder="Your phone number"
-                type="tel"
-                icon={FaPhone}
-              />
-
-            </div>
-
-            <Input
-              label="Your Location"
-              value={form.location}
-              onChange={(value) =>
-                updateField(
-                  "location",
-                  value
-                )
-              }
-              placeholder="Your current location"
-              icon={FaMapMarkerAlt}
+              `}
             />
 
-            {/* TYPE */}
-
-            <TypeSelector />
-
-            {/* TYPE FIELDS */}
-
-            <TypeFields />
-
-            {/* DESCRIPTION */}
-
-            <div className="space-y-1.5">
-
-              <label className="px-1 text-xs font-semibold text-black/65">
-                Additional Details
-              </label>
-
-              <textarea
-                value={form.description}
-                onChange={(e) =>
-                  updateField(
-                    "description",
-                    e.target.value
-                  )
+            <div
+              className={`
+                h-2 flex-1 rounded-full
+                ${
+                  step >= 2
+                    ? "bg-black"
+                    : "bg-black/10"
                 }
-                rows={6}
-                placeholder="Additional details..."
-                className="
-                  w-full resize-none
-                  rounded-2xl
-                  border border-white/80
-                  bg-white/65
-                  px-4 py-3
-                  text-sm font-medium
-                  text-black
-                  outline-none
-                  shadow-[0_4px_20px_rgba(15,23,42,0.04)]
-                  backdrop-blur-xl
-                  placeholder:text-black/35
-                  transition
-                  focus:border-black/20
-                  focus:bg-white
-                "
-              />
+              `}
+            />
+          </div>
 
-            </div>
+          {/* ==================================================
+              ERROR
+          ================================================== */}
 
-            {/* MESSAGE */}
-
-            {message.text && (
-              <div
-                className={`
-                  rounded-2xl
-                  px-4 py-3
-                  text-xs font-semibold
-                  ${
-                    message.type === "success"
-                      ? "bg-green-500/10 text-green-700"
-                      : "bg-red-500/10 text-red-600"
-                  }
-                `}
-              >
-                {message.text}
-              </div>
-            )}
-
-            {/* SUBMIT */}
-
-            <button
-              type="submit"
-              disabled={loading}
+          {error && (
+            <div
               className="
-                flex h-[52px]
-                w-full items-center
-                justify-center
-                gap-2
+                mb-5
                 rounded-2xl
-                bg-black
-                text-sm font-bold
-                text-white
-                shadow-[0_10px_30px_rgba(0,0,0,0.16)]
-                transition
-                hover:bg-black/90
-                active:scale-[0.99]
-                disabled:cursor-not-allowed
-                disabled:opacity-60
+                border border-red-200
+                bg-red-50
+                px-4 py-3
+                text-sm
+                font-medium
+                text-red-700
               "
             >
-              {loading ? (
-                <>
-                  <span
-                    className="
-                      h-4 w-4
-                      animate-spin
-                      rounded-full
-                      border-2
-                      border-white/30
-                      border-t-white
-                    "
+              {error}
+            </div>
+          )}
+
+          {/* ==================================================
+              STEP 1
+          ================================================== */}
+
+          {step === 1 && (
+            <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.85fr)]">
+              <section
+                className="
+                  rounded-[30px]
+                  border border-black/[0.07]
+                  bg-white
+                  p-5
+                  shadow-[0_15px_60px_rgba(15,23,42,0.06)]
+                  sm:p-7
+                  lg:p-9
+                "
+              >
+                <div className="mb-7">
+                  <div className="text-2xl font-black">
+                    Choose what you need
+                  </div>
+
+                  <div className="mt-1 text-sm text-black/45">
+                    உங்களுக்கு தேவையான category-யை தேர்வு செய்யவும்
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {TYPES.map(
+                    (item) => (
+                      <TypeCard
+                        key={item.id}
+                        item={item}
+                        selected={
+                          type ===
+                          item.id
+                        }
+                        onClick={() =>
+                          setType(
+                            item.id
+                          )
+                        }
+                      />
+                    )
+                  )}
+                </div>
+              </section>
+
+              <section
+                className="
+                  rounded-[30px]
+                  border border-black/[0.07]
+                  bg-white
+                  p-5
+                  shadow-[0_15px_60px_rgba(15,23,42,0.06)]
+                  sm:p-7
+                  lg:p-9
+                "
+              >
+                <div className="mb-7">
+                  <div className="text-2xl font-black">
+                    Your Information
+                  </div>
+
+                  <div className="mt-1 text-sm text-black/45">
+                    உங்கள் தகவல்கள்
+                  </div>
+                </div>
+
+                <div className="space-y-5">
+                  <Field
+                    label="Name"
+                    value={name}
+                    onChange={(e) =>
+                      setName(
+                        e.target.value
+                      )
+                    }
+                    placeholder="Enter your name"
                   />
 
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  Submit
-                  <FaCheck size={12} />
-                </>
-              )}
-            </button>
+                  <Field
+                    label="Phone Number"
+                    value={phone}
+                    onChange={(e) =>
+                      handlePhone(
+                        e.target.value
+                      )
+                    }
+                    placeholder="10 digit mobile number"
+                    inputMode="numeric"
+                    maxLength={10}
+                  />
 
-          </div>
-        </form>
+                  <Field
+                    label="Your Location"
+                    value={location}
+                    onChange={(e) =>
+                      setLocation(
+                        e.target.value
+                      )
+                    }
+                    placeholder="Enter your location"
+                  />
 
-      </div>
+                  <button
+                    type="button"
+                    onClick={
+                      nextStep
+                    }
+                    className="
+                      mt-2
+                      flex h-13
+                      w-full
+                      items-center
+                      justify-center
+                      gap-2
+                      rounded-2xl
+                      bg-black
+                      px-5
+                      py-3.5
+                      text-sm
+                      font-bold
+                      text-white
+                      transition
+                      hover:opacity-90
+                      active:scale-[0.99]
+                    "
+                  >
+                    Continue
+                    <ArrowRight
+                      size={18}
+                    />
+                  </button>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* ==================================================
+              STEP 2
+          ================================================== */}
+
+          {step === 2 && (
+            <section
+              className="
+                w-full
+                rounded-[30px]
+                border border-black/[0.07]
+                bg-white
+                p-5
+                shadow-[0_15px_60px_rgba(15,23,42,0.06)]
+                sm:p-7
+                lg:p-10
+              "
+            >
+              <div className="mb-8 flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-2xl font-black">
+                    {TYPES.find(
+                      (item) =>
+                        item.id ===
+                        type
+                    )?.title}{" "}
+                    Details
+                  </div>
+
+                  <div className="mt-1 text-sm text-black/45">
+                    தேவையான முழு தகவல்களை உள்ளிடவும்
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setStep(1)
+                  }
+                  className="
+                    hidden items-center
+                    gap-2 rounded-xl
+                    border border-black/10
+                    px-4 py-2
+                    text-sm font-semibold
+                    sm:flex
+                  "
+                >
+                  <ArrowLeft
+                    size={16}
+                  />
+                  Back
+                </button>
+              </div>
+
+              <div className="grid gap-8 lg:grid-cols-2">
+                <div>
+                  {renderTypeFields()}
+                </div>
+
+                <div className="space-y-5">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-black/75">
+                      Additional Details
+                    </label>
+
+                    <textarea
+                      value={
+                        description
+                      }
+                      onChange={(e) =>
+                        setDescription(
+                          e.target.value
+                        )
+                      }
+                      rows={8}
+                      placeholder="Tell us anything else you need..."
+                      className="
+                        min-h-[190px]
+                        w-full
+                        resize-y
+                        rounded-2xl
+                        border border-black/10
+                        bg-white
+                        p-4
+                        text-[15px]
+                        outline-none
+                        placeholder:text-black/30
+                        focus:border-black/30
+                        focus:ring-4
+                        focus:ring-black/[0.04]
+                      "
+                    />
+                  </div>
+
+                  {/* ==========================================
+                      AUDIO RECORD
+                  ========================================== */}
+
+                  <div
+                    className="
+                      rounded-3xl
+                      border border-black/10
+                      bg-[#f7f7fa]
+                      p-5
+                    "
+                  >
+                    <div className="mb-4">
+                      <div className="text-sm font-bold">
+                        Voice Note
+                      </div>
+
+                      <div className="mt-1 text-xs text-black/45">
+                        குரல் மூலம் கூடுதல் தகவல் சொல்லலாம்
+                      </div>
+                    </div>
+
+                    {!recording &&
+                      !audioFile && (
+                        <button
+                          type="button"
+                          onClick={
+                            startRecording
+                          }
+                          className="
+                            flex w-full
+                            items-center
+                            justify-center
+                            gap-3
+                            rounded-2xl
+                            bg-black
+                            px-5 py-4
+                            text-sm
+                            font-bold
+                            text-white
+                            transition
+                            hover:opacity-90
+                          "
+                        >
+                          <Mic
+                            size={19}
+                          />
+                          Record Voice
+                        </button>
+                      )}
+
+                    {recording && (
+                      <div className="space-y-4">
+                        <div
+                          className="
+                            flex items-center
+                            justify-between
+                            rounded-2xl
+                            bg-white
+                            p-4
+                          "
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="
+                                h-3 w-3
+                                animate-pulse
+                                rounded-full
+                                bg-red-500
+                              "
+                            />
+
+                            <div>
+                              <div className="text-sm font-bold">
+                                Recording...
+                              </div>
+
+                              <div className="text-xs text-black/45">
+                                {
+                                  formatSeconds(
+                                    recordSeconds
+                                  )
+                                }
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={
+                                toggleRecordingPause
+                              }
+                              className="
+                                flex h-10 w-10
+                                items-center
+                                justify-center
+                                rounded-full
+                                bg-black
+                                text-white
+                              "
+                            >
+                              {audioPaused ? (
+                                <Play
+                                  size={16}
+                                />
+                              ) : (
+                                <Pause
+                                  size={16}
+                                />
+                              )}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={
+                                stopRecording
+                              }
+                              className="
+                                flex h-10 w-10
+                                items-center
+                                justify-center
+                                rounded-full
+                                bg-red-500
+                                text-white
+                              "
+                            >
+                              <Square
+                                size={15}
+                                fill="currentColor"
+                              />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {!recording &&
+                      audioFile &&
+                      audioUrl && (
+                        <div className="space-y-3">
+                          <audio
+                            ref={
+                              audioPreviewRef
+                            }
+                            controls
+                            preload="metadata"
+                            src={audioUrl}
+                            className="w-full"
+                            onPlay={() =>
+                              setAudioPaused(
+                                false
+                              )
+                            }
+                            onPause={() =>
+                              setAudioPaused(
+                                true
+                              )
+                            }
+                          />
+
+                          <button
+                            type="button"
+                            onClick={
+                              removeAudio
+                            }
+                            className="
+                              flex items-center
+                              gap-2
+                              text-xs
+                              font-semibold
+                              text-red-600
+                            "
+                          >
+                            <X
+                              size={14}
+                            />
+                            Remove audio
+                          </button>
+                        </div>
+                      )}
+                  </div>
+
+                  {/* ==========================================
+                      SUBMIT
+                  ========================================== */}
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setStep(1)
+                      }
+                      disabled={loading}
+                      className="
+                        flex h-13
+                        flex-1
+                        items-center
+                        justify-center
+                        gap-2
+                        rounded-2xl
+                        border border-black/10
+                        bg-white
+                        px-5 py-3.5
+                        text-sm
+                        font-bold
+                        disabled:opacity-40
+                      "
+                    >
+                      <ArrowLeft
+                        size={17}
+                      />
+                      Back
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={submit}
+                      disabled={loading}
+                      className="
+                        flex h-13
+                        flex-[2]
+                        items-center
+                        justify-center
+                        gap-2
+                        rounded-2xl
+                        bg-black
+                        px-5 py-3.5
+                        text-sm
+                        font-bold
+                        text-white
+                        transition
+                        hover:opacity-90
+                        disabled:cursor-not-allowed
+                        disabled:opacity-50
+                      "
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2
+                            size={18}
+                            className="animate-spin"
+                          />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Send
+                            size={17}
+                          />
+                          Submit Request
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+        </div>
+      </section>
     </main>
   );
 }
