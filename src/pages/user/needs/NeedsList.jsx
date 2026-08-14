@@ -22,6 +22,7 @@ import {
 
 import {
   deleteMyNeed,
+  restoreMyNeed,
   getAudioUrl,
   getMyNeeds,
   getNeedId,
@@ -254,57 +255,73 @@ function Status({ value }) {
   );
 }
 
-function AudioPlayer({
-  item,
-}) {
-  const url =
-    getAudioUrl(item);
+function AudioPlayer({ item }) {
+  const url = getAudioUrl(item);
 
   /*
-   * OLD DATA:
-   * /data/user/...
-   *
-   * Browser cannot access that.
+   * Always reserve the same audio area.
+   * If there is no usable audio URL, show an empty audio state
+   * instead of removing the section and changing card height.
    */
-
   if (!url) {
-    return null;
+    return (
+      <div
+        className="
+          mt-auto pt-5
+        "
+      >
+        <div
+          className="
+            flex min-h-[82px] items-center gap-3
+            rounded-2xl
+            border border-dashed border-black/10
+            bg-[#f4f4f6]
+            px-4
+          "
+        >
+          <div
+            className="
+              flex h-10 w-10 shrink-0 items-center justify-center
+              rounded-full bg-black/[0.06]
+              text-black/35
+            "
+          >
+            <span className="text-lg">♪</span>
+          </div>
+
+          <div className="min-w-0">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-black/40">
+              Voice Note
+            </div>
+            <div className="mt-1 text-xs font-medium text-black/35">
+              No audio available
+            </div>
+            <div className="text-[10px] text-black/25">
+              ஆடியோ பதிவு இல்லை
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div
-      className="
-        mt-5
-        rounded-2xl
-        bg-[#e7ffdb]
-        p-3
-      "
-    >
-      <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-black/50">
-        Voice Note
-      </div>
+    <div className="mt-auto pt-5">
+      <div className="rounded-2xl bg-[#e7ffdb] p-3">
+        <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-black/50">
+          Voice Note
+        </div>
 
-      <audio
-        controls
-        preload="metadata"
-        src={url}
-        className="block w-full"
-        onClick={(e) => {
-          /*
-           * IMPORTANT:
-           * Stop click bubbling.
-           * Prevent parent card/navigation
-           * from receiving audio click.
-           */
-          e.stopPropagation();
-        }}
-        onPlay={(e) =>
-          e.stopPropagation()
-        }
-        onPause={(e) =>
-          e.stopPropagation()
-        }
-      />
+        <audio
+          controls
+          preload="metadata"
+          src={url}
+          className="block h-10 w-full"
+          onClick={(e) => e.stopPropagation()}
+          onPlay={(e) => e.stopPropagation()}
+          onPause={(e) => e.stopPropagation()}
+        />
+      </div>
     </div>
   );
 }
@@ -312,6 +329,9 @@ function AudioPlayer({
 function NeedCard({
   item,
   onDelete,
+  onRestore,
+  isDeleted = false,
+  restoring = false,
 }) {
   const type =
     String(
@@ -339,6 +359,8 @@ function NeedCard({
         transition
         hover:-translate-y-0.5
         hover:shadow-[0_18px_55px_rgba(15,23,42,0.09)]
+        h-full
+        flex flex-col
       "
     >
       {/* ======================================================
@@ -365,6 +387,10 @@ function NeedCard({
           "
         />
 
+        {isDeleted && (
+          <div className="absolute inset-0 bg-red-600/55" />
+        )}
+
         <div className="absolute bottom-3 left-4">
           <div className="text-lg font-black text-white">
             {config.title}
@@ -376,9 +402,23 @@ function NeedCard({
         </div>
 
         <div className="absolute right-3 top-3">
-          <Status
-            value={item?.status}
-          />
+          {isDeleted ? (
+            <span
+              className="
+                inline-flex items-center gap-1.5
+                rounded-full bg-red-700 px-3 py-1.5
+                text-[10px] font-black uppercase text-white
+                shadow-lg
+              "
+            >
+              <Trash2 size={13} />
+              Recently Deleted
+            </span>
+          ) : (
+            <Status
+              value={item?.status}
+            />
+          )}
         </div>
       </div>
 
@@ -386,7 +426,7 @@ function NeedCard({
           CONTENT
       ====================================================== */}
 
-      <div className="p-4 sm:p-5">
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-black">
@@ -398,7 +438,7 @@ function NeedCard({
             </div>
           </div>
 
-          {id && (
+          {id && !isDeleted && (
             <button
               type="button"
               onClick={() =>
@@ -415,11 +455,35 @@ function NeedCard({
                 transition
                 hover:bg-red-100
               "
-              aria-label="Delete"
+              aria-label="Delete request"
+              title="Move to Recently Deleted"
             >
-              <Trash2
-                size={15}
-              />
+              <Trash2 size={15} />
+            </button>
+          )}
+
+          {id && isDeleted && (
+            <button
+              type="button"
+              disabled={restoring}
+              onClick={() =>
+                onRestore(id)
+              }
+              className="
+                rounded-2xl
+                bg-emerald-600
+                px-3 py-2
+                text-[10px] font-black
+                text-white
+                shadow-sm
+                transition
+                hover:bg-emerald-700
+                disabled:cursor-not-allowed
+                disabled:opacity-50
+              "
+              title="Recover within 24 hours"
+            >
+              {restoring ? "Recovering..." : "Recover"}
             </button>
           )}
         </div>
@@ -491,6 +555,9 @@ function NeedCard({
           <div
             className="
               mt-4
+              min-h-[68px]
+              max-h-[96px]
+              overflow-hidden
               rounded-2xl
               bg-[#f7f7fa]
               p-3
@@ -517,6 +584,12 @@ export default function NeedsList() {
   const [needs, setNeeds] =
     useState([]);
 
+  const [deletedNeeds, setDeletedNeeds] =
+    useState([]);
+
+  const [restoringId, setRestoringId] =
+    useState("");
+
   const [loading, setLoading] =
     useState(true);
 
@@ -535,14 +608,28 @@ export default function NeedsList() {
       setLoading(true);
       setError("");
 
-      const data =
+      const result =
         await getMyNeeds();
 
-      setNeeds(
-        Array.isArray(data)
-          ? data
-          : []
-      );
+      // Supports the new API shape:
+      // { active: [...], deleted: [...] }
+      // and keeps backward compatibility if the API still returns an array.
+      if (Array.isArray(result)) {
+        setNeeds(result);
+        setDeletedNeeds([]);
+      } else {
+        setNeeds(
+          Array.isArray(result?.active)
+            ? result.active
+            : []
+        );
+
+        setDeletedNeeds(
+          Array.isArray(result?.deleted)
+            ? result.deleted
+            : []
+        );
+      }
     } catch (err) {
       console.error(err);
 
@@ -578,7 +665,7 @@ export default function NeedsList() {
 
     const confirmDelete =
       window.confirm(
-        "Are you sure you want to delete this request?"
+        "Move this request to Recently Deleted?\n\nYou can recover it within 24 hours."
       );
 
     if (!confirmDelete) {
@@ -594,10 +681,16 @@ export default function NeedsList() {
 
     if (!success) {
       window.alert(
-        "Delete failed. Please try again."
+        "Delete request failed. Please try again."
       );
       return;
     }
+
+    const deletedItem =
+      needs.find(
+        (item) =>
+          getNeedId(item) === id
+      );
 
     setNeeds((current) =>
       current.filter(
@@ -605,6 +698,76 @@ export default function NeedsList() {
           getNeedId(item) !== id
       )
     );
+
+    if (deletedItem) {
+      setDeletedNeeds((current) => [
+        {
+          ...deletedItem,
+          isDeleted: true,
+          deletedAt:
+            new Date().toISOString(),
+        },
+        ...current.filter(
+          (item) =>
+            getNeedId(item) !== id
+        ),
+      ]);
+    }
+  };
+
+  const handleRestore = async (
+    id
+  ) => {
+    if (!id) return;
+
+    const confirmRestore =
+      window.confirm(
+        "Recover this request?\n\nIt will be moved back to My Needs."
+      );
+
+    if (!confirmRestore) {
+      return;
+    }
+
+    setRestoringId(id);
+
+    const result =
+      await restoreMyNeed(id);
+
+    setRestoringId("");
+
+    if (!result?.success) {
+      window.alert(
+        result?.message ||
+          "Recover failed. Please try again."
+      );
+      return;
+    }
+
+    const restored =
+      result?.data ||
+      result?.need ||
+      deletedNeeds.find(
+        (item) =>
+          getNeedId(item) === id
+      );
+
+    setDeletedNeeds((current) =>
+      current.filter(
+        (item) =>
+          getNeedId(item) !== id
+      )
+    );
+
+    if (restored) {
+      setNeeds((current) => [
+        restored,
+        ...current.filter(
+          (item) =>
+            getNeedId(item) !== id
+        ),
+      ]);
+    }
   };
 
   // ==========================================================
@@ -838,7 +1001,7 @@ export default function NeedsList() {
                   </div>
 
                   <div className="mt-1 text-sm text-black/45">
-                    {needs.length} request
+                    {needs.length} active request
                     {needs.length !== 1
                       ? "s"
                       : ""}{" "}
@@ -852,48 +1015,121 @@ export default function NeedsList() {
                     MOBILE: 1
                 ================================================= */}
 
-                <div
-                  className="
-                    grid
-                    grid-cols-1
-                    gap-5
-                    sm:grid-cols-2
-                    xl:grid-cols-4
-                  "
-                >
-                  {needs.map(
-                    (item) => {
-                      const id =
-                        getNeedId(
-                          item
-                        );
+                {needs.length > 0 && (
+                  <div
+                    className="
+                      grid
+                      grid-cols-1
+                      items-stretch
+                      gap-5
+                      sm:grid-cols-2
+                      xl:grid-cols-4
+                    "
+                  >
+                    {needs.map(
+                      (item) => {
+                        const id =
+                          getNeedId(item);
 
-                      return (
-                        <div
-                          key={
-                            id ||
-                            `${item.type}-${item.createdAt}`
-                          }
-                          className={
-                            deletingId ===
-                            id
-                              ? "pointer-events-none opacity-50"
-                              : ""
-                          }
-                        >
-                          <NeedCard
-                            item={
-                              item
+                        return (
+                          <div
+                            key={
+                              id ||
+                              `${item.type}-${item.createdAt}`
                             }
-                            onDelete={
-                              handleDelete
+                            className={
+                              deletingId === id
+                                ? "pointer-events-none opacity-50"
+                                : ""
                             }
-                          />
+                          >
+                            <NeedCard
+                              item={item}
+                              onDelete={handleDelete}
+                            />
+                          </div>
+                        );
+                      }
+                    )}
+                  </div>
+                )}
+
+                {deletedNeeds.length > 0 && (
+                  <section className="mt-12">
+                    <div
+                      className="
+                        mb-5 rounded-3xl
+                        border border-red-200
+                        bg-red-50
+                        p-5
+                      "
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <div className="text-lg font-black text-red-800">
+                            Recently Deleted
+                          </div>
+                          <div className="mt-1 text-xs font-medium text-red-700/70">
+                            சமீபத்தில் நீக்கப்பட்டவை
+                          </div>
+                          <div className="mt-2 text-xs text-red-700">
+                            Recover within 24 hours. After 24 hours,
+                            the request is permanently removed automatically.
+                          </div>
                         </div>
-                      );
-                    }
-                  )}
-                </div>
+
+                        <div className="rounded-full bg-red-600 px-4 py-2 text-[10px] font-black uppercase text-white">
+                          24 Hours Recovery
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      className="
+                        grid
+                        grid-cols-1
+                        items-stretch
+                        gap-5
+                        sm:grid-cols-2
+                        xl:grid-cols-4
+                      "
+                    >
+                      {deletedNeeds.map(
+                        (item) => {
+                          const id =
+                            getNeedId(item);
+
+                          return (
+                            <div
+                              key={
+                                `deleted-${id || item.createdAt}`
+                              }
+                              className={
+                                restoringId === id
+                                  ? "pointer-events-none opacity-60"
+                                  : ""
+                              }
+                            >
+                              <NeedCard
+                                item={item}
+                                isDeleted
+                                restoring={
+                                  restoringId === id
+                                }
+                                onDelete={
+                                  handleDelete
+                                }
+                                onRestore={
+                                  handleRestore
+                                }
+                              />
+                            </div>
+                          );
+                        }
+                      )}
+                    </div>
+                  </section>
+                )}
               </>
             )}
         </div>
