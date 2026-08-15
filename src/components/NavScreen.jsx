@@ -1,11 +1,9 @@
+// ======================= src/screens/NavScreen.jsx =======================
+
 import logo from "@/assets/logo/logo_1.webp";
-
-// src/screens/NavScreen.jsx
-
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { logout } from "@/services/apiService";
-
 
 export default function NavScreen() {
   const navigate = useNavigate();
@@ -21,7 +19,7 @@ export default function NavScreen() {
     <div className="nav-screen">
 
       {/* =====================================================
-          SOFT LAVENDER BACKGROUND
+          BACKGROUND
       ===================================================== */}
 
       <div className="nav-background">
@@ -54,7 +52,6 @@ export default function NavScreen() {
         />
       </div>
 
-
       {/* =====================================================
           HEADER
       ===================================================== */}
@@ -62,7 +59,6 @@ export default function NavScreen() {
       <div className="nav-header">
 
         {/* BACK */}
-
         <GlassIcon onClick={() => navigate(-1)}>
           <svg
             viewBox="0 0 24 24"
@@ -75,7 +71,6 @@ export default function NavScreen() {
               d="M19 12H5"
               strokeLinecap="round"
             />
-
             <path
               d="M12 19l-7-7 7-7"
               strokeLinecap="round"
@@ -84,9 +79,7 @@ export default function NavScreen() {
           </svg>
         </GlassIcon>
 
-
         {/* LOGO */}
-
         <motion.button
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.96 }}
@@ -99,9 +92,7 @@ export default function NavScreen() {
           />
         </motion.button>
 
-
         {/* RIGHT ICONS */}
-
         <div className="header-actions">
 
           <TopIcon
@@ -161,7 +152,6 @@ export default function NavScreen() {
               className="top-svg"
             >
               <circle cx="12" cy="8" r="3.5" />
-
               <path
                 d="M5 20c.8-3.5 3.2-5.5 7-5.5s6.2 2 7 5.5"
                 strokeLinecap="round"
@@ -169,9 +159,7 @@ export default function NavScreen() {
             </svg>
           </TopIcon>
 
-
           {/* DESKTOP LOGOUT */}
-
           <div className="desktop-logout">
             <TopIcon
               onClick={handleLogout}
@@ -190,12 +178,10 @@ export default function NavScreen() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-
                 <path
                   d="M21 12H8"
                   strokeLinecap="round"
                 />
-
                 <path
                   d="M13 19H6a2 2 0 01-2-2V7a2 2 0 012-2h7"
                   strokeLinecap="round"
@@ -207,37 +193,21 @@ export default function NavScreen() {
         </div>
       </div>
 
-
       {/* =====================================================
-          DESKTOP VERSION
+          DESKTOP
       ===================================================== */}
 
       <main className="desktop-navigation">
 
-        {/* LABEL */}
-
         <motion.div
-          initial={{
-            opacity: 0,
-            y: 20,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.6,
-          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
           className="desktop-label"
         >
           <span />
           RE2BUY / MENU
         </motion.div>
-
-
-        {/* =================================================
-            BIG MENU
-        ================================================= */}
 
         <div className="desktop-menu-grid">
 
@@ -268,22 +238,19 @@ export default function NavScreen() {
               delay={0.15}
             />
 
-
             <DesktopDivider />
-
 
             <DesktopHeading>
               Services
             </DesktopHeading>
 
-
-         <DesktopMenuItem
-  number="04" 
-  label="Need"
-  tamil="கார் வாங்க"
-  onClick={() => go("/needs")}
-  delay={0.2}
-/>
+            <DesktopMenuItem
+              number="04"
+              label="Need"
+              tamil="கார் வாங்க"
+              onClick={() => go("/needs")}
+              delay={0.2}
+            />
 
             <DesktopMenuItem
               number="05"
@@ -302,7 +269,6 @@ export default function NavScreen() {
             />
 
           </div>
-
 
           {/* COLUMN 2 */}
 
@@ -324,14 +290,11 @@ export default function NavScreen() {
               delay={0.4}
             />
 
-
             <DesktopDivider />
-
 
             <DesktopHeading>
               Support
             </DesktopHeading>
-
 
             <DesktopMenuItem
               number="09"
@@ -365,7 +328,6 @@ export default function NavScreen() {
 
           </div>
 
-
           {/* COLUMN 3 */}
 
           <div className="desktop-menu-column desktop-legal-column">
@@ -373,7 +335,6 @@ export default function NavScreen() {
             <DesktopHeading>
               Company
             </DesktopHeading>
-
 
             <DesktopMenuItem
               number="13"
@@ -389,52 +350,42 @@ export default function NavScreen() {
               delay={0.7}
             />
 
-          <DesktopMenuItem
-  number="15"
-  label="Privacy Policy"
-  onClick={() => go("/privacy-policy")}
-  delay={0.75}
-/>
+            <DesktopMenuItem
+              number="15"
+              label="Privacy Policy"
+              onClick={() => go("/privacy-policy")}
+              delay={0.75}
+            />
 
-<DesktopMenuItem
-  number="16"
-  label="Terms & Conditions"
-  onClick={() => go("/terms-conditions")}
-  delay={0.8}
-/>
+            <DesktopMenuItem
+              number="16"
+              label="Terms & Conditions"
+              onClick={() => go("/terms-conditions")}
+              delay={0.8}
+            />
 
-<DesktopMenuItem
-  number="17"
-  label="Refund & Cancellation"
-  onClick={() => go("/refund-policy")}
-  delay={0.85}
-/>
+            <DesktopMenuItem
+              number="17"
+              label="Refund & Cancellation"
+              onClick={() => go("/refund-policy")}
+              delay={0.85}
+            />
 
           </div>
 
         </div>
 
-
-        {/* =================================================
-            DESKTOP FOOTER
-        ================================================= */}
+        {/* DESKTOP FOOTER */}
 
         <motion.div
-          initial={{
-            opacity: 0,
-            y: 20,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{
             delay: 0.9,
             duration: 0.6,
           }}
           className="desktop-footer"
         >
-
           <div className="desktop-footer-line" />
 
           <div className="desktop-footer-content">
@@ -447,9 +398,7 @@ export default function NavScreen() {
             <div className="desktop-footer-center">
               <span>Your trusted marketplace</span>
 
-              <button
-                onClick={() => go("/help")}
-              >
+              <button onClick={() => go("/help")}>
                 Need help? ↗
               </button>
             </div>
@@ -465,39 +414,28 @@ export default function NavScreen() {
           <p className="desktop-copyright">
             © {new Date().getFullYear()} Re2buy. All rights reserved.
           </p>
-
         </motion.div>
 
       </main>
 
-
       {/* =====================================================
-          MOBILE VERSION — OLD DESIGN
-          DO NOT CHANGE
+          MOBILE
+          SAME LINKS + SAME ROUTES AS DESKTOP
       ===================================================== */}
 
       <main className="mobile-navigation">
 
         <motion.div
-          initial={{
-            opacity: 0,
-            y: 40,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
           className="mobile-glass-panel"
         >
 
           <div className="mobile-sections">
 
-            {/* =============================================
-                SECTION 1
-            ============================================= */}
+            {/* ACCOUNT */}
 
             <MobileSection>
-
               <SectionTitle title="Account" />
 
               <NavItem
@@ -514,16 +452,11 @@ export default function NavScreen() {
                 label="Finance (பைனான்ஸ்)"
                 onClick={() => go("/finance")}
               />
-
             </MobileSection>
 
-
-            {/* =============================================
-                SECTION 2
-            ============================================= */}
+            {/* SERVICES */}
 
             <MobileSection>
-
               <SectionTitle title="Services" />
 
               <SubTitle text="Car Services" />
@@ -548,24 +481,19 @@ export default function NavScreen() {
               <SubTitle text="Property Services" />
 
               <NavItem
-                label="Buy (வீடு வாங்க)"
+                label="Buy Property (வீடு வாங்க)"
                 onClick={() => go("/buy-property")}
               />
 
               <NavItem
-                label="Sell (வீடு விற்க)"
+                label="Sell Property (வீடு விற்க)"
                 onClick={() => go("/sell-property")}
               />
-
             </MobileSection>
 
-
-            {/* =============================================
-                SECTION 3
-            ============================================= */}
+            {/* SUPPORT */}
 
             <MobileSection>
-
               <SectionTitle title="Support" />
 
               <NavItem
@@ -587,17 +515,12 @@ export default function NavScreen() {
                 label="Help & Support (உதவி)"
                 onClick={() => go("/help")}
               />
-
             </MobileSection>
 
-
-            {/* =============================================
-                SECTION 4
-            ============================================= */}
+            {/* COMPANY */}
 
             <MobileSection>
-
-              <SectionTitle title="Legal" />
+              <SectionTitle title="Company" />
 
               <NavItem
                 label="Company"
@@ -611,30 +534,25 @@ export default function NavScreen() {
 
               <NavItem
                 label="Privacy Policy"
-                onClick={() => go("/privacy")}
+                onClick={() => go("/privacy-policy")}
               />
 
               <NavItem
                 label="Terms & Conditions"
-                onClick={() => go("/terms")}
+                onClick={() => go("/terms-conditions")}
               />
 
               <NavItem
                 label="Refund & Cancellation"
-                onClick={() => go("/refund")}
+                onClick={() => go("/refund-policy")}
               />
-
             </MobileSection>
 
           </div>
 
-
-          {/* =============================================
-              MOBILE LOGOUT
-          ============================================= */}
+          {/* MOBILE LOGOUT */}
 
           <div className="mobile-logout-area">
-
             <Divider />
 
             <NavItem
@@ -642,7 +560,6 @@ export default function NavScreen() {
               danger
               onClick={handleLogout}
             />
-
           </div>
 
         </motion.div>
@@ -652,7 +569,6 @@ export default function NavScreen() {
     </div>
   );
 }
-
 
 /* =============================================================
    DESKTOP MENU ITEM
@@ -683,13 +599,11 @@ function DesktopMenuItem({
       onClick={onClick}
       className="desktop-menu-item"
     >
-
       <span className="desktop-number">
         {number}
       </span>
 
       <span className="desktop-item-text">
-
         {label}
 
         {tamil && (
@@ -697,17 +611,14 @@ function DesktopMenuItem({
             ({tamil})
           </span>
         )}
-
       </span>
 
       <span className="desktop-arrow">
         ↗
       </span>
-
     </motion.button>
   );
 }
-
 
 /* =============================================================
    DESKTOP HEADING
@@ -716,22 +627,15 @@ function DesktopMenuItem({
 function DesktopHeading({ children }) {
   return (
     <motion.div
-      initial={{
-        opacity: 0,
-      }}
-      animate={{
-        opacity: 1,
-      }}
-      transition={{
-        duration: 0.5,
-      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
       className="desktop-heading"
     >
       {children}
     </motion.div>
   );
 }
-
 
 /* =============================================================
    DESKTOP DIVIDER
@@ -742,7 +646,6 @@ function DesktopDivider() {
     <div className="desktop-divider" />
   );
 }
-
 
 /* =============================================================
    DESKTOP SOCIAL
@@ -765,9 +668,8 @@ function SocialButton({ label }) {
   );
 }
 
-
 /* =============================================================
-   MOBILE — ORIGINAL COMPONENTS
+   MOBILE SECTION
 ============================================================= */
 
 function MobileSection({ children }) {
@@ -778,6 +680,9 @@ function MobileSection({ children }) {
   );
 }
 
+/* =============================================================
+   MOBILE TITLE
+============================================================= */
 
 function SectionTitle({ title }) {
   return (
@@ -787,6 +692,9 @@ function SectionTitle({ title }) {
   );
 }
 
+/* =============================================================
+   MOBILE SUBTITLE
+============================================================= */
 
 function SubTitle({ text }) {
   return (
@@ -796,11 +704,14 @@ function SubTitle({ text }) {
   );
 }
 
+/* =============================================================
+   MOBILE NAV ITEM
+============================================================= */
 
 function NavItem({
   label,
   onClick,
-  danger,
+  danger = false,
 }) {
   return (
     <motion.button
@@ -809,9 +720,7 @@ function NavItem({
       }}
       onClick={onClick}
       className={`mobile-nav-item ${
-        danger
-          ? "mobile-nav-danger"
-          : ""
+        danger ? "mobile-nav-danger" : ""
       }`}
     >
       <span>
@@ -825,13 +734,15 @@ function NavItem({
   );
 }
 
+/* =============================================================
+   MOBILE DIVIDER
+============================================================= */
 
 function Divider() {
   return (
     <div className="mobile-divider" />
   );
 }
-
 
 /* =============================================================
    GLASS ICON
@@ -857,7 +768,6 @@ function GlassIcon({
   );
 }
 
-
 /* =============================================================
    TOP ICON
 ============================================================= */
@@ -880,9 +790,7 @@ function TopIcon({
       title={title}
       aria-label={title}
       className={`top-icon ${
-        danger
-          ? "top-icon-danger"
-          : ""
+        danger ? "top-icon-danger" : ""
       }`}
     >
       {children}
@@ -890,25 +798,17 @@ function TopIcon({
   );
 }
 
-
 /* =============================================================
    STYLES
-============================================================= */
-
-const styles = `
-`;
-
-/* =============================================================
-   GLOBAL STYLE INJECTION
 ============================================================= */
 
 const styleElement = document.createElement("style");
 
 styleElement.innerHTML = `
 
-/* ============================================================
-   ROOT
-============================================================ */
+* {
+  box-sizing: border-box;
+}
 
 .nav-screen {
   min-height: 100vh;
@@ -916,7 +816,6 @@ styleElement.innerHTML = `
   max-width: 100vw;
   position: relative;
   overflow-x: hidden;
-  box-sizing: border-box;
 
   background:
     linear-gradient(
@@ -934,29 +833,18 @@ styleElement.innerHTML = `
     sans-serif;
 }
 
-
-/* ============================================================
-   BACKGROUND
-============================================================ */
-
 .nav-background {
   position: fixed;
   inset: 0;
-
   overflow: hidden;
-
   pointer-events: none;
-
   z-index: 0;
 }
 
-
 .lavender-orb {
   position: absolute;
-
   width: 540px;
   height: 540px;
-
   border-radius: 50%;
 
   background:
@@ -970,42 +858,33 @@ styleElement.innerHTML = `
   filter: blur(18px);
 }
 
-
 .orb-one {
   top: -300px;
   left: -200px;
 }
-
 
 .orb-two {
   right: -280px;
   bottom: -280px;
 }
 
-
-/* ============================================================
+/* =====================================================
    HEADER
-============================================================ */
+===================================================== */
 
 .nav-header {
   position: relative;
   z-index: 20;
 
   height: 92px;
-
   width: 100%;
 
-  padding:
-    20px
-    clamp(20px, 4vw, 64px);
+  padding: 20px clamp(20px, 4vw, 64px);
 
   display: flex;
-
   align-items: center;
-
   justify-content: space-between;
 }
-
 
 .glass-icon {
   width: 48px;
@@ -1013,48 +892,35 @@ styleElement.innerHTML = `
 
   border-radius: 50%;
 
-  border: 1px solid
-    rgba(255,255,255,.9);
+  border: 1px solid rgba(255,255,255,.9);
 
-  background:
-    rgba(255,255,255,.62);
+  background: rgba(255,255,255,.62);
 
   backdrop-filter: blur(20px);
-
   -webkit-backdrop-filter: blur(20px);
 
   box-shadow:
-    0 8px 30px
-    rgba(100,80,130,.07);
+    0 8px 30px rgba(100,80,130,.07);
 
   display: flex;
-
   align-items: center;
-
   justify-content: center;
 
   cursor: pointer;
-
   color: #29252f;
 }
-
 
 .header-svg {
   width: 21px;
   height: 21px;
 }
 
-
 .logo-button {
   position: absolute;
-
   left: 50%;
-
-  transform:
-    translateX(-50%);
+  transform: translateX(-50%);
 
   border: none;
-
   background: transparent;
 
   padding: 5px 10px;
@@ -1062,24 +928,17 @@ styleElement.innerHTML = `
   cursor: pointer;
 }
 
-
 .logo-button img {
   height: 38px;
-
   width: auto;
-
   object-fit: contain;
 }
 
-
 .header-actions {
   display: flex;
-
   align-items: center;
-
   gap: 8px;
 }
-
 
 .top-icon {
   width: 44px;
@@ -1087,87 +946,60 @@ styleElement.innerHTML = `
 
   border-radius: 50%;
 
-  border: 1px solid
-    rgba(255,255,255,.9);
+  border: 1px solid rgba(255,255,255,.9);
 
-  background:
-    rgba(255,255,255,.60);
+  background: rgba(255,255,255,.60);
 
   backdrop-filter: blur(18px);
-
   -webkit-backdrop-filter: blur(18px);
 
   box-shadow:
-    0 6px 24px
-    rgba(100,80,130,.06);
+    0 6px 24px rgba(100,80,130,.06);
 
   display: flex;
-
   align-items: center;
-
   justify-content: center;
 
   cursor: pointer;
-
   color: #5f5869;
 }
-
 
 .top-icon:hover {
   background: #fff;
 }
 
-
 .top-icon-danger {
   color: #d66a6a;
-
-  background:
-    rgba(255,245,245,.72);
+  background: rgba(255,245,245,.72);
 }
-
 
 .top-svg {
   width: 18px;
   height: 18px;
 }
 
-
 .star-symbol {
   font-size: 17px;
 }
 
-
-/* ============================================================
-   DESKTOP NAVIGATION
-============================================================ */
+/* =====================================================
+   DESKTOP
+===================================================== */
 
 .desktop-navigation {
   position: relative;
-
   z-index: 5;
 
-  width:
-    min(
-      1500px,
-      calc(100% - 48px)
-    );
-
-  box-sizing: border-box;
+  width: min(1500px, calc(100% - 48px));
 
   margin: 0 auto;
 
-  padding:
-    42px
-    0
-    55px;
+  padding: 42px 0 55px;
 }
-
 
 .desktop-label {
   display: flex;
-
   align-items: center;
-
   gap: 10px;
 
   margin-bottom: 34px;
@@ -1175,12 +1007,9 @@ styleElement.innerHTML = `
   color: #968ea1;
 
   font-size: 10px;
-
   font-weight: 700;
-
   letter-spacing: .23em;
 }
-
 
 .desktop-label span {
   width: 7px;
@@ -1191,14 +1020,8 @@ styleElement.innerHTML = `
   background: #a98ce7;
 
   box-shadow:
-    0 0 0 5px
-    rgba(169,140,231,.10);
+    0 0 0 5px rgba(169,140,231,.10);
 }
-
-
-/* ============================================================
-   DESKTOP GRID
-============================================================ */
 
 .desktop-menu-grid {
   display: grid;
@@ -1206,7 +1029,7 @@ styleElement.innerHTML = `
   grid-template-columns:
     minmax(0, 1fr)
     minmax(0, 1fr)
-    minmax(0, 0.82fr);
+    minmax(0, .82fr);
 
   gap: clamp(24px, 4vw, 72px);
 
@@ -1217,22 +1040,15 @@ styleElement.innerHTML = `
   min-width: 0;
 }
 
-
 .desktop-menu-column {
   min-width: 0;
 }
-
 
 .desktop-legal-column {
   padding-left: 0;
   min-width: 0;
   overflow: hidden;
 }
-
-
-/* ============================================================
-   DESKTOP ITEM
-============================================================ */
 
 .desktop-menu-item {
   position: relative;
@@ -1242,29 +1058,21 @@ styleElement.innerHTML = `
   min-width: 0;
 
   border: none;
-
   background: transparent;
 
-  padding:
-    5px
-    0;
+  padding: 5px 0;
 
   display: flex;
-
   align-items: baseline;
-
   gap: 12px;
 
   text-align: left;
 
   cursor: pointer;
-
   overflow: hidden;
-  box-sizing: border-box;
 
   color: #17151b;
 }
-
 
 .desktop-number {
   flex: 0 0 auto;
@@ -1272,22 +1080,15 @@ styleElement.innerHTML = `
   color: #b9b1c1;
 
   font-size: 9px;
-
   font-weight: 600;
 
-  transform:
-    translateY(-6px);
+  transform: translateY(-6px);
 }
-
 
 .desktop-item-text {
   display: block;
 
-  font-size: clamp(
-    30px,
-    3.25vw,
-    58px
-  );
+  font-size: clamp(30px, 3.25vw, 58px);
 
   line-height: 1.02;
 
@@ -1296,14 +1097,15 @@ styleElement.innerHTML = `
   letter-spacing: -0.055em;
 
   white-space: normal;
-
   overflow-wrap: anywhere;
-  word-break: normal;
 
   max-width: 100%;
   min-width: 0;
-}
 
+  transition:
+    color .25s ease,
+    transform .45s cubic-bezier(.22,1,.36,1);
+}
 
 .desktop-tamil {
   display: inline-block;
@@ -1313,18 +1115,15 @@ styleElement.innerHTML = `
   color: #aaa3b2;
 
   font-size: 13px;
-
   font-weight: 400;
 
   letter-spacing: 0;
 }
 
-
 .desktop-arrow {
   position: absolute;
 
   right: 0;
-
   top: 50%;
 
   transform:
@@ -1339,22 +1138,15 @@ styleElement.innerHTML = `
 
   transition:
     opacity .25s ease,
-    transform .45s
-    cubic-bezier(.22,1,.36,1);
+    transform .45s cubic-bezier(.22,1,.36,1);
 }
 
-
-.desktop-menu-item:hover
-.desktop-item-text {
+.desktop-menu-item:hover .desktop-item-text {
   color: #9a79d1;
-
-  transform:
-    translateX(8px);
+  transform: translateX(8px);
 }
 
-
-.desktop-menu-item:hover
-.desktop-arrow {
+.desktop-menu-item:hover .desktop-arrow {
   opacity: 1;
 
   transform:
@@ -1362,54 +1154,29 @@ styleElement.innerHTML = `
     translateX(0);
 }
 
-
-.desktop-menu-item:active
-.desktop-item-text {
+.desktop-menu-item:active .desktop-item-text {
   transform:
     translateX(12px)
     scale(.98);
 }
 
-
-/* ============================================================
-   DESKTOP HEADING
-============================================================ */
-
 .desktop-heading {
-  margin:
-    24px
-    0
-    12px;
+  margin: 24px 0 12px;
 
   color: #a284d4;
 
-  font-size:
-    clamp(
-      17px,
-      1.4vw,
-      22px
-    );
+  font-size: clamp(17px, 1.4vw, 22px);
 
   font-weight: 700;
 
-  letter-spacing:
-    -.025em;
+  letter-spacing: -.025em;
 }
-
-
-/* ============================================================
-   DESKTOP DIVIDER
-============================================================ */
 
 .desktop-divider {
   width: 100%;
-
   height: 1px;
 
-  margin:
-    28px
-    0
-    8px;
+  margin: 28px 0 8px;
 
   background:
     linear-gradient(
@@ -1419,25 +1186,20 @@ styleElement.innerHTML = `
     );
 }
 
-
-/* ============================================================
+/* =====================================================
    DESKTOP FOOTER
-============================================================ */
+===================================================== */
 
 .desktop-footer {
   margin-top: 68px;
 }
 
-
 .desktop-footer-line {
   width: 100%;
-
   height: 1px;
 
-  background:
-    rgba(30,25,40,.12);
+  background: rgba(30,25,40,.12);
 }
-
 
 .desktop-footer-content {
   display: grid;
@@ -1449,16 +1211,11 @@ styleElement.innerHTML = `
 
   align-items: center;
 
-  padding:
-    24px
-    0
-    16px;
+  padding: 24px 0 16px;
 }
-
 
 .desktop-footer-content > div:first-child {
   display: flex;
-
   flex-direction: column;
 
   gap: 3px;
@@ -1468,17 +1225,13 @@ styleElement.innerHTML = `
   font-size: 12px;
 }
 
-
 .desktop-footer-content strong {
   color: #28232f;
-
   font-size: 14px;
 }
 
-
 .desktop-footer-center {
   display: flex;
-
   flex-direction: column;
 
   align-items: center;
@@ -1490,10 +1243,8 @@ styleElement.innerHTML = `
   font-size: 12px;
 }
 
-
 .desktop-footer-center button {
   border: none;
-
   background: transparent;
 
   color: #9978ce;
@@ -1501,19 +1252,14 @@ styleElement.innerHTML = `
   cursor: pointer;
 
   font-size: 12px;
-
   font-weight: 600;
 }
 
-
 .desktop-social {
   display: flex;
-
   justify-content: flex-end;
-
   gap: 9px;
 }
-
 
 .social-button {
   width: 44px;
@@ -1521,34 +1267,25 @@ styleElement.innerHTML = `
 
   border-radius: 50%;
 
-  border: 1px solid
-    rgba(255,255,255,.95);
+  border: 1px solid rgba(255,255,255,.95);
 
-  background:
-    rgba(255,255,255,.68);
+  background: rgba(255,255,255,.68);
 
   color: #696173;
 
   font-size: 10px;
-
   font-weight: 800;
 
   cursor: pointer;
 
   box-shadow:
-    0 5px 20px
-    rgba(100,80,130,.05);
+    0 5px 20px rgba(100,80,130,.05);
 }
-
 
 .social-button:hover {
-  background:
-    #e9ddff;
-
-  color:
-    #8464bd;
+  background: #e9ddff;
+  color: #8464bd;
 }
-
 
 .desktop-copyright {
   margin: 0;
@@ -1558,54 +1295,42 @@ styleElement.innerHTML = `
   font-size: 10px;
 }
 
-
-/* ============================================================
-   MOBILE NAVIGATION
-============================================================ */
+/* =====================================================
+   MOBILE
+===================================================== */
 
 .mobile-navigation {
   display: none;
 }
 
-
-/* ============================================================
+/* =====================================================
    TABLET
-============================================================ */
+===================================================== */
 
 @media (max-width: 1100px) {
 
   .desktop-navigation {
-    width:
-      calc(100% - 48px);
+    width: calc(100% - 48px);
   }
-
 
   .desktop-menu-grid {
     gap: 30px;
   }
 
-
   .desktop-item-text {
-    font-size:
-      clamp(
-        30px,
-        4vw,
-        50px
-      );
+    font-size: clamp(
+      30px,
+      4vw,
+      50px
+    );
   }
-
 }
 
-
-/* ============================================================
-   MOBILE — ORIGINAL DESIGN
-============================================================ */
+/* =====================================================
+   MOBILE
+===================================================== */
 
 @media (max-width: 768px) {
-
-  /* -----------------------------------------
-     KEEP ORIGINAL MOBILE BACKGROUND
-  ----------------------------------------- */
 
   .nav-screen {
     min-height: 100vh;
@@ -1618,20 +1343,11 @@ styleElement.innerHTML = `
       );
   }
 
-
-  /* -----------------------------------------
-     ORIGINAL MOBILE HEADER
-  ----------------------------------------- */
-
   .nav-header {
     height: auto;
 
-    padding:
-      8px
-      8px
-      0;
+    padding: 8px 8px 0;
   }
-
 
   .glass-icon {
     width: 40px;
@@ -1639,120 +1355,86 @@ styleElement.innerHTML = `
 
     border-radius: 12px;
 
-    background:
-      rgba(255,255,255,.70);
+    background: rgba(255,255,255,.70);
 
     box-shadow:
-      0 2px 8px
-      rgba(0,0,0,.04);
+      0 2px 8px rgba(0,0,0,.04);
   }
-
 
   .header-svg {
     width: 20px;
     height: 20px;
   }
 
-
   .logo-button {
     position: static;
-
     transform: none;
-
     padding: 0;
   }
-
 
   .logo-button img {
     height: 28px;
   }
 
-
   .header-actions {
     gap: 6px;
   }
-
 
   .top-icon {
     width: 36px;
     height: 36px;
 
-    background:
-      rgba(255,255,255,.70);
+    background: rgba(255,255,255,.70);
 
     box-shadow:
-      0 2px 8px
-      rgba(0,0,0,.04);
+      0 2px 8px rgba(0,0,0,.04);
   }
-
 
   .top-svg {
     width: 16px;
     height: 16px;
   }
 
-
   .star-symbol {
     font-size: 14px;
   }
-
 
   .desktop-logout {
     display: none;
   }
 
-
-  /* -----------------------------------------
-     HIDE NEW DESKTOP DESIGN
-  ----------------------------------------- */
-
+  /* HIDE DESKTOP */
   .desktop-navigation {
     display: none;
   }
 
-
-  /* -----------------------------------------
-     SHOW OLD MOBILE DESIGN
-  ----------------------------------------- */
-
+  /* SHOW MOBILE */
   .mobile-navigation {
     display: block;
 
     width: 100%;
 
-    padding:
-      0
-      8px
-      20px;
+    padding: 0 8px 20px;
   }
-
 
   .mobile-glass-panel {
     margin-top: 16px;
 
     border-radius: 24px;
 
-    background:
-      rgba(255,255,255,.60);
+    background: rgba(255,255,255,.60);
 
-    backdrop-filter:
-      blur(24px);
-
-    -webkit-backdrop-filter:
-      blur(24px);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
 
     border:
-      1px solid
-      rgba(255,255,255,.45);
+      1px solid rgba(255,255,255,.45);
 
     box-shadow:
-      0 12px 40px
-      rgba(50,40,80,.08);
+      0 12px 40px rgba(50,40,80,.08);
 
-    padding:
-      16px;
+    padding: 16px;
   }
-
 
   .mobile-sections {
     display: grid;
@@ -1762,61 +1444,44 @@ styleElement.innerHTML = `
     gap: 24px;
   }
 
-
   .mobile-section {
     width: 100%;
   }
 
-
   .mobile-section-title {
-    margin:
-      0
-      0
-      7px;
+    margin: 0 0 7px;
 
-    font-size:
-      18px;
+    font-size: 18px;
 
     line-height: 1.2;
 
     font-weight: 700;
 
-    color:
-      #26222e;
+    color: #26222e;
   }
 
-
   .mobile-sub-title {
-    margin:
-      13px
-      0
-      4px;
+    margin: 13px 0 4px;
 
-    font-size:
-      11px;
+    font-size: 11px;
 
     font-weight: 700;
 
-    color:
-      #948ba2;
+    color: #948ba2;
   }
-
 
   .mobile-nav-item {
     width: 100%;
 
     min-height: 46px;
 
-    padding:
-      11px
-      10px;
+    padding: 11px 10px;
 
     border: none;
 
     border-radius: 12px;
 
-    background:
-      transparent;
+    background: transparent;
 
     display: flex;
 
@@ -1826,11 +1491,9 @@ styleElement.innerHTML = `
 
     gap: 10px;
 
-    color:
-      #30303a;
+    color: #30303a;
 
-    font-size:
-      14px;
+    font-size: 14px;
 
     font-weight: 500;
 
@@ -1843,57 +1506,41 @@ styleElement.innerHTML = `
       color .25s ease;
   }
 
-
   .mobile-nav-item:hover {
-    background:
-      rgba(255,255,255,.65);
+    background: rgba(255,255,255,.65);
 
-    color:
-      #8062b5;
+    color: #8062b5;
   }
-
 
   .mobile-nav-arrow {
     font-size: 21px;
 
     line-height: 1;
 
-    color:
-      #aaa2b0;
+    color: #aaa2b0;
   }
-
 
   .mobile-divider {
     width: 100%;
 
     height: 1px;
 
-    margin:
-      8px
-      0;
+    margin: 8px 0;
 
     background:
       rgba(120,110,135,.10);
   }
 
-
   .mobile-nav-danger {
-    color:
-      #d65f6b;
+    color: #d65f6b;
 
     background:
       rgba(255,240,242,.45);
   }
 
-
   .mobile-logout-area {
     margin-top: 8px;
   }
-
-
-  /* -----------------------------------------
-     KEEP MOBILE BACKGROUND SOFT
-  ----------------------------------------- */
 
   .lavender-orb {
     width: 300px;
@@ -1902,96 +1549,66 @@ styleElement.innerHTML = `
     opacity: .45;
   }
 
-
   .orb-one {
     top: -150px;
     left: -150px;
   }
 
-
   .orb-two {
     right: -150px;
     bottom: -150px;
   }
-
 }
 
-
-/* ============================================================
+/* =====================================================
    SMALL MOBILE
-============================================================ */
+===================================================== */
 
 @media (max-width: 480px) {
 
   .nav-header {
-    padding:
-      8px
-      6px
-      0;
+    padding: 8px 6px 0;
   }
-
 
   .mobile-navigation {
-    padding:
-      0
-      6px
-      15px;
+    padding: 0 6px 15px;
   }
-
 
   .mobile-glass-panel {
     margin-top: 14px;
 
     border-radius: 22px;
 
-    padding:
-      14px;
+    padding: 14px;
   }
-
 
   .mobile-sections {
     gap: 20px;
   }
 
-
   .mobile-section-title {
-    font-size:
-      17px;
+    font-size: 17px;
   }
-
 
   .mobile-nav-item {
-    min-height:
-      44px;
+    min-height: 44px;
 
-    font-size:
-      13px;
+    font-size: 13px;
   }
-
 
   .logo-button img {
-    height:
-      26px;
+    height: 26px;
   }
-
 
   .top-icon {
-    width:
-      34px;
-
-    height:
-      34px;
+    width: 34px;
+    height: 34px;
   }
-
 
   .glass-icon {
-    width:
-      38px;
-
-    height:
-      38px;
+    width: 38px;
+    height: 38px;
   }
-
 }
 
 `;
@@ -2003,7 +1620,4 @@ if (!document.head.querySelector("[data-nav-screen-style]")) {
   );
 
   document.head.appendChild(styleElement);
-
-
-  
 }
