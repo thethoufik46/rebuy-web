@@ -25,7 +25,7 @@ function getAuthHeaders() {
 }
 
 /* ============================================================
-   SAFE JSON REQUEST
+   SAFE JSON
 ============================================================ */
 
 async function fetchJSON(url, options = {}) {
@@ -98,7 +98,9 @@ export async function addNeed({
     return {
       success: data?.success !== false,
       data,
-      message: data?.message || "Request submitted successfully",
+      message:
+        data?.message ||
+        "Request submitted successfully",
     };
   } catch (error) {
     console.error("addNeed error:", error);
@@ -115,8 +117,11 @@ export async function addNeed({
 
 /* ============================================================
    GET MY NEEDS
-   RETURNS:
+
+   Expected backend:
+
    {
+     success: true,
      active: [],
      deleted: []
    }
@@ -128,15 +133,6 @@ export async function getMyNeeds() {
       method: "GET",
       headers: getAuthHeaders(),
     });
-
-    /*
-      New backend response:
-      {
-        success: true,
-        active: [],
-        deleted: []
-      }
-    */
 
     if (
       Array.isArray(data?.active) ||
@@ -153,12 +149,7 @@ export async function getMyNeeds() {
       };
     }
 
-    /*
-      Backward compatibility:
-      {
-        cars: []
-      }
-    */
+    /* OLD BACKEND */
 
     const list =
       data?.cars ||
@@ -168,27 +159,44 @@ export async function getMyNeeds() {
 
     return {
       active: Array.isArray(list)
-        ? list
+        ? list.filter(
+            (item) => !item?.isDeleted
+          )
         : [],
 
-      deleted: [],
+      deleted: Array.isArray(list)
+        ? list.filter(
+            (item) => item?.isDeleted
+          )
+        : [],
     };
   } catch (error) {
     console.error("getMyNeeds error:", error);
-
     throw error;
   }
 }
 
 /* ============================================================
    DELETE MY NEED
-   USER DELETE = MOVE TO RECENTLY DELETED
+
+   IMPORTANT:
+   USER DELETE = SOFT DELETE
+
+   Backend should set:
+
+   isDeleted = true
+   deletedAt = new Date()
+   deleteExpiresAt = new Date(
+      Date.now() + 24 * 60 * 60 * 1000
+   )
 ============================================================ */
 
 export async function deleteMyNeed(id) {
   if (!id) {
     return {
       success: false,
+      data: null,
+      recoverUntil: null,
       message: "Need ID is required",
     };
   }
@@ -204,14 +212,20 @@ export async function deleteMyNeed(id) {
 
     return {
       success: data?.success === true,
+
       data:
         data?.data ||
         data?.car ||
         data?.need ||
         null,
+
+      recoverUntil:
+        data?.recoverUntil ||
+        data?.deleteExpiresAt ||
+        null,
+
       message:
-        data?.message ||
-        "",
+        data?.message || "",
     };
   } catch (error) {
     console.error(
@@ -221,6 +235,8 @@ export async function deleteMyNeed(id) {
 
     return {
       success: false,
+      data: null,
+      recoverUntil: null,
       message:
         error?.message ||
         "Delete failed",
@@ -229,8 +245,7 @@ export async function deleteMyNeed(id) {
 }
 
 /* ============================================================
-   RESTORE MY NEED
-   ONLY WITHIN 24 HOURS
+   RESTORE
 ============================================================ */
 
 export async function restoreMyNeed(id) {
@@ -252,7 +267,8 @@ export async function restoreMyNeed(id) {
     );
 
     return {
-      success: data?.success === true,
+      success:
+        data?.success === true,
 
       data:
         data?.data ||
@@ -261,8 +277,7 @@ export async function restoreMyNeed(id) {
         null,
 
       message:
-        data?.message ||
-        "",
+        data?.message || "",
     };
   } catch (error) {
     console.error(
@@ -281,12 +296,14 @@ export async function restoreMyNeed(id) {
 }
 
 /* ============================================================
-   GET SINGLE NEED
+   GET SINGLE
 ============================================================ */
 
 export async function getNeedById(id) {
   if (!id) {
-    throw new Error("Need ID is required");
+    throw new Error(
+      "Need ID is required"
+    );
   }
 
   const data = await fetchJSON(
@@ -307,105 +324,18 @@ export async function getNeedById(id) {
 }
 
 /* ============================================================
-   GET NEEDS BY TYPE
-============================================================ */
-
-export async function getNeedsByType(type) {
-  try {
-    const params = new URLSearchParams();
-
-    if (type) {
-      params.set("type", String(type));
-    }
-
-    const query = params.toString();
-
-    const data = await fetchJSON(
-      `${NEED_URL}${query ? `?${query}` : ""}`,
-      {
-        method: "GET",
-        headers: getAuthHeaders(),
-      }
-    );
-
-    const list =
-      data?.cars ||
-      data?.needs ||
-      data?.requests ||
-      [];
-
-    return Array.isArray(list)
-      ? list
-      : [];
-  } catch (error) {
-    console.error(
-      "getNeedsByType error:",
-      error
-    );
-
-    throw error;
-  }
-}
-
-/* ============================================================
-   GET NEEDS WITH FILTER
-============================================================ */
-
-export async function getNeeds({
-  type = "",
-  status = "",
-} = {}) {
-  try {
-    const params = new URLSearchParams();
-
-    if (type) {
-      params.set("type", String(type));
-    }
-
-    if (status) {
-      params.set("status", String(status));
-    }
-
-    const query = params.toString();
-
-    const data = await fetchJSON(
-      `${NEED_URL}${query ? `?${query}` : ""}`,
-      {
-        method: "GET",
-        headers: getAuthHeaders(),
-      }
-    );
-
-    const list =
-      data?.cars ||
-      data?.needs ||
-      data?.requests ||
-      [];
-
-    return Array.isArray(list)
-      ? list
-      : [];
-  } catch (error) {
-    console.error(
-      "getNeeds error:",
-      error
-    );
-
-    throw error;
-  }
-}
-
-/* ============================================================
-   GET ALL NEEDS
-   ADMIN
+   ADMIN GET
 ============================================================ */
 
 export async function getAllNeeds() {
   try {
-    const data = await fetchJSON(NEED_URL, {
-      method: "GET",
-      headers: getAuthHeaders(),
-    });
+    const data = await fetchJSON(
+      NEED_URL,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      }
+    );
 
     const list =
       data?.cars ||
@@ -427,8 +357,7 @@ export async function getAllNeeds() {
 }
 
 /* ============================================================
-   UPDATE NEED STATUS
-   ADMIN
+   ADMIN STATUS
 ============================================================ */
 
 export async function updateNeedStatus({
@@ -437,39 +366,40 @@ export async function updateNeedStatus({
   adminNote = "",
 }) {
   if (!id) {
-    throw new Error("Need ID is required");
+    throw new Error(
+      "Need ID is required"
+    );
   }
 
   try {
-    const body = {
-      status,
-      ...(adminNote
-        ? {
-            adminNote: String(
-              adminNote
-            ).trim(),
-          }
-        : {}),
-    };
-
     const data = await fetchJSON(
       `${NEED_URL}/${encodeURIComponent(id)}/status`,
       {
         method: "PUT",
         headers: getAuthHeaders(),
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          status,
+          ...(adminNote
+            ? {
+                adminNote:
+                  String(adminNote).trim(),
+              }
+            : {}),
+        }),
       }
     );
 
     return {
-      success: data?.success === true,
+      success:
+        data?.success === true,
+
       data:
         data?.car ||
         data?.data ||
         null,
+
       message:
-        data?.message ||
-        "",
+        data?.message || "",
     };
   } catch (error) {
     console.error(
@@ -488,12 +418,14 @@ export async function updateNeedStatus({
 }
 
 /* ============================================================
-   ADMIN DELETE
+   ADMIN PERMANENT DELETE
 ============================================================ */
 
 export async function deleteNeed(id) {
   if (!id) {
-    throw new Error("Need ID is required");
+    throw new Error(
+      "Need ID is required"
+    );
   }
 
   try {
@@ -506,14 +438,16 @@ export async function deleteNeed(id) {
     );
 
     return {
-      success: data?.success !== false,
+      success:
+        data?.success !== false,
+
       data:
         data?.car ||
         data?.data ||
         null,
+
       message:
-        data?.message ||
-        "",
+        data?.message || "",
     };
   } catch (error) {
     console.error(
@@ -523,6 +457,7 @@ export async function deleteNeed(id) {
 
     return {
       success: false,
+      data: null,
       message:
         error?.message ||
         "Delete failed",
@@ -531,21 +466,17 @@ export async function deleteNeed(id) {
 }
 
 /* ============================================================
-   GET NEED ID
+   ID
 ============================================================ */
 
 export function getNeedId(item) {
-  if (!item) {
-    return "";
-  }
+  if (!item) return "";
 
   if (
     typeof item._id === "object" &&
     item._id?.$oid
   ) {
-    return String(
-      item._id.$oid
-    );
+    return String(item._id.$oid);
   }
 
   if (item._id) {
@@ -560,7 +491,7 @@ export function getNeedId(item) {
 }
 
 /* ============================================================
-   GET NEED TYPE
+   TYPE
 ============================================================ */
 
 export function getNeedType(item) {
@@ -570,27 +501,54 @@ export function getNeedType(item) {
 }
 
 /* ============================================================
-   VISIBLE NEED
+   AUDIO URL
 ============================================================ */
 
-export function isVisibleNeed(item) {
-  if (!item) {
-    return false;
+export function getAudioUrl(item) {
+  const value =
+    item?.audioNote ||
+    item?.audio ||
+    item?.audioUrl ||
+    "";
+
+  if (!value) return "";
+
+  const url =
+    String(value).trim();
+
+  if (!url) return "";
+
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("blob:")
+  ) {
+    return url;
   }
 
-  const status = String(
-    item?.status || ""
-  ).toLowerCase();
+  /*
+    Old Flutter local path:
 
-  return (
-    !item?.isDeleted &&
-    status !== "draft" &&
-    status !== "drift"
+    /data/user/0/com.rebuy.app/...
+
+    Browser cannot play this.
+  */
+
+  return "";
+}
+
+/* ============================================================
+   AUDIO
+============================================================ */
+
+export function hasAudio(item) {
+  return Boolean(
+    getAudioUrl(item)
   );
 }
 
 /* ============================================================
-   CHECK RECENTLY DELETED
+   DELETED
 ============================================================ */
 
 export function isDeletedNeed(item) {
@@ -600,7 +558,7 @@ export function isDeletedNeed(item) {
 }
 
 /* ============================================================
-   GET DELETED DATE
+   DELETED DATE
 ============================================================ */
 
 export function getDeletedAt(item) {
@@ -608,9 +566,8 @@ export function getDeletedAt(item) {
     return null;
   }
 
-  const date = new Date(
-    item.deletedAt
-  );
+  const date =
+    new Date(item.deletedAt);
 
   if (
     Number.isNaN(
@@ -624,7 +581,45 @@ export function getDeletedAt(item) {
 }
 
 /* ============================================================
-   24 HOUR RECOVERY CHECK
+   DELETE EXPIRY
+============================================================ */
+
+export function getDeleteExpiresAt(item) {
+  if (
+    item?.deleteExpiresAt
+  ) {
+    const date =
+      new Date(
+        item.deleteExpiresAt
+      );
+
+    if (
+      !Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return date;
+    }
+  }
+
+  const deletedAt =
+    getDeletedAt(item);
+
+  if (!deletedAt) {
+    return null;
+  }
+
+  return new Date(
+    deletedAt.getTime() +
+      24 *
+        60 *
+        60 *
+        1000
+  );
+}
+
+/* ============================================================
+   CAN RECOVER
 ============================================================ */
 
 export function canRecoverNeed(item) {
@@ -632,47 +627,40 @@ export function canRecoverNeed(item) {
     return false;
   }
 
-  const deletedAt =
-    getDeletedAt(item);
+  const expiresAt =
+    getDeleteExpiresAt(item);
 
-  if (!deletedAt) {
+  if (!expiresAt) {
     return false;
   }
 
-  const expiresAt =
-    deletedAt.getTime() +
-    24 * 60 * 60 * 1000;
-
   return (
     Date.now() <
-    expiresAt
+    expiresAt.getTime()
   );
 }
 
 /* ============================================================
-   RECOVERY TIME LEFT
+   RECOVERY TIME
 ============================================================ */
 
 export function getRecoveryTimeLeft(item) {
-  const deletedAt =
-    getDeletedAt(item);
+  const expiresAt =
+    getDeleteExpiresAt(item);
 
-  if (!deletedAt) {
+  if (!expiresAt) {
     return 0;
   }
 
-  const expiresAt =
-    deletedAt.getTime() +
-    24 * 60 * 60 * 1000;
-
   return Math.max(
     0,
-    expiresAt - Date.now()
+    expiresAt.getTime() -
+      Date.now()
   );
 }
 
 /* ============================================================
-   FORMAT RECOVERY TIME
+   FORMAT TIMER
 ============================================================ */
 
 export function formatRecoveryTime(item) {
@@ -715,87 +703,32 @@ export function formatRecoveryTime(item) {
 }
 
 /* ============================================================
-   AUDIO URL
+   VISIBLE ACTIVE NEED
 ============================================================ */
 
-export function getAudioUrl(item) {
-  const value =
-    item?.audioNote ||
-    item?.audio ||
-    item?.audioUrl ||
-    "";
-
-  if (!value) {
-    return "";
+export function isVisibleNeed(item) {
+  if (!item) {
+    return false;
   }
 
-  const url = String(
-    value
-  ).trim();
-
-  if (!url) {
-    return "";
-  }
-
-  /*
-    R2 / Cloudflare public URL
-    Example:
-    https://pub-xxxx.r2.dev/buycar/audio/....
-  */
-
-  if (
-    url.startsWith(
-      "https://"
-    ) ||
-    url.startsWith(
-      "http://"
-    ) ||
-    url.startsWith(
-      "blob:"
-    )
-  ) {
-    return url;
-  }
-
-  /*
-    Old Flutter local-cache path:
-    /data/user/0/com.rebuy.app/...
-
-    Browser cannot access this.
-  */
-
-  if (
-    url.startsWith(
-      "/data/"
-    ) ||
-    url.startsWith(
-      "data/user/"
-    ) ||
-    url.includes(
-      "com.rebuy.app"
-    )
-  ) {
-    return "";
-  }
-
-  return "";
-}
-
-/* ============================================================
-   AUDIO AVAILABLE
-============================================================ */
-
-export function hasAudio(item) {
-  return Boolean(
-    getAudioUrl(item)
+  return (
+    !item.isDeleted &&
+    String(
+      item.status || ""
+    ).toLowerCase() !== "draft" &&
+    String(
+      item.status || ""
+    ).toLowerCase() !== "drift"
   );
 }
 
 /* ============================================================
-   SAFE AUDIO TYPE
+   AUDIO MIME
 ============================================================ */
 
-export function getAudioMimeType(url = "") {
+export function getAudioMimeType(
+  url = ""
+) {
   const cleanUrl =
     String(url)
       .split("?")[0]
