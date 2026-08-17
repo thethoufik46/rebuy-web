@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -175,6 +176,10 @@ const whatsappGroups = [
 export default function Help() {
   const navigate = useNavigate();
 
+  /* =======================================================
+     OPEN EXTERNAL LINK
+  ======================================================= */
+
   const openLink = (href) => {
     if (!href) return;
 
@@ -183,6 +188,14 @@ export default function Help() {
       "_blank",
       "noopener,noreferrer"
     );
+  };
+
+  /* =======================================================
+     REPORT PAGE
+  ======================================================= */
+
+  const openReport = () => {
+    navigate("/report");
   };
 
   return (
@@ -221,8 +234,12 @@ export default function Help() {
             onClick={() => navigate(-1)}
             aria-label="Go back"
             className="
-              flex h-10 w-10 shrink-0
-              items-center justify-center
+              flex
+              h-10
+              w-10
+              shrink-0
+              items-center
+              justify-center
               rounded-full
               bg-white
               text-black
@@ -332,7 +349,8 @@ export default function Help() {
                 <div
                   key={item.title}
                   className={`
-                    flex w-full
+                    flex
+                    w-full
                     ${
                       item.align === "right"
                         ? "justify-end"
@@ -369,31 +387,32 @@ export default function Help() {
                       xl:w-[65%]
                     "
                     style={{
-                      backgroundImage: `linear-gradient(135deg, ${
-                        index === 0
-                          ? "#FFE6F0"
-                          : index === 1
-                          ? "#E6F8FF"
-                          : index === 2
-                          ? "#E8FFF3"
-                          : index === 3
-                          ? "#FFF2E6"
-                          : index === 4
-                          ? "#EDE7FF"
-                          : "#E6F0FF"
-                      }, ${
-                        index === 0
-                          ? "#F3EFFF"
-                          : index === 1
-                          ? "#EFFAFF"
-                          : index === 2
-                          ? "#F0FFF9"
-                          : index === 3
-                          ? "#FFFAF0"
-                          : index === 4
-                          ? "#F6F2FF"
-                          : "#F2F6FF"
-                      })`,
+                      backgroundImage:
+                        `linear-gradient(135deg, ${
+                          index === 0
+                            ? "#FFE6F0"
+                            : index === 1
+                            ? "#E6F8FF"
+                            : index === 2
+                            ? "#E8FFF3"
+                            : index === 3
+                            ? "#FFF2E6"
+                            : index === 4
+                            ? "#EDE7FF"
+                            : "#E6F0FF"
+                        }, ${
+                          index === 0
+                            ? "#F3EFFF"
+                            : index === 1
+                            ? "#EFFAFF"
+                            : index === 2
+                            ? "#F0FFF9"
+                            : index === 3
+                            ? "#FFFAF0"
+                            : index === 4
+                            ? "#F6F2FF"
+                            : "#F2F6FF"
+                        })`,
                     }}
                   >
 
@@ -478,14 +497,11 @@ export default function Help() {
 
             <button
               type="button"
-              onClick={() => {
-                // Add your report route here if required.
-                // Example:
-                // navigate("/report");
-              }}
+              onClick={openReport}
               className="
                 group
-                flex w-full
+                flex
+                w-full
                 items-center
                 rounded-[22px]
                 border
@@ -510,12 +526,15 @@ export default function Help() {
 
               <span
                 className="
-                  flex h-[46px] w-[46px]
+                  flex
+                  h-[46px]
+                  w-[46px]
                   shrink-0
                   items-center
                   justify-center
                   rounded-full
                   bg-white/90
+                  shadow-sm
                 "
               >
                 <AlertTriangle
@@ -539,7 +558,8 @@ export default function Help() {
 
                 <span
                   className="
-                    mt-1 block
+                    mt-1
+                    block
                     text-[13px]
                     text-black/55
                   "
@@ -595,7 +615,8 @@ export default function Help() {
                 mt-4
                 overflow-hidden
                 rounded-[22px]
-                border border-white/50
+                border
+                border-white/50
                 bg-white/55
                 p-5
                 shadow-[0_15px_40px_rgba(0,0,0,0.07)]
@@ -689,7 +710,8 @@ export default function Help() {
               className="
                 overflow-hidden
                 rounded-[22px]
-                border border-white/50
+                border
+                border-white/50
                 bg-white/55
                 p-5
                 shadow-[0_15px_40px_rgba(0,0,0,0.07)]
@@ -717,8 +739,6 @@ export default function Help() {
                 Join groups by category
               </p>
 
-              {/* GROUP GRID */}
-
               <div
                 className="
                   mt-5
@@ -735,7 +755,9 @@ export default function Help() {
                   <button
                     key={group}
                     type="button"
-                    onClick={() => openLink(WHATSAPP_GROUP_LINK)}
+                    onClick={() =>
+                      openLink(WHATSAPP_GROUP_LINK)
+                    }
                     className="
                       group
                       flex
@@ -796,7 +818,7 @@ export default function Help() {
           </section>
 
           {/* =================================================
-              BOTTOM
+              BOTTOM SPACE
           ================================================= */}
 
           <div className="h-8" />

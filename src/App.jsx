@@ -112,6 +112,19 @@ import Help from "@/pages/Faq/help";
 import Cashback from "@/pages/Faq/Cashback";
 
 /* =========================================================
+   SURVEY / LAND MEASUREMENT
+========================================================= */
+
+import Survery from "@/pages/user/home/property/survery/Survery";
+import SurveyUserList from "@/pages/user/home/property/survery/SurveyUserList";
+
+/* =========================================================
+   ADMIN REPORT
+========================================================= */
+
+import Report from "@/components/Report/Report";
+
+/* =========================================================
    APP
 ========================================================= */
 
@@ -220,35 +233,45 @@ export default function App() {
 
         <Route element={<ProtectedRoute />}>
 
-          {/* HOME */}
+          {/* ===================================================
+              HOME
+          =================================================== */}
 
           <Route
             path="/home"
             element={<UserHome />}
           />
 
-          {/* SEARCH */}
+          {/* ===================================================
+              SEARCH
+          =================================================== */}
 
           <Route
             path="/search-results"
             element={<SearchResults />}
           />
 
-          {/* MENU */}
+          {/* ===================================================
+              MENU
+          =================================================== */}
 
           <Route
             path="/menu"
             element={<NavScreen />}
           />
 
-          {/* NOTIFICATIONS */}
+          {/* ===================================================
+              NOTIFICATIONS
+          =================================================== */}
 
           <Route
             path="/notifications"
             element={<NotificationScreen />}
           />
 
-          {/* FILTER */}
+          {/* ===================================================
+              FILTER
+          =================================================== */}
 
           <Route
             path="/filter"
@@ -260,14 +283,18 @@ export default function App() {
             element={<FilterResultScreen />}
           />
 
-          {/* SLIDE */}
+          {/* ===================================================
+              SLIDE
+          =================================================== */}
 
           <Route
             path="/slide"
             element={<SlideBanner />}
           />
 
-          {/* PROFILE */}
+          {/* ===================================================
+              PROFILE
+          =================================================== */}
 
           <Route
             path="/profile"
@@ -279,49 +306,82 @@ export default function App() {
             element={<ChangePassword />}
           />
 
-          {/* FINANCE */}
+          {/* ===================================================
+              FINANCE
+          =================================================== */}
 
           <Route
             path="/finance"
             element={<Finance />}
           />
 
-          {/* TESTIMONIALS */}
+          {/* ===================================================
+              TESTIMONIALS
+          =================================================== */}
 
           <Route
             path="/testimonials"
             element={<Testimonials />}
           />
 
-          {/* CAR */}
+          {/* ===================================================
+              LAND SURVEY
+          =================================================== */}
+
+          <Route
+            path="/survey"
+            element={<Survery />}
+          />
+
+          {/* ===================================================
+              SURVEY USER LIST
+              User submitted survey details
+          =================================================== */}
+
+          <Route
+            path="/survey-list"
+            element={<SurveyUserList />}
+          />
+
+          {/* ===================================================
+              CAR DETAILS
+          =================================================== */}
 
           <Route
             path="/car/:carId"
             element={<CarDetails />}
           />
 
-          {/* BIKE */}
+          {/* ===================================================
+              BIKE DETAILS
+          =================================================== */}
 
           <Route
             path="/bike/:bikeId"
             element={<BikeDetails />}
           />
 
-          {/* PROPERTY */}
+          {/* ===================================================
+              PROPERTY DETAILS
+          =================================================== */}
 
           <Route
             path="/property/:propertyId"
             element={<PropertyDetails />}
           />
 
-          {/* ELECTRONICS */}
+          {/* ===================================================
+              ELECTRONICS DETAILS
+          =================================================== */}
 
           <Route
             path="/electronics/:electronicsId"
             element={<ElectronicsDetails />}
           />
 
-          {/* VARIANT */}
+          {/* ===================================================
+              VARIANT
+          =================================================== */}
 
           <Route
             path="/variant/:variant"
@@ -333,25 +393,40 @@ export default function App() {
             element={<VariantAll />}
           />
 
-          {/* WISHLIST */}
+          {/* ===================================================
+              WISHLIST
+          =================================================== */}
 
           <Route
             path="/wishlist"
             element={<WishlistPage />}
           />
 
-          {/* OWN BOARD */}
+          {/* ===================================================
+              OWN BOARD
+          =================================================== */}
 
           <Route
             path="/own-cars"
             element={<ViewAllOwnBoardScreen />}
           />
 
-          {/* T BOARD */}
+          {/* ===================================================
+              T BOARD
+          =================================================== */}
 
           <Route
             path="/t-board-cars"
             element={<ViewAllTBoardScreen />}
+          />
+
+          {/* ===================================================
+              ADMIN REPORTS
+          =================================================== */}
+
+          <Route
+            path="/report"
+            element={<Report />}
           />
 
         </Route>
